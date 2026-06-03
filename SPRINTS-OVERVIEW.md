@@ -1,4 +1,4 @@
-# Sebenza — sprints overview
+# LifeTrack — sprints overview
 
 ## How sprints work
 - Each sprint is a vertical slice: schema → server actions → UI → deployed and usable.

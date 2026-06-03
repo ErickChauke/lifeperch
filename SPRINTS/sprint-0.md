@@ -91,9 +91,9 @@ VAULT_PIN=
 
 ## Layer 4 — layout shell
 - Create `src/app/(app)/layout.tsx` — shared layout with sidebar + topbar.
-- Create `src/components/layout/sidebar.tsx` — empty sidebar (no module links yet, just the Sebenza logo and user avatar).
+- Create `src/components/layout/sidebar.tsx` — empty sidebar (no module links yet, just the LifeTrack logo and user avatar).
 - Create `src/components/layout/topbar.tsx` — top bar with page title and sign-out button.
-- Create `src/app/(app)/dashboard/page.tsx` — empty dashboard page with "Welcome to Sebenza" text.
+- Create `src/app/(app)/dashboard/page.tsx` — empty dashboard page with "Welcome to LifeTrack" text.
 - Commit: `"add layout shell with sidebar and dashboard page"`
 
 ## Layer 5 — deploy

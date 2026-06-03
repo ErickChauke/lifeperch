@@ -5,7 +5,7 @@ export function Sidebar({ user }: { user: User }) {
   return (
     <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-60 shrink-0 flex-col border-r p-4">
       <div className="mb-8 px-2">
-        <span className="text-xl font-semibold tracking-tight">Sebenza</span>
+        <span className="text-xl font-semibold tracking-tight">LifeTrack</span>
       </div>
 
       <nav className="flex-1" />
