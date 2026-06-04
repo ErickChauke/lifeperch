@@ -1,6 +1,7 @@
 import type { User } from "next-auth";
+import { NavLinks } from "@/components/layout/nav-links";
 
-// App sidebar. Module links are added in later sprints.
+// App sidebar. Nav links are driven by config/modules.config.ts.
 export function Sidebar({ user }: { user: User }) {
   return (
     <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-60 shrink-0 flex-col border-r p-4">
@@ -8,7 +9,9 @@ export function Sidebar({ user }: { user: User }) {
         <span className="text-xl font-semibold tracking-tight">LifePerch</span>
       </div>
 
-      <nav className="flex-1" />
+      <nav className="flex-1">
+        <NavLinks />
+      </nav>
 
       <div className="border-sidebar-border flex items-center gap-3 border-t pt-4">
         {user.image ? (
