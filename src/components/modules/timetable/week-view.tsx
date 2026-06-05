@@ -33,10 +33,10 @@ export function WeekView({
   const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX;
 
   return (
-    <div className="bg-surface overflow-x-auto rounded-[var(--r-lg)] border">
+    <div className="bg-surface scrollbar-thin max-h-[calc(100vh-12rem)] overflow-auto rounded-[var(--r-lg)] border">
       <div className="flex min-w-[720px]">
-        <div className="w-14 shrink-0">
-          <div className="h-10 border-b" />
+        <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
+          <div className="bg-surface sticky top-0 z-30 h-10 border-b" />
           <div className="relative" style={{ height: bodyHeight }}>
             {hours.map((h, i) => (
               <div
@@ -54,7 +54,7 @@ export function WeekView({
           const dayEvents = events.filter((e) => dayColumn(e) === dayIdx);
           return (
             <div key={day} className="flex-1 border-l">
-              <div className="text-fg-3 flex h-10 items-center justify-center border-b font-mono text-xs font-medium uppercase tracking-[0.04em]">
+              <div className="bg-surface text-fg-3 sticky top-0 z-10 flex h-10 items-center justify-center border-b font-mono text-xs font-medium uppercase tracking-[0.04em]">
                 {day.slice(0, 3)}
               </div>
               <div className="relative" style={{ height: bodyHeight }}>
