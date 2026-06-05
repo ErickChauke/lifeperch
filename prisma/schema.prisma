@@ -11,14 +11,32 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  createdAt     DateTime  @default(now())
+  id              String           @id @default(cuid())
+  name            String?
+  email           String?          @unique
+  emailVerified   DateTime?
+  image           String?
+  accounts        Account[]
+  sessions        Session[]
+  timetableEvents TimetableEvent[]
+  createdAt       DateTime         @default(now())
+}
+
+model TimetableEvent {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  type         String
+  color        String    @default("#378ADD")
+  dayOfWeek    Int?
+  startTime    String
+  endTime      String
+  isRecurring  Boolean   @default(true)
+  specificDate DateTime?
+  location     String?
+  notes        String?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
 }
 
 model Account {

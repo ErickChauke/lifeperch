@@ -1,5 +1,11 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
+
+// Neon needs an explicit WebSocket constructor on Node runtimes so that
+// writes (which run inside a transaction) can open a connection.
+neonConfig.webSocketConstructor = ws;
 
 // Prisma 7 connects through a driver adapter. Neon serverless Postgres uses
 // the Neon adapter with the DATABASE_URL connection string.
