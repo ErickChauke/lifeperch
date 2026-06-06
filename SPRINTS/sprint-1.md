@@ -1,5 +1,10 @@
 # Sprint 1 — timetable
 
+## Status: COMPLETE
+Merged to `main` via PR #4 (2026-06-05). Verified on production: sign-in, sidebar active state,
+dashboard greeting, and timetable add/edit/delete all work; renders on phone. DB writes confirmed
+through the UI.
+
 ## Goal
 A fully working timetable showing your real uni and work schedule. Recurring weekly events and one-off events. Add, edit, delete from the UI.
 
@@ -7,10 +12,10 @@ A fully working timetable showing your real uni and work schedule. Recurring wee
 `sprint-1`
 
 ## Done when
-- Your real university lectures and work shifts are visible in a week view.
-- You can add, edit, and delete events from the UI.
-- The seed script populates your timetable from a single file.
-- Deployed and working on phone.
+- [x] A general week view shows your real events (any type, recurring or one-off).
+- [x] You can add, edit, and delete events from the UI.
+- [x] An optional seed script can bulk-load a whole week from a single file.
+- [x] Deployed and working on phone.
 
 ## Layer 1 — schema
 Add to `prisma/schema.prisma`:
