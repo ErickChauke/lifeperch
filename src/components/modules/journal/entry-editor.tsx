@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MOOD_DEFAULT, type EntryInput } from "@/lib/journal";
 import { createEntry, updateEntry } from "@/actions/journal";
-import { MoodSlider } from "./mood-slider";
 import type { Entry } from "./journal-board";
 
 // Editor for the selected day. One entry per day: a day with no entry opens
-// blank with the mood at the neutral default; saving creates or updates it.
+// blank; saving creates or updates it. Mood is no longer surfaced, but the
+// existing value is preserved on update (new entries keep the neutral default).
 export function EntryEditor({
   day,
   entry,
@@ -21,7 +21,7 @@ export function EntryEditor({
   const exists = entry !== null;
   const [title, setTitle] = useState(entry?.title ?? "");
   const [body, setBody] = useState(entry?.body ?? "");
-  const [mood, setMood] = useState(entry?.mood ?? MOOD_DEFAULT);
+  const mood = entry?.mood ?? MOOD_DEFAULT;
   const [pending, startTransition] = useTransition();
 
   function onSave() {
@@ -59,8 +59,6 @@ export function EntryEditor({
         placeholder="Give the day a title…"
         className="placeholder:text-fg-4 w-full bg-transparent text-2xl font-semibold outline-none"
       />
-
-      <MoodSlider value={mood} onChange={setMood} />
 
       <textarea
         value={body}
