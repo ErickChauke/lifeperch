@@ -32,3 +32,8 @@ Commit: `"add money dashboard UI"`
 
 ## Layer 4 — deploy
 Push, deploy, log first real transaction and goal, merge to main.
+
+## Note
+Design expanded this sprint from 3 to 5 screens: dashboard, transaction log, savings goals, shopping
+list, wishlist (see `design/sprint-3-screens.md`). Built schema -> actions -> UI on `sprint-3`; PR open
+to main. Production verification pending.

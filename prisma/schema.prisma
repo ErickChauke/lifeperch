@@ -21,6 +21,10 @@ model User {
   timetableEvents TimetableEvent[]
   notes           Note[]
   dailyEntries    DailyEntry[]
+  transactions    Transaction[]
+  savingsGoals    SavingsGoal[]
+  shoppingItems   ShoppingItem[]
+  wishlistItems   WishlistItem[]
   createdAt       DateTime         @default(now())
 }
 
@@ -64,6 +68,66 @@ model DailyEntry {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
+}
+
+// One money event. Amounts are stored in cents (integer) to avoid float drift.
+// type is "income" or "expense"; investing is carried by the "Investment" expense
+// category and reframed on the dashboard as its own figure.
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  amount      Int
+  category    String
+  description String?
+  date        DateTime @db.Date
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A savings target. Amounts in cents. monthlyAmount is the contribution that
+// drives the time-to-goal estimate. Linked to a wishlist item by name only.
+model SavingsGoal {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  targetAmount  Int      @default(0)
+  currentAmount Int      @default(0)
+  monthlyAmount Int      @default(0)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// A planned purchase. price is the estimated unit price in cents; the basket is
+// logged to the transaction log as one expense per category.
+model ShoppingItem {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  price     Int      @default(0)
+  category  String
+  quantity  Int      @default(1)
+  bought    Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Something to buy someday. price in cents; priority is "high"/"medium"/"low".
+// One tap turns it into a savings goal (linked by name).
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  price     Int      @default(0)
+  priority  String   @default("medium")
+  category  String
+  note      String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {

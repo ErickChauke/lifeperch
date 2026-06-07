@@ -23,7 +23,7 @@ export const modules: ModuleConfig[] = [
   { id: "journal", label: "Journal", href: "/journal", icon: "journal", group: "Daily", enabled: true },
   // Records
   { id: "notes", label: "Notes", href: "/notes", icon: "notes", group: "Records", enabled: true },
-  { id: "money", label: "Money", href: "/money", icon: "money", group: "Records", enabled: false },
+  { id: "money", label: "Money", href: "/money", icon: "money", group: "Records", enabled: true },
   { id: "health", label: "Health", href: "/health", icon: "health", group: "Records", enabled: false },
   { id: "literature", label: "Literature", href: "/literature", icon: "literature", group: "Records", enabled: false },
   { id: "jobs", label: "Jobs", href: "/jobs", icon: "jobs", group: "Records", enabled: false },
