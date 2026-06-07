@@ -6,8 +6,8 @@ import { previewText } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 import type { Entry } from "./journal-board";
 
-// History rail beneath the calendar, newest first. Each row shows the day, the
-// mood, and the entry title (or a body snippet). Clicking a row selects its day.
+// History rail beneath the calendar, newest first. Each row shows the day and
+// the entry title (or a body snippet). Clicking a row selects its day.
 export function PastEntries({
   entries,
   selected,
@@ -51,9 +51,6 @@ export function PastEntries({
                 )}
               >
                 {label}
-              </span>
-              <span className="text-fg shrink-0 font-mono text-sm">
-                {entry.mood}/10
               </span>
             </button>
           );
