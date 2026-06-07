@@ -35,5 +35,9 @@ Push, deploy, log first real transaction and goal, merge to main.
 
 ## Note
 Design expanded this sprint from 3 to 5 screens: dashboard, transaction log, savings goals, shopping
-list, wishlist (see `design/sprint-3-screens.md`). Built schema -> actions -> UI on `sprint-3`; PR open
-to main. Production verification pending.
+list, wishlist (see `design/sprint-3-screens.md`). Built schema -> actions -> UI on `sprint-3`.
+
+## Status: COMPLETE
+Merged to main via PR #6 and verified on production. A follow-up (sprint-3.1, PR #8, merged) then
+restructured the shopping list and wishlist into named, titled collections (one category per
+list/collection); see `design/sprint-3.1-screens.md`. Both verified on production.
