@@ -1,5 +1,10 @@
 # Sprint 5 — habits, health, jobs, timeline
 
+> **Status: COMPLETE.** Merged to main via PR #10 and verified on production: habits (boolean +
+> countable check-in, streaks), health (meal log by type + weekly calories), applications (Kanban
+> pipeline + stage drawer) and timeline (milestone rail) all live and working on phone. The job
+> module ships as "Applications" (job / bursary / scholarship / grant) per the design.
+
 ## Goal
 The final four modules: habit tracker, meal and health log, job application pipeline, and future timeline with milestones.
 
