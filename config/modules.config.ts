@@ -19,15 +19,15 @@ export const modules: ModuleConfig[] = [
   // Daily
   { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard", group: "Daily", enabled: true },
   { id: "timetable", label: "Timetable", href: "/timetable", icon: "calendar", group: "Daily", enabled: true },
-  { id: "habits", label: "Habits", href: "/habits", icon: "habits", group: "Daily", enabled: false },
+  { id: "habits", label: "Habits", href: "/habits", icon: "habits", group: "Daily", enabled: true },
   { id: "journal", label: "Journal", href: "/journal", icon: "journal", group: "Daily", enabled: true },
   // Records
   { id: "notes", label: "Notes", href: "/notes", icon: "notes", group: "Records", enabled: true },
   { id: "money", label: "Money", href: "/money", icon: "money", group: "Records", enabled: true },
-  { id: "health", label: "Health", href: "/health", icon: "health", group: "Records", enabled: false },
+  { id: "health", label: "Health", href: "/health", icon: "health", group: "Records", enabled: true },
   { id: "literature", label: "Literature", href: "/literature", icon: "literature", group: "Records", enabled: true },
-  { id: "jobs", label: "Jobs", href: "/jobs", icon: "jobs", group: "Records", enabled: false },
+  { id: "jobs", label: "Applications", href: "/jobs", icon: "jobs", group: "Records", enabled: true },
   // Archive
   { id: "vault", label: "Vault", href: "/vault", icon: "vault", group: "Archive", enabled: true },
-  { id: "timeline", label: "Timeline", href: "/timeline", icon: "timeline", group: "Archive", enabled: false },
+  { id: "timeline", label: "Timeline", href: "/timeline", icon: "timeline", group: "Archive", enabled: true },
 ];
