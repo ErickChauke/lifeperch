@@ -29,6 +29,13 @@ model User {
   wishlistItems   WishlistItem[]
   documents       Document[]
   literature      Literature[]
+  habits          Habit[]
+  habitLogs       HabitLog[]
+  meals           Meal[]
+  jobApplications JobApplication[]
+  appStages       AppStage[]
+  timelines       Timeline[]
+  milestones      Milestone[]
   createdAt       DateTime         @default(now())
 }
 
@@ -195,6 +202,122 @@ model Literature {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// A habit to keep. kind is "boolean" (done/not-done) or "count" (toward a daily
+// target). target/unit only matter for countable habits. icon is a lucide name
+// used as a label aid on the card. Archived habits leave the grid but keep history.
+model Habit {
+  id        String     @id @default(cuid())
+  userId    String
+  name      String
+  kind      String     @default("boolean")
+  target    Int        @default(1)
+  unit      String?
+  icon      String?
+  archived  Boolean    @default(false)
+  logs      HabitLog[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// One day's check-in for a habit. value is 0/1 for boolean habits, or the count
+// reached for countable ones. One row per habit per day.
+model HabitLog {
+  id        String   @id @default(cuid())
+  userId    String
+  habitId   String
+  date      DateTime @db.Date
+  value     Int      @default(0)
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([habitId, date])
+}
+
+// A logged meal for a day. type is "breakfast"/"lunch"/"dinner"/"snack". time is
+// an optional "HH:mm" clock string used to sort rows. calories are optional.
+model Meal {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  type      String
+  name      String
+  time      String?
+  calories  Int?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// An application in the pipeline (a job, bursary, scholarship, grant). status is
+// the Kanban column: "applied"/"interview"/"offer"/"outcome". outcome carries the
+// final result once in the outcome column: "accepted"/"rejected"/"withdrawn".
+// value is an optional amount in cents (salary or award).
+model JobApplication {
+  id           String     @id @default(cuid())
+  userId       String
+  organisation String
+  position     String
+  location     String?
+  value        Int?
+  status       String     @default("applied")
+  outcome      String?
+  appliedDate  DateTime?  @db.Date
+  stages       AppStage[]
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// A note in an application's history. label is the stage it belongs to (e.g.
+// "Interview"); date is optional. Shown newest-first in the stage detail drawer.
+model AppStage {
+  id            String         @id @default(cuid())
+  userId        String
+  applicationId String
+  label         String
+  note          String         @default("")
+  date          DateTime?      @db.Date
+  application   JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// A named timeline track (e.g. "Career"/"Education"/"Personal"). Milestones
+// optionally belong to one; the rail itself stays a single flat chronological line
+// and the track reads as a label badge.
+model Timeline {
+  id         String      @id @default(cuid())
+  userId     String
+  name       String
+  milestones Milestone[]
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@unique([userId, name])
+}
+
+// A milestone on the timeline. status is "planned"/"in-progress"/"done"; overdue
+// is computed from targetDate, never stored. timelineId is null for an untracked
+// milestone.
+model Milestone {
+  id          String    @id @default(cuid())
+  userId      String
+  timelineId  String?
+  title       String
+  description String?
+  targetDate  DateTime  @db.Date
+  status      String    @default("planned")
+  timeline    Timeline? @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Account {

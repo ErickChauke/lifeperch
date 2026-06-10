@@ -1,5 +1,10 @@
 # Sprint 4 — vault and literature
 
+> **Status: COMPLETE.** Merged to main. Vault (PIN gate, Cloudinary upload, document grid) and
+> Literature (paper list, status badges, PDF/link, notes, tags) shipped and verified on production.
+> Sprint 3.1 (shopping lists + wishlist collections) also shipped and merged alongside the money
+> module.
+
 ## Goal
 A PIN-protected document vault and a literature review tracker for research papers.
 
