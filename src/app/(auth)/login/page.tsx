@@ -27,7 +27,7 @@ function GoogleGlyph() {
 
 export default function LoginPage() {
   return (
-    <main className="relative grid min-h-screen place-items-center p-6">
+    <main className="scrollbar-hide relative flex h-full overflow-y-auto overscroll-none p-6">
       {/* Atmospheric accent glow behind the card */}
       <div
         aria-hidden
@@ -39,7 +39,7 @@ export default function LoginPage() {
       />
 
       <div
-        className="bg-surface relative w-full max-w-[400px] rounded-[var(--r-xl)] border px-8 pt-10 pb-8 text-center"
+        className="bg-surface relative m-auto w-full max-w-[400px] rounded-[var(--r-xl)] border px-8 pt-10 pb-8 text-center"
         style={{ boxShadow: "var(--shadow-pop)" }}
       >
         <div className="mb-6 flex justify-center">

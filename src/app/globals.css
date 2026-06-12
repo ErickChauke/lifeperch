@@ -198,6 +198,13 @@
   html {
     @apply font-sans;
   }
+  /* Pinned viewport: the window itself never scrolls; inner regions do. */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   /* Aligned figures for tabular data set in the mono face */
   .font-mono {
     font-feature-settings: "tnum" 1;
@@ -207,25 +214,17 @@
   }
 }
 
-/* Thin, themed scrollbar for data surfaces (e.g. the timetable board). */
-@utility scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-2) transparent;
+/* Hides scrollbars on scroll regions; wheel, keys and touch still scroll. */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   &::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    display: none;
   }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-2);
-    border: 3px solid transparent;
-    background-clip: padding-box;
-    border-radius: 999px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background: var(--text-4);
-    background-clip: padding-box;
-  }
+}
+
+/* Full viewport height with a vh fallback for browsers without dvh. */
+@utility h-viewport {
+  height: 100vh;
+  height: 100dvh;
 }
