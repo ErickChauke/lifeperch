@@ -31,7 +31,7 @@ export function ShoppingOverview({ lists }: { lists: ShoppingListWithItems[] }) 
       <>
         <MoneyEmpty
           eyebrow="Records · Money · Shopping"
-          message="No shopping lists yet. Start one for a shop — a Checkers run, a hardware trip — and see what it'll cost."
+          message="No shopping lists yet. Start one for a shop - a Checkers run, a hardware trip - and see what it'll cost."
           action={
             <Button onClick={() => setCreating(true)}>
               <Plus /> New list

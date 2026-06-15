@@ -49,7 +49,7 @@ export const INCOME_CATEGORIES = [
   { value: "Other", icon: "circle-dashed" },
 ] as const;
 
-// Spending categories are the expense categories minus investing — used by the
+// Spending categories are the expense categories minus investing - used by the
 // shopping list and wishlist, which never deal in investments.
 export const SPENDING_CATEGORIES = EXPENSE_CATEGORIES.filter(
   (c) => c.value !== INVESTMENT_CATEGORY,

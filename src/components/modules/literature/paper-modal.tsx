@@ -73,7 +73,7 @@ function PaperForm({ paper, onClose }: { paper: Paper | null; onClose: () => voi
   function pick(f: File | null) {
     if (!f) return;
     if (f.size > MAX_UPLOAD_BYTES) {
-      setRejected(`That file is ${formatBytes(f.size)} — the limit is 10 MB.`);
+      setRejected(`That file is ${formatBytes(f.size)} - the limit is 10 MB.`);
       return;
     }
     setRejected(null);

@@ -244,7 +244,7 @@ function Expectations({ transactions, period }: { transactions: Transaction[]; p
                     : "text-fg",
               )}
             >
-              {f.cents === null ? "—" : formatZAR(centsToRand(f.cents))}
+              {f.cents === null ? "-" : formatZAR(centsToRand(f.cents))}
             </span>
           </div>
         ))}
@@ -357,7 +357,7 @@ function GoalRow({ goal }: { goal: Goal }) {
         <span className="text-fg truncate font-medium">{goal.name}</span>
         <span className="text-fg-2 shrink-0 font-mono text-sm">
           {formatZAR(centsToRand(goal.currentAmount))} /{" "}
-          {unset ? "—" : formatZAR(centsToRand(goal.targetAmount))}
+          {unset ? "-" : formatZAR(centsToRand(goal.targetAmount))}
         </span>
       </div>
       <div className="bg-surface-3 h-2 overflow-hidden rounded-full">

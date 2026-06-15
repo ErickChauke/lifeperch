@@ -61,7 +61,7 @@ export function TimelineBoard({
         {milestones.length === 0 ? (
           <MoneyEmpty
             eyebrow="Archive · Timeline"
-            message="Nothing on the timeline yet. Set a milestone you're aiming at — a move, a qualification, a trip — and watch the rail fill in by date."
+            message="Nothing on the timeline yet. Set a milestone you're aiming at - a move, a qualification, a trip - and watch the rail fill in by date."
             action={
               <Button onClick={() => setCreating(true)}>
                 <Plus /> Add milestone

@@ -42,7 +42,7 @@ const TYPE_ICONS: Record<MealType, LucideIcon> = {
 
 // Groups a thousands-separated kcal figure, or a dash when there is no value.
 function kcal(value: number | null): string {
-  if (value == null) return "—";
+  if (value == null) return "-";
   return `${String(value).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kcal`;
 }
 
@@ -103,7 +103,7 @@ export function HealthBoard({
         <PageBody className="pt-6 md:pt-10">
           <MoneyEmpty
             eyebrow="Records · Health"
-            message="No meals logged yet. Jot what you eat — breakfast, a snack, dinner — with a time and calories if you want them, and your week takes shape above."
+            message="No meals logged yet. Jot what you eat - breakfast, a snack, dinner - with a time and calories if you want them, and your week takes shape above."
             action={
               <Button onClick={() => setCreating("breakfast")}>
                 <Plus /> Add meal
@@ -260,14 +260,14 @@ export function HealthBoard({
                         className="hover:bg-surface-2 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors"
                       >
                         <span className="text-fg-3 w-[38px] shrink-0 font-mono text-xs tabular-nums">
-                          {meal.time ?? <span className="text-fg-4">—</span>}
+                          {meal.time ?? <span className="text-fg-4">-</span>}
                         </span>
                         <span className="text-fg min-w-0 flex-1 truncate text-[15px]">
                           {meal.name}
                         </span>
                         <span className="shrink-0 font-mono text-sm tabular-nums">
                           {meal.calories == null ? (
-                            <span className="text-fg-4">—</span>
+                            <span className="text-fg-4">-</span>
                           ) : (
                             <span className="text-fg-2">
                               {String(meal.calories).replace(

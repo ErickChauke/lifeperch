@@ -1,4 +1,4 @@
-# Sprint 0 — foundation
+# Sprint 0 - foundation
 
 ## Goal
 A deployed, authenticated Next.js app with an empty sidebar. No features yet. Just the skeleton every future sprint builds on.
@@ -12,7 +12,7 @@ A deployed, authenticated Next.js app with an empty sidebar. No features yet. Ju
 - The app is live on Vercel.
 - No TypeScript errors. No console errors.
 
-## Layer 1 — project setup
+## Layer 1 - project setup
 - Run: `npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias "@/*"`
 - Install dependencies:
   `npm install prisma @prisma/client @auth/prisma-adapter next-auth@beta zod react-hook-form @hookform/resolvers date-fns recharts cloudinary`
@@ -31,7 +31,7 @@ CLOUDINARY_API_SECRET=
 VAULT_PIN=
 - Commit: `"scaffold next.js app and install dependencies"`
 
-## Layer 2 — database
+## Layer 2 - database
 - Initialise Prisma: `npx prisma init`
 - Write the User model in `prisma/schema.prisma` (Auth.js requires specific fields):
 ```prisma
@@ -81,22 +81,22 @@ VAULT_PIN=
 - Run: `npx prisma migrate dev --name init-auth`
 - Commit: `"add auth schema and run initial migration"`
 
-## Layer 3 — auth
-- Create `src/lib/prisma.ts` — Prisma client singleton.
-- Create `src/lib/auth.ts` — Auth.js config with Google provider and Prisma adapter.
-- Create `src/app/api/auth/[...nextauth]/route.ts` — Auth.js route handler.
-- Create `src/app/(auth)/login/page.tsx` — login page with "Sign in with Google" button.
+## Layer 3 - auth
+- Create `src/lib/prisma.ts` - Prisma client singleton.
+- Create `src/lib/auth.ts` - Auth.js config with Google provider and Prisma adapter.
+- Create `src/app/api/auth/[...nextauth]/route.ts` - Auth.js route handler.
+- Create `src/app/(auth)/login/page.tsx` - login page with "Sign in with Google" button.
 - Protect all `(app)` routes with a middleware check in `src/middleware.ts`.
 - Commit: `"wire google auth and protect app routes"`
 
-## Layer 4 — layout shell
-- Create `src/app/(app)/layout.tsx` — shared layout with sidebar + topbar.
-- Create `src/components/layout/sidebar.tsx` — empty sidebar (no module links yet, just the LifePerch logo and user avatar).
-- Create `src/components/layout/topbar.tsx` — top bar with page title and sign-out button.
-- Create `src/app/(app)/dashboard/page.tsx` — empty dashboard page with "Welcome to LifePerch" text.
+## Layer 4 - layout shell
+- Create `src/app/(app)/layout.tsx` - shared layout with sidebar + topbar.
+- Create `src/components/layout/sidebar.tsx` - empty sidebar (no module links yet, just the LifePerch logo and user avatar).
+- Create `src/components/layout/topbar.tsx` - top bar with page title and sign-out button.
+- Create `src/app/(app)/dashboard/page.tsx` - empty dashboard page with "Welcome to LifePerch" text.
 - Commit: `"add layout shell with sidebar and dashboard page"`
 
-## Layer 5 — deploy
+## Layer 5 - deploy
 - Push branch to GitHub.
 - Connect repo to Vercel if not already done.
 - Add all env vars from `.env.example` to Vercel dashboard (with real values).

@@ -1,4 +1,4 @@
-# LifePerch — sprints overview
+# LifePerch - sprints overview
 
 ## How sprints work
 - Each sprint is a vertical slice: schema → server actions → UI → deployed and usable.
@@ -19,10 +19,10 @@
 | 5 | sprint-5 | Habits, health, jobs pipeline, future timeline | not started |
 
 ## Sprint status key
-- `not started` — branch not created yet
-- `in progress` — branch created, work underway
-- `in review` — PR open, testing on phone
-- `done` — merged to main, live on Vercel
+- `not started` - branch not created yet
+- `in progress` - branch created, work underway
+- `in review` - PR open, testing on phone
+- `done` - merged to main, live on Vercel
 
 ## What done means for each sprint
 
@@ -48,4 +48,4 @@
 ## Design workflow
 - Design the sidebar shell and dashboard layout before Sprint 0.
 - Design each module's screens before the sprint that builds it.
-- Lock in colour palette, sidebar style, and card style upfront — all sprints inherit them.
+- Lock in colour palette, sidebar style, and card style upfront - all sprints inherit them.
