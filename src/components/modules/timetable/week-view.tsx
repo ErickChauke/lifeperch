@@ -33,7 +33,7 @@ export function WeekView({
   const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX;
 
   return (
-    <div className="bg-surface scrollbar-thin max-h-[calc(100vh-12rem)] overflow-auto rounded-[var(--r-lg)] border">
+    <div className="bg-surface scrollbar-hide min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border">
       <div className="flex min-w-[720px]">
         <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
           <div className="bg-surface sticky top-0 z-30 h-10 border-b" />
