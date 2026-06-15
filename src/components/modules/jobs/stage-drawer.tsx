@@ -115,7 +115,7 @@ function DrawerBody({
         </Button>
       </div>
 
-      <div className="scrollbar-thin flex-1 overflow-y-auto p-5">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto p-5">
         {/* Detail */}
         {application.value != null ? (
           <div className="mb-5">

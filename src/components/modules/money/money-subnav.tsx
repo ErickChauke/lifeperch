@@ -12,13 +12,14 @@ const TABS = [
   { href: "/money/wishlist", label: "Wishlist" },
 ];
 
-// Sticky sub-nav for the Money module. The active tab gets a 2px accent
-// underline. Overview matches the bare /money route; the rest match their prefix.
+// Sub-nav for the Money module: pinned on desktop, sticky-blurred on mobile.
+// The active tab gets a 2px accent underline. Overview matches the bare /money
+// route; the rest match their prefix.
 export function MoneySubnav() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-background sticky top-16 z-20 -mx-8 -mt-12 mb-8 border-b px-8">
+    <nav className="bg-background/85 sticky top-0 z-20 shrink-0 border-b px-5 backdrop-blur-[10px] md:static md:bg-background md:px-8 md:backdrop-blur-none">
       <div className="flex gap-6">
         {TABS.map((tab) => {
           const active =

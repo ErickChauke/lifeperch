@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Menu } from "lucide-react";
 import { modules } from "@config/modules.config";
+import { useSidebar } from "@/components/layout/sidebar-context";
 
 // Derives the current page name from the path: prefers a module label, else
 // title-cases the first segment. Defaults to Dashboard at the app root.
@@ -14,14 +15,25 @@ function pageName(pathname: string): string {
   return segment.charAt(0).toUpperCase() + segment.slice(1);
 }
 
-// Top bar: LifePerch / <Page> breadcrumb, search pill, notifications bell.
+// Top bar: hamburger (mobile), LifePerch / <Page> breadcrumb, search pill,
+// notifications bell. Pinned in the shell, so no sticky positioning needed.
 export function Topbar() {
   const pathname = usePathname();
   const page = pageName(pathname);
+  const { toggle } = useSidebar();
 
   return (
-    <header className="bg-background/80 sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b px-8 backdrop-blur-[10px]">
-      <p className="text-[15px] font-semibold">
+    <header className="flex h-16 shrink-0 items-center gap-3 border-b px-5 md:gap-4 md:px-8">
+      <button
+        type="button"
+        aria-label="Open navigation"
+        onClick={toggle}
+        className="text-fg-2 hover:bg-surface-2 hover:text-fg -ml-1 flex size-9 shrink-0 items-center justify-center rounded-[var(--r-sm)] transition-colors md:hidden"
+      >
+        <Menu className="size-[18px]" strokeWidth={1.75} />
+      </button>
+
+      <p className="min-w-0 truncate text-[15px] font-semibold">
         <span className="text-fg-3 font-normal">LifePerch</span>
         <span className="text-fg-4 px-1.5 font-normal">/</span>
         <span className="text-fg">{page}</span>

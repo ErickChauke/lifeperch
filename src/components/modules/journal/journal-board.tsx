@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { dateToDay } from "@/lib/journal";
+import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { Calendar } from "./calendar";
 import { EntryEditor } from "./entry-editor";
 import { PastEntries } from "./past-entries";
@@ -26,23 +27,27 @@ export function JournalBoard({ entries }: { entries: Entry[] }) {
   const selectedEntry = byDay.get(selected) ?? null;
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <div className="flex w-full flex-col gap-6 lg:w-[300px] lg:shrink-0">
-        <Calendar
-          selected={selected}
-          today={today}
-          entryDays={entryDays}
-          onSelect={setSelected}
-        />
-        <PastEntries
-          entries={entries}
-          selected={selected}
-          onSelect={setSelected}
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <EntryEditor key={selected} day={selected} entry={selectedEntry} />
-      </div>
-    </div>
+    <PageShell>
+      <PageBody className="pt-6 md:pt-10">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex w-full flex-col gap-6 lg:w-[300px] lg:shrink-0">
+            <Calendar
+              selected={selected}
+              today={today}
+              entryDays={entryDays}
+              onSelect={setSelected}
+            />
+            <PastEntries
+              entries={entries}
+              selected={selected}
+              onSelect={setSelected}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <EntryEditor key={selected} day={selected} entry={selectedEntry} />
+          </div>
+        </div>
+      </PageBody>
+    </PageShell>
   );
 }

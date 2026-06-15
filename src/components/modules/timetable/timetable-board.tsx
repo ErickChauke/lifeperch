@@ -25,8 +25,8 @@ export function TimetableBoard({ events }: { events: TimetableEvent[] }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-8 md:px-8 md:pb-10">
+      <div className="flex shrink-0 justify-end">
         <Button size="sm" onClick={openAdd}>
           <Plus />
           Add event

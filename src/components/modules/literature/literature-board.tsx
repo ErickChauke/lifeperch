@@ -5,6 +5,11 @@ import { Plus, Search, FileText, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { statusLabel } from "@/lib/literature";
+import {
+  PageShell,
+  PageHeader,
+  PageBody,
+} from "@/components/layout/page-shell";
 import { Segmented } from "@/components/modules/money/segmented";
 import { MoneyEmpty } from "@/components/modules/money/money-empty";
 import { PaperModal } from "./paper-modal";
@@ -61,65 +66,83 @@ export function LiteratureBoard({ papers }: { papers: Paper[] }) {
 
   if (papers.length === 0) {
     return (
-      <>
-        <MoneyEmpty
-          eyebrow="Records · Literature"
-          message="No papers yet. Track what you're reading — a title, who wrote it, and a link or a PDF — and your shelf fills in here."
-          action={
-            <Button onClick={() => setCreating(true)}>
-              <Plus /> Add paper
-            </Button>
-          }
-        />
-        <PaperModal open={creating} onOpenChange={(o) => !o && closeModal()} paper={null} />
-      </>
+      <PageShell>
+        <PageBody className="pt-6 md:pt-10">
+          <MoneyEmpty
+            eyebrow="Records · Literature"
+            message="No papers yet. Track what you're reading — a title, who wrote it, and a link or a PDF — and your shelf fills in here."
+            action={
+              <Button onClick={() => setCreating(true)}>
+                <Plus /> Add paper
+              </Button>
+            }
+          />
+          <PaperModal
+            open={creating}
+            onOpenChange={(o) => !o && closeModal()}
+            paper={null}
+          />
+        </PageBody>
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search papers…"
-            className="bg-surface-2 placeholder:text-fg-3 focus-visible:border-accent-line h-9 w-full rounded-sm border pl-8 pr-3 text-sm outline-none"
+    <PageShell>
+      <PageHeader>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[200px] flex-1">
+            <Search className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search papers…"
+              className="bg-surface-2 placeholder:text-fg-3 focus-visible:border-accent-line h-9 w-full rounded-sm border pl-8 pr-3 text-sm outline-none"
+            />
+          </div>
+          <Segmented
+            options={STATUS_FILTERS}
+            value={status}
+            onChange={setStatus}
           />
-        </div>
-        <Segmented options={STATUS_FILTERS} value={status} onChange={setStatus} />
-        {hasFilters ? (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear
-          </Button>
-        ) : null}
-        <Button onClick={() => setCreating(true)}>
-          <Plus /> Add paper
-        </Button>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-fg-3 flex flex-col items-start gap-3 py-10 text-sm">
-          <p>No papers match.</p>
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear
+          {hasFilters ? (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Clear
+            </Button>
+          ) : null}
+          <Button onClick={() => setCreating(true)}>
+            <Plus /> Add paper
           </Button>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((paper) => (
-            <PaperCard key={paper.id} paper={paper} onEdit={() => setEditing(paper)} />
-          ))}
-        </div>
-      )}
+      </PageHeader>
 
-      <PaperModal
-        open={creating || editing !== null}
-        onOpenChange={(o) => !o && closeModal()}
-        paper={editing}
-      />
-    </div>
+      <PageBody className="space-y-6">
+        {filtered.length === 0 ? (
+          <div className="text-fg-3 flex flex-col items-start gap-3 py-10 text-sm">
+            <p>No papers match.</p>
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Clear
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((paper) => (
+              <PaperCard
+                key={paper.id}
+                paper={paper}
+                onEdit={() => setEditing(paper)}
+              />
+            ))}
+          </div>
+        )}
+
+        <PaperModal
+          open={creating || editing !== null}
+          onOpenChange={(o) => !o && closeModal()}
+          paper={editing}
+        />
+      </PageBody>
+    </PageShell>
   );
 }
 
@@ -153,7 +176,11 @@ function PaperCard({ paper, onEdit }: { paper: Paper; onEdit: () => void }) {
             }}
             className="text-fg-3 hover:text-fg-2 flex items-center gap-1 font-mono text-xs"
           >
-            {paper.fileUrl ? <FileText className="size-3.5" /> : <LinkIcon className="size-3.5" />}
+            {paper.fileUrl ? (
+              <FileText className="size-3.5" />
+            ) : (
+              <LinkIcon className="size-3.5" />
+            )}
             {paper.fileUrl ? "PDF" : "Link"}
           </button>
         ) : (
@@ -161,14 +188,18 @@ function PaperCard({ paper, onEdit }: { paper: Paper; onEdit: () => void }) {
         )}
       </div>
 
-      <p className="text-fg line-clamp-2 text-lg font-semibold">{paper.title}</p>
+      <p className="text-fg line-clamp-2 text-lg font-semibold">
+        {paper.title}
+      </p>
 
       {paper.authors || paper.year ? (
         <p className="flex items-center gap-1.5 text-sm">
           {paper.authors ? (
             <span className="text-fg-2 min-w-0 truncate">{paper.authors}</span>
           ) : null}
-          {paper.authors && paper.year ? <span className="text-fg-4">·</span> : null}
+          {paper.authors && paper.year ? (
+            <span className="text-fg-4">·</span>
+          ) : null}
           {paper.year ? (
             <span className="text-fg-3 shrink-0 font-mono">{paper.year}</span>
           ) : null}

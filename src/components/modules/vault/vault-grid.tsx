@@ -3,10 +3,24 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Lock, Upload, FileText, Image, Table, Archive, File, Trash2 } from "lucide-react";
+import {
+  Lock,
+  Upload,
+  FileText,
+  Image,
+  Table,
+  Archive,
+  File,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  PageShell,
+  PageHeader,
+  PageBody,
+} from "@/components/layout/page-shell";
 import { fileKind, formatBytes } from "@/lib/vault";
 import { lockVault, deleteDocument } from "@/actions/vault";
 import { DocumentUploadModal } from "./document-upload-modal";
@@ -35,49 +49,59 @@ export function VaultGrid({ documents }: { documents: Document[] }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-fg text-2xl font-semibold">Vault</h1>
-          <p className="text-fg-3 mt-1 font-mono text-xs">
-            {documents.length} {documents.length === 1 ? "document" : "documents"}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={relock} disabled={pending}>
-            <Lock /> Re-lock
-          </Button>
-          <Button onClick={() => setUploading(true)}>
-            <Upload /> Upload
-          </Button>
-        </div>
-      </div>
-
-      {documents.length === 0 ? (
-        <div className="mx-auto max-w-[560px] py-12 text-center">
-          <p className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
-            Archive · Vault
-          </p>
-          <p className="text-fg-2 mt-3 text-[15px]">
-            The vault is open and empty. Upload your first document — an ID, a
-            contract, a certificate — and it lives here, behind your PIN.
-          </p>
-          <div className="mt-6 flex justify-center">
+    <PageShell>
+      <PageHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-fg text-2xl font-semibold">Vault</h1>
+            <p className="text-fg-3 mt-1 font-mono text-xs">
+              {documents.length}{" "}
+              {documents.length === 1 ? "document" : "documents"}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={relock}
+              disabled={pending}
+            >
+              <Lock /> Re-lock
+            </Button>
             <Button onClick={() => setUploading(true)}>
               <Upload /> Upload
             </Button>
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {documents.map((doc) => (
-            <DocCard key={doc.id} doc={doc} />
-          ))}
-        </div>
-      )}
+      </PageHeader>
 
-      <DocumentUploadModal open={uploading} onOpenChange={setUploading} />
-    </div>
+      <PageBody className="space-y-6">
+        {documents.length === 0 ? (
+          <div className="mx-auto max-w-[560px] py-12 text-center">
+            <p className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
+              Archive · Vault
+            </p>
+            <p className="text-fg-2 mt-3 text-[15px]">
+              The vault is open and empty. Upload your first document — an ID, a
+              contract, a certificate — and it lives here, behind your PIN.
+            </p>
+            <div className="mt-6 flex justify-center">
+              <Button onClick={() => setUploading(true)}>
+                <Upload /> Upload
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {documents.map((doc) => (
+              <DocCard key={doc.id} doc={doc} />
+            ))}
+          </div>
+        )}
+
+        <DocumentUploadModal open={uploading} onOpenChange={setUploading} />
+      </PageBody>
+    </PageShell>
   );
 }
 
@@ -86,7 +110,9 @@ function DocCard({ doc }: { doc: Document }) {
   const [pending, startTransition] = useTransition();
   const [confirm, setConfirm] = useState(false);
   const Icon = KIND_ICONS[fileKind(doc.format)];
-  const meta = [doc.format?.toUpperCase(), formatBytes(doc.bytes)].filter(Boolean).join(" · ");
+  const meta = [doc.format?.toUpperCase(), formatBytes(doc.bytes)]
+    .filter(Boolean)
+    .join(" · ");
 
   function open() {
     window.open(doc.url, "_blank", "noopener");
@@ -118,7 +144,9 @@ function DocCard({ doc }: { doc: Document }) {
         <span className="bg-surface-2 text-fg-2 flex size-10 items-center justify-center rounded-sm">
           <Icon className="size-5" strokeWidth={1.75} />
         </span>
-        <span className="text-fg mt-3 line-clamp-2 block text-sm font-medium">{doc.title}</span>
+        <span className="text-fg mt-3 line-clamp-2 block text-sm font-medium">
+          {doc.title}
+        </span>
       </button>
 
       {confirm ? (
@@ -132,7 +160,11 @@ function DocCard({ doc }: { doc: Document }) {
           >
             Delete
           </button>
-          <button type="button" onClick={() => setConfirm(false)} className="text-fg-3">
+          <button
+            type="button"
+            onClick={() => setConfirm(false)}
+            className="text-fg-3"
+          >
             Cancel
           </button>
         </div>
