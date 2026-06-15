@@ -116,7 +116,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
           </span>
           <span className="text-fg-2 text-sm">
             {" / "}
-            {unset ? "—" : formatZAR(centsToRand(goal.targetAmount))}
+            {unset ? "-" : formatZAR(centsToRand(goal.targetAmount))}
           </span>
         </span>
         {percent !== null ? (

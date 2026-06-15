@@ -55,7 +55,7 @@ export function JobsBoard({ applications }: { applications: Application[] }) {
         <PageBody className="pt-6 md:pt-10">
           <MoneyEmpty
             eyebrow="Records · Applications"
-            message="No applications yet. Add the first thing you're applying for — a job, a bursary, a grant — and move it along as things happen: applied, interview, offer, outcome."
+            message="No applications yet. Add the first thing you're applying for - a job, a bursary, a grant - and move it along as things happen: applied, interview, offer, outcome."
             action={
               <Button onClick={() => setCreating(true)}>
                 <Plus /> Add application

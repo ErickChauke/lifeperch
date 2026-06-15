@@ -23,7 +23,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  /* shadcn neutral hover pair — repointed at surface-2 so the raw --accent var
+  /* shadcn neutral hover pair - repointed at surface-2 so the raw --accent var
      stays the lime brand colour (see design integration note). */
   --color-accent: var(--surface-2);
   --color-accent-foreground: var(--text);
@@ -71,7 +71,7 @@
 }
 
 :root {
-  /* Accent — Lime (theme-independent brand) */
+  /* Accent - Lime (theme-independent brand) */
   --accent: #a3e635;
   --accent-hover: #94d626;
   --accent-active: #82be1c;
@@ -99,7 +99,7 @@
   --danger: #e5644e;
   --info: #5b8cff;
 
-  /* Spacing — 4px base */
+  /* Spacing - 4px base */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -112,7 +112,7 @@
   --s16: 64px;
   --s20: 80px;
 
-  /* Radius — 18px locked; family stays {sm: r-4, lg: r+4, xl: r+10} */
+  /* Radius - 18px locked; family stays {sm: r-4, lg: r+4, xl: r+10} */
   --r-sm: 14px;
   --r: 18px;
   --r-lg: 22px;

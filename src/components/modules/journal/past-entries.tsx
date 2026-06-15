@@ -30,7 +30,7 @@ export function PastEntries({
           const titled = !!entry.title?.trim();
           const label = titled
             ? entry.title!.trim()
-            : previewText(entry.body) || "—";
+            : previewText(entry.body) || "-";
           return (
             <button
               key={entry.id}

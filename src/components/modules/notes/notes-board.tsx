@@ -78,7 +78,7 @@ export function NotesBoard({ notes }: { notes: Note[] }) {
             </p>
             <p className="text-fg-2 mt-3 text-[15px]">
               Nothing written down yet. Notes is where ideas and reference live
-              — start one.
+              - start one.
             </p>
             <div className="mt-6 flex justify-center">
               <Button onClick={() => setCreating(true)}>

@@ -20,7 +20,7 @@ const USER_EMAIL = "erickchauke0217@gmail.com";
 // Optional bulk-loader. The primary way events enter LifePerch is the timetable
 // UI (add/edit/delete). Use this only to wipe and reload a whole week in one go,
 // then run: npx tsx scripts/update-timetable.ts
-// The rows below are generic examples — replace them with whatever your week holds
+// The rows below are generic examples - replace them with whatever your week holds
 // (lessons, shifts, personal blocks). Any "type" in EVENT_TYPES works.
 // dayOfWeek: 0 = Monday ... 6 = Sunday. Times are "HH:MM" (24 hour).
 const EVENTS: {

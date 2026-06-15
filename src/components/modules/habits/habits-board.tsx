@@ -57,7 +57,7 @@ export function HabitsBoard({
         {habits.length === 0 ? (
           <MoneyEmpty
             eyebrow="Daily · Habits"
-            message="No habits yet. Pick one small thing to keep — a glass of water, ten minutes of reading — and check it off here each day."
+            message="No habits yet. Pick one small thing to keep - a glass of water, ten minutes of reading - and check it off here each day."
             action={
               <Button onClick={() => setCreating(true)}>
                 <Plus /> Add habit

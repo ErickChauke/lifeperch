@@ -28,7 +28,7 @@ const QUICK_STARTS: QuickStart[] = [
   },
   {
     title: "Write today's entry",
-    desc: "A line or a page — the journal is always open.",
+    desc: "A line or a page - the journal is always open.",
     href: "/journal",
     icon: BookText,
   },
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
 
           <p className="text-fg-2 mt-4 max-w-[52ch] text-lg leading-relaxed">
             Nothing scheduled, nothing overdue. This is the shell every part of
-            LifePerch lives inside — pick a place to begin.
+            LifePerch lives inside - pick a place to begin.
           </p>
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">

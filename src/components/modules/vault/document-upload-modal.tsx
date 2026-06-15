@@ -50,7 +50,7 @@ export function DocumentUploadModal({
     if (!f) return;
     if (f.size > MAX_UPLOAD_BYTES) {
       setFile(null);
-      setRejected(`That file is ${formatBytes(f.size)} — the limit is 10 MB.`);
+      setRejected(`That file is ${formatBytes(f.size)} - the limit is 10 MB.`);
       return;
     }
     setRejected(null);

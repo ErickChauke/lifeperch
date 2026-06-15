@@ -70,7 +70,7 @@ export function LiteratureBoard({ papers }: { papers: Paper[] }) {
         <PageBody className="pt-6 md:pt-10">
           <MoneyEmpty
             eyebrow="Records · Literature"
-            message="No papers yet. Track what you're reading — a title, who wrote it, and a link or a PDF — and your shelf fills in here."
+            message="No papers yet. Track what you're reading - a title, who wrote it, and a link or a PDF - and your shelf fills in here."
             action={
               <Button onClick={() => setCreating(true)}>
                 <Plus /> Add paper
@@ -184,7 +184,7 @@ function PaperCard({ paper, onEdit }: { paper: Paper; onEdit: () => void }) {
             {paper.fileUrl ? "PDF" : "Link"}
           </button>
         ) : (
-          <span className="text-fg-4 font-mono text-xs">—</span>
+          <span className="text-fg-4 font-mono text-xs">-</span>
         )}
       </div>
 

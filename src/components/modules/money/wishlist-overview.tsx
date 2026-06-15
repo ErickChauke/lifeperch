@@ -34,7 +34,7 @@ export function WishlistOverview({
       <>
         <MoneyEmpty
           eyebrow="Records · Money · Wishlist"
-          message="No wishlists yet. Make a collection for the things you want — a camera kit, a home office — and price them up."
+          message="No wishlists yet. Make a collection for the things you want - a camera kit, a home office - and price them up."
           action={
             <Button onClick={() => setCreating(true)}>
               <Plus /> New collection

@@ -82,8 +82,8 @@ export function VaultGrid({ documents }: { documents: Document[] }) {
               Archive · Vault
             </p>
             <p className="text-fg-2 mt-3 text-[15px]">
-              The vault is open and empty. Upload your first document — an ID, a
-              contract, a certificate — and it lives here, behind your PIN.
+              The vault is open and empty. Upload your first document - an ID, a
+              contract, a certificate - and it lives here, behind your PIN.
             </p>
             <div className="mt-6 flex justify-center">
               <Button onClick={() => setUploading(true)}>

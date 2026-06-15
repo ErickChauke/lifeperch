@@ -62,7 +62,7 @@ export function HabitCard({
         </div>
       </div>
 
-      {/* Check-in foot — its own click target, never opens the editor. */}
+      {/* Check-in foot - its own click target, never opens the editor. */}
       {count ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">

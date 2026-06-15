@@ -82,7 +82,7 @@ export function TransactionsBoard({
       <>
         <MoneyEmpty
           eyebrow="Records · Money"
-          message="Nothing logged yet. Every rand in and out lives here — add the first one."
+          message="Nothing logged yet. Every rand in and out lives here - add the first one."
           action={
             <Button onClick={() => setCreating(true)}>
               <Plus /> Add transaction
