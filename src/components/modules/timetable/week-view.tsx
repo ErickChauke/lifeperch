@@ -11,6 +11,9 @@ import { EventCard } from "./event-card";
 import type { TimetableEvent } from "./timetable-board";
 
 const HOUR_PX = 48;
+// Breathing room at the top and bottom so the first and last hour labels,
+// which sit centered on the grid edges, are not clipped.
+const GRID_PAD = 8;
 
 // Returns the Monday-first column index an event belongs to, or null.
 function dayColumn(event: TimetableEvent): number | null {
@@ -30,7 +33,7 @@ export function WeekView({
 }) {
   const hours: number[] = [];
   for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) hours.push(h);
-  const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX;
+  const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX + GRID_PAD * 2;
 
   return (
     <div className="bg-surface scrollbar-hide min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border">
@@ -42,7 +45,7 @@ export function WeekView({
               <div
                 key={h}
                 className="text-fg-3 absolute right-1 -translate-y-1/2 font-mono text-[11px]"
-                style={{ top: i * HOUR_PX }}
+                style={{ top: i * HOUR_PX + GRID_PAD }}
               >
                 {String(h).padStart(2, "0")}:00
               </div>
@@ -62,14 +65,14 @@ export function WeekView({
                   <div
                     key={h}
                     className="absolute inset-x-0 border-t border-[var(--border)]"
-                    style={{ top: (i + 1) * HOUR_PX }}
+                    style={{ top: (i + 1) * HOUR_PX + GRID_PAD }}
                   />
                 ))}
                 {dayEvents.map((event) => {
                   const start =
                     timeToMinutes(event.startTime) - GRID_START_HOUR * 60;
                   const end = timeToMinutes(event.endTime) - GRID_START_HOUR * 60;
-                  const top = Math.max(0, (start / 60) * HOUR_PX);
+                  const top = Math.max(0, (start / 60) * HOUR_PX) + GRID_PAD;
                   const height = Math.max(18, ((end - start) / 60) * HOUR_PX - 2);
                   return (
                     <div
