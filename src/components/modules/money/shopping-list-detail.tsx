@@ -251,7 +251,7 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
       )}
 
       {basket.length > 0 ? (
-        <div className="bg-surface border-border-2 fixed inset-x-8 bottom-4 z-20 mx-auto flex max-w-[1100px] items-center justify-between gap-3 rounded-lg border px-5 py-3 shadow-[var(--shadow-pop)] md:left-[272px] md:right-8 md:mx-0">
+        <div className="bg-surface border-border-2 fixed inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[1100px] items-center justify-between gap-3 rounded-lg border px-5 py-3 shadow-[var(--shadow-pop)] md:left-[272px] md:right-8 md:mx-0">
           <span className="text-fg-2 text-sm">
             {basket.length} in basket ·{" "}
             <span className="text-fg font-mono">{formatZAR(centsToRand(basketTotal))}</span>
