@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import {
   WEEKDAYS,
   GRID_START_HOUR,
@@ -8,32 +9,46 @@ import {
   weekdayIndex,
 } from "@/lib/timetable";
 import { EventCard } from "./event-card";
+import { TodoBlockCard } from "./todo-block-card";
 import type { TimetableEvent } from "./timetable-board";
+import type { Todo } from "@/components/modules/todo/todo-board";
 
 const HOUR_PX = 48;
 // Breathing room at the top and bottom so the first and last hour labels,
 // which sit centered on the grid edges, are not clipped.
 const GRID_PAD = 8;
+// Fallback duration for a timed todo saved without an end time.
+const DEFAULT_TODO_MINUTES = 60;
 
-// Returns the Monday-first column index an event belongs to, or null.
-function dayColumn(event: TimetableEvent): number | null {
-  if (event.isRecurring) return event.dayOfWeek;
-  if (event.specificDate) return weekdayIndex(new Date(event.specificDate));
+// Anything schedulable onto the grid: an event or a todo share these fields.
+type Schedulable = {
+  isRecurring: boolean;
+  dayOfWeek: number | null;
+  specificDate: Date | null;
+};
+
+// Returns the Monday-first column index an item belongs to, or null.
+function dayColumn(item: Schedulable): number | null {
+  if (item.isRecurring) return item.dayOfWeek;
+  if (item.specificDate) return weekdayIndex(new Date(item.specificDate));
   return null;
 }
 
-// Weekly time grid: a time gutter plus seven day columns. Events are
-// positioned by their start and end time.
+// Weekly time grid: a time gutter plus seven day columns. Events are positioned
+// by their start and end time. Time-blocked todos overlay as distinct blocks.
 export function WeekView({
   events,
   onEventClick,
+  todos = [],
 }: {
   events: TimetableEvent[];
   onEventClick: (event: TimetableEvent) => void;
+  todos?: Todo[];
 }) {
   const hours: number[] = [];
   for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) hours.push(h);
   const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX + GRID_PAD * 2;
+  const today = format(new Date(), "yyyy-MM-dd");
 
   return (
     <div className="bg-surface scrollbar-hide min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border">
@@ -55,6 +70,9 @@ export function WeekView({
 
         {WEEKDAYS.map((day, dayIdx) => {
           const dayEvents = events.filter((e) => dayColumn(e) === dayIdx);
+          const dayTodos = todos.filter(
+            (t) => t.startTime && dayColumn(t) === dayIdx,
+          );
           return (
             <div key={day} className="flex-1 border-l">
               <div className="bg-surface text-fg-3 sticky top-0 z-10 flex h-10 items-center justify-center border-b font-mono text-xs font-medium uppercase tracking-[0.04em]">
@@ -84,6 +102,25 @@ export function WeekView({
                         event={event}
                         onClick={() => onEventClick(event)}
                       />
+                    </div>
+                  );
+                })}
+                {dayTodos.map((todo) => {
+                  const startMin = timeToMinutes(todo.startTime!);
+                  const endMin = todo.endTime
+                    ? timeToMinutes(todo.endTime)
+                    : startMin + DEFAULT_TODO_MINUTES;
+                  const start = startMin - GRID_START_HOUR * 60;
+                  const end = endMin - GRID_START_HOUR * 60;
+                  const top = Math.max(0, (start / 60) * HOUR_PX) + GRID_PAD;
+                  const height = Math.max(18, ((end - start) / 60) * HOUR_PX - 2);
+                  return (
+                    <div
+                      key={todo.id}
+                      className="absolute inset-x-1 z-10"
+                      style={{ top, height }}
+                    >
+                      <TodoBlockCard todo={todo} today={today} />
                     </div>
                   );
                 })}

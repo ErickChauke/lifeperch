@@ -6,11 +6,18 @@ import { Button } from "@/components/ui/button";
 import { WeekView } from "./week-view";
 import { EventModal } from "./event-modal";
 import type { getEvents } from "@/actions/timetable";
+import type { Todo } from "@/components/modules/todo/todo-board";
 
 export type TimetableEvent = Awaited<ReturnType<typeof getEvents>>[number];
 
 // Client container for the timetable. Owns the add/edit modal state.
-export function TimetableBoard({ events }: { events: TimetableEvent[] }) {
+export function TimetableBoard({
+  events,
+  todos,
+}: {
+  events: TimetableEvent[];
+  todos: Todo[];
+}) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TimetableEvent | null>(null);
 
@@ -32,7 +39,7 @@ export function TimetableBoard({ events }: { events: TimetableEvent[] }) {
           Add event
         </Button>
       </div>
-      <WeekView events={events} onEventClick={openEdit} />
+      <WeekView events={events} onEventClick={openEdit} todos={todos} />
       <EventModal open={open} onOpenChange={setOpen} event={selected} />
     </div>
   );
