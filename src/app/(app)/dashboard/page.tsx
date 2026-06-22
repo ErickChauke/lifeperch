@@ -9,8 +9,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { getTodayTodos } from "@/actions/todo";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { DashboardGreeting } from "@/components/modules/dashboard/dashboard-greeting";
+import { TodaysTodos } from "@/components/modules/dashboard/todays-todos";
+import { QuickAddTodo } from "@/components/modules/dashboard/quick-add-todo";
 
 type QuickStart = {
   title: string;
@@ -50,6 +53,9 @@ export default async function DashboardPage() {
   const session = await auth();
   const name = session?.user?.name?.split(" ")[0] ?? "there";
   const now = new Date();
+  const todayStr = format(now, "yyyy-MM-dd");
+  const { today: dueToday, overdue } = await getTodayTodos();
+  const hasTodos = dueToday.length > 0 || overdue.length > 0;
 
   return (
     <PageShell>
@@ -67,10 +73,22 @@ export default async function DashboardPage() {
             }
           />
 
-          <p className="text-fg-2 mt-4 max-w-[52ch] text-lg leading-relaxed">
-            Nothing scheduled, nothing overdue. This is the shell every part of
-            LifePerch lives inside - pick a place to begin.
-          </p>
+          {hasTodos ? (
+            <TodaysTodos
+              today={todayStr}
+              dueToday={dueToday}
+              overdue={overdue}
+            />
+          ) : (
+            <p className="text-fg-2 mt-4 max-w-[52ch] text-lg leading-relaxed">
+              Nothing scheduled, nothing overdue. This is the shell every part of
+              LifePerch lives inside - pick a place to begin.
+            </p>
+          )}
+
+          <div className="mt-6">
+            <QuickAddTodo today={todayStr} />
+          </div>
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {QUICK_STARTS.map(({ title, desc, href, icon: Icon }) => (

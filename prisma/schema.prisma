@@ -36,6 +36,7 @@ model User {
   appStages       AppStage[]
   timelines       Timeline[]
   milestones      Milestone[]
+  todos           Todo[]
   createdAt       DateTime         @default(now())
 }
 
@@ -318,6 +319,35 @@ model Milestone {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// A scheduled task. It can be dateless (a flexible backlog item), tied to a
+// specificDate, or recurring weekly on dayOfWeek (0 = Monday ... 6 = Sunday).
+// startTime/endTime ("HH:MM") give it a time block on the timetable grid.
+// priority is "low"/"normal"/"high"; status is "pending"/"done". Completion is a
+// single status/completedAt: a recurring todo counts as done only on the day it
+// was completed and reverts to pending the next day. linkedModule/linkedId point
+// at any other module, realising the planned Reminder cross-link.
+model Todo {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  notes        String?
+  priority     String    @default("normal")
+  status       String    @default("pending")
+  tags         String[]  @default([])
+  isRecurring  Boolean   @default(false)
+  dayOfWeek    Int?
+  specificDate DateTime? @db.Date
+  startTime    String?
+  endTime      String?
+  linkedModule String?
+  linkedId     String?
+  linkedLabel  String?
+  completedAt  DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Account {

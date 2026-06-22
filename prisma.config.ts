@@ -7,6 +7,18 @@ import { defineConfig } from "prisma/config";
 // DATABASE_URL from the same file Next.js uses.
 config({ path: ".env.local" });
 
+// Prisma's migration engine connects with the native Postgres driver, which
+// cannot negotiate Neon's channel_binding=require and reports P1001. The app
+// runtime is unaffected because it uses the Neon serverless adapter. Drop just
+// that parameter for the migrate/CLI connection; sslmode=require still applies.
+function migrationUrl(): string | undefined {
+  const url = process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"];
+  return url
+    ?.replace(/&channel_binding=require/g, "")
+    .replace(/\?channel_binding=require&/g, "?")
+    .replace(/\?channel_binding=require$/g, "");
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -16,6 +28,6 @@ export default defineConfig({
     // Migrations run over a direct (unpooled) connection when DIRECT_URL is set,
     // since the Neon pooler does not support the DDL/advisory locks migrate uses.
     // Falls back to DATABASE_URL locally where no separate direct URL is needed.
-    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
+    url: migrationUrl(),
   },
 });
