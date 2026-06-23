@@ -54,15 +54,29 @@ export async function getTodos() {
   });
 }
 
-// Returns the dashboard slices: todos due today and overdue one-offs.
-export async function getTodayTodos() {
-  const todos = await getTodos();
+// Returns the dashboard slices for a given user: todos due today and overdue
+// one-offs. Session-free so the digest cron can call it with an explicit user id.
+export async function getTodayTodosForUser(userId: string) {
+  const todos = await prisma.todo.findMany({
+    where: { userId },
+    orderBy: [
+      { specificDate: "asc" },
+      { startTime: "asc" },
+      { createdAt: "asc" },
+    ],
+  });
   const today = dateToDay(new Date());
   const overdue = todos.filter((t) => isOverdue(t, today));
   const due = todos.filter(
     (t) => !isOverdue(t, today) && bucketOf(t, today) === "today",
   );
   return { today: due, overdue };
+}
+
+// Returns the dashboard slices: todos due today and overdue one-offs.
+export async function getTodayTodos() {
+  const userId = await requireUserId();
+  return getTodayTodosForUser(userId);
 }
 
 // Creates a new todo for the current user.
