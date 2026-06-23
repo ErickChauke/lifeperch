@@ -9,6 +9,7 @@ export const { auth: proxy } = NextAuth(authConfig);
 export default proxy;
 
 export const config = {
-  // Runs on every route except the auth API, the login page, and static assets.
-  matcher: ["/((?!api/auth|login|_next/static|_next/image|favicon.ico).*)"],
+  // Runs on every route except the auth API, the cron API (guarded by its own
+  // secret, no session), the login page, and static assets.
+  matcher: ["/((?!api/auth|api/cron|login|_next/static|_next/image|favicon.ico).*)"],
 };
