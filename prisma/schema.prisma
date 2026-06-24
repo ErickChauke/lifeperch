@@ -40,6 +40,7 @@ model User {
   appStages       AppStage[]
   timelines       Timeline[]
   milestones      Milestone[]
+  todoCollections TodoCollection[]
   todos           Todo[]
   createdAt       DateTime         @default(now())
 }
@@ -383,26 +384,41 @@ model Milestone {
 // single status/completedAt: a recurring todo counts as done only on the day it
 // was completed and reverts to pending the next day. linkedModule/linkedId point
 // at any other module, realising the planned Reminder cross-link.
+// A project: a titled folder that groups todos. description optional. Each
+// project keeps its own list and calendar view.
+model TodoCollection {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  todos       Todo[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Todo {
-  id           String    @id @default(cuid())
+  id           String         @id @default(cuid())
   userId       String
+  collectionId String
   title        String
   notes        String?
-  priority     String    @default("normal")
-  status       String    @default("pending")
-  tags         String[]  @default([])
-  isRecurring  Boolean   @default(false)
+  priority     String         @default("normal")
+  status       String         @default("pending")
+  tags         String[]       @default([])
+  isRecurring  Boolean        @default(false)
   dayOfWeek    Int?
-  specificDate DateTime? @db.Date
+  specificDate DateTime?      @db.Date
   startTime    String?
   endTime      String?
   linkedModule String?
   linkedId     String?
   linkedLabel  String?
   completedAt  DateTime?
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  collection   TodoCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model Account {

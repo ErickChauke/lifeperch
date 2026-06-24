@@ -29,6 +29,14 @@ export function priorityColor(priority: string): string {
   return PRIORITIES.find((p) => p.value === priority)?.color ?? "#5b8cff";
 }
 
+// Validation for a todo project: a title and an optional description.
+export const todoCollectionSchema = z.object({
+  title: z.string().min(1, "Name the project"),
+  description: z.string().nullable().optional(),
+});
+
+export type TodoCollectionInput = z.infer<typeof todoCollectionSchema>;
+
 // The two completion states. Completion stays a single status/completedAt: a
 // recurring todo is only done on the day it was completed (see isDoneToday).
 export const STATUSES = ["pending", "done"] as const;

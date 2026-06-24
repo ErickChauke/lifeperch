@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createTodo } from "@/actions/todo";
+import { quickAddTodo } from "@/actions/todo";
 
 // A one-field quick capture on the dashboard. Adds a normal-priority todo due
 // today so it lands straight in the Today list.
@@ -18,7 +18,7 @@ export function QuickAddTodo({ today }: { today: string }) {
     if (!value) return;
     startTransition(async () => {
       try {
-        await createTodo({
+        await quickAddTodo({
           title: value,
           notes: null,
           priority: "normal",

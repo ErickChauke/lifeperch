@@ -1,25 +1,48 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { PageBody } from "@/components/layout/page-shell";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  PageShell,
+  PageHeader,
+  PageBody,
+} from "@/components/layout/page-shell";
 import { dateToDay } from "@/lib/money";
+import {
+  renameCollection,
+  updateCollectionDescription,
+  deleteCollection,
+} from "@/actions/todo";
 import { TodoCalendar } from "./todo-calendar";
 import { TodoList } from "./todo-list";
 import { TodoModal } from "./todo-modal";
-import type { getTodos } from "@/actions/todo";
+import type { getTodos, getCollection } from "@/actions/todo";
 
 export type Todo = Awaited<ReturnType<typeof getTodos>>[number];
+type Project = NonNullable<Awaited<ReturnType<typeof getCollection>>>;
 
-// Client container for the todo page. Owns the selected day and the add/edit
-// modal, and feeds the calendar the days that carry a due todo.
-export function TodoBoard({ todos }: { todos: Todo[] }) {
+// One project: its todos as a list and a calendar, plus the add/edit modal. The
+// header carries the project title, edit and delete.
+export function TodoBoard({ project }: { project: Project }) {
+  const router = useRouter();
+  const todos = project.todos;
   const today = format(new Date(), "yyyy-MM-dd");
   const [selected, setSelected] = useState(today);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Todo | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const [editingProject, setEditingProject] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(project.title);
+  const [descDraft, setDescDraft] = useState(project.description ?? "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const dueDays = useMemo(() => {
     const set = new Set<string>();
@@ -47,8 +70,105 @@ export function TodoBoard({ todos }: { todos: Todo[] }) {
     setOpen(true);
   }
 
+  function saveProject() {
+    const clean = titleDraft.trim();
+    if (!clean) return;
+    startTransition(async () => {
+      try {
+        await renameCollection(project.id, clean);
+        await updateCollectionDescription(project.id, descDraft);
+        setEditingProject(false);
+      } catch {
+        toast.error("Could not save the project");
+      }
+    });
+  }
+
+  function onDelete() {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await deleteCollection(project.id);
+        router.push("/todo");
+      } catch {
+        toast.error("Could not delete the project");
+      }
+    });
+  }
+
   return (
-    <PageBody className="pt-2 md:pt-2">
+    <PageShell>
+      <PageHeader className="space-y-4">
+        <Link
+          href="/todo"
+          className="text-fg-3 hover:text-fg-2 inline-flex items-center gap-1 font-mono text-xs"
+        >
+          <ChevronLeft className="size-4" /> To-Do
+        </Link>
+
+        {editingProject ? (
+          <div className="space-y-2">
+            <Input
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              autoFocus
+              className="h-9 max-w-sm text-xl font-semibold"
+            />
+            <Textarea
+              value={descDraft}
+              onChange={(e) => setDescDraft(e.target.value)}
+              placeholder="What this project is about (optional)"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={saveProject} disabled={pending}>
+                Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditingProject(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-fg truncate text-[22px] font-semibold tracking-[-0.01em]">
+                {project.title}
+              </h2>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Edit project"
+                  onClick={() => {
+                    setTitleDraft(project.title);
+                    setDescDraft(project.description ?? "");
+                    setEditingProject(true);
+                  }}
+                >
+                  <Pencil className="text-fg-3 size-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={confirmDelete ? "destructive" : "ghost"}
+                  aria-label="Delete project"
+                  onClick={onDelete}
+                  disabled={pending}
+                >
+                  {confirmDelete ? "Delete project?" : <Trash2 className="text-fg-3 size-4" />}
+                </Button>
+              </div>
+            </div>
+            {project.description ? (
+              <p className="text-fg-2 text-sm">{project.description}</p>
+            ) : null}
+          </div>
+        )}
+      </PageHeader>
+
+      <PageBody className="pt-2 md:pt-2">
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex w-full flex-col gap-4 lg:w-[300px] lg:shrink-0">
             <TodoCalendar
@@ -73,7 +193,13 @@ export function TodoBoard({ todos }: { todos: Todo[] }) {
             />
           </div>
         </div>
-        <TodoModal open={open} onOpenChange={setOpen} todo={editing} />
-    </PageBody>
+        <TodoModal
+          open={open}
+          onOpenChange={setOpen}
+          collectionId={project.id}
+          todo={editing}
+        />
+      </PageBody>
+    </PageShell>
   );
 }
