@@ -44,7 +44,7 @@ export function CardDetailView({ collection }: { collection: CardDetail }) {
         await renameCollection(collection.id, clean);
         setRenaming(false);
       } catch {
-        toast.error("Could not rename the card");
+        toast.error("Could not rename the folder");
       }
     });
   }
@@ -59,7 +59,7 @@ export function CardDetailView({ collection }: { collection: CardDetail }) {
         await deleteCollection(collection.id);
         router.push("/vault");
       } catch {
-        toast.error("Could not delete the card");
+        toast.error("Could not delete the folder");
       }
     });
   }
@@ -128,7 +128,7 @@ export function CardDetailView({ collection }: { collection: CardDetail }) {
               <Button
                 size="icon-sm"
                 variant="ghost"
-                aria-label="Card settings"
+                aria-label="Folder settings"
                 onClick={() => setSettingsOpen(true)}
               >
                 <Settings className="text-fg-3 size-4" />
@@ -136,7 +136,7 @@ export function CardDetailView({ collection }: { collection: CardDetail }) {
               <Button
                 size="icon-sm"
                 variant="ghost"
-                aria-label="Rename card"
+                aria-label="Rename folder"
                 onClick={() => {
                   setTitleDraft(collection.title);
                   setRenaming(true);
@@ -147,11 +147,11 @@ export function CardDetailView({ collection }: { collection: CardDetail }) {
               <Button
                 size="sm"
                 variant={confirmDelete ? "destructive" : "ghost"}
-                aria-label="Delete card"
+                aria-label="Delete folder"
                 onClick={onDelete}
                 disabled={pending}
               >
-                {confirmDelete ? "Delete card?" : <Trash2 className="text-fg-3 size-4" />}
+                {confirmDelete ? "Delete folder?" : <Trash2 className="text-fg-3 size-4" />}
               </Button>
             </div>
           ) : null}
@@ -174,7 +174,7 @@ export function CardDetailView({ collection }: { collection: CardDetail }) {
 
         {count === 0 ? (
           <p className="text-fg-3 text-sm">
-            Nothing in this card yet. Upload your first document.
+            Nothing in this folder yet. Upload your first document.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Plus, Folder } from "lucide-react";
+import { Lock, FolderPlus, Folder, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   PageShell,
@@ -12,6 +12,7 @@ import {
 } from "@/components/layout/page-shell";
 import { lockVault } from "@/actions/vault";
 import { CardModal } from "./card-modal";
+import { VaultUploadModal } from "./vault-upload-modal";
 import type { getCollections } from "@/actions/vault";
 
 type Collection = Awaited<ReturnType<typeof getCollections>>[number];
@@ -19,7 +20,14 @@ type Collection = Awaited<ReturnType<typeof getCollections>>[number];
 export function VaultBoard({ collections }: { collections: Collection[] }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  // Open (no-password) folders are the upload targets from here; locked folders
+  // are uploaded into from inside, after unlocking.
+  const openFolders = collections
+    .filter((c) => !c.passwordHash)
+    .map((c) => ({ id: c.id, title: c.title }));
 
   function relock() {
     startTransition(async () => {
@@ -35,15 +43,18 @@ export function VaultBoard({ collections }: { collections: Collection[] }) {
           <div>
             <h1 className="text-fg text-2xl font-semibold">Vault</h1>
             <p className="text-fg-3 mt-1 font-mono text-xs">
-              {collections.length} {collections.length === 1 ? "card" : "cards"}
+              {collections.length} {collections.length === 1 ? "folder" : "folders"}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={relock} disabled={pending}>
               <Lock /> Re-lock
             </Button>
-            <Button onClick={() => setCreating(true)}>
-              <Plus /> New card
+            <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+              <FolderPlus /> New folder
+            </Button>
+            <Button size="sm" onClick={() => setUploading(true)}>
+              <Upload /> Upload
             </Button>
           </div>
         </div>
@@ -56,12 +67,15 @@ export function VaultBoard({ collections }: { collections: Collection[] }) {
               Archive · Vault
             </p>
             <p className="text-fg-2 mt-3 text-[15px]">
-              The vault is open and empty. Make your first card - a folder for IDs,
-              contracts or photos - and group your documents inside it.
+              The vault is open and empty. Upload your first document - an ID, a
+              contract, a certificate - or make a folder to group them in.
             </p>
-            <div className="mt-6 flex justify-center">
-              <Button onClick={() => setCreating(true)}>
-                <Plus /> New card
+            <div className="mt-6 flex justify-center gap-2">
+              <Button variant="outline" onClick={() => setCreating(true)}>
+                <FolderPlus /> New folder
+              </Button>
+              <Button onClick={() => setUploading(true)}>
+                <Upload /> Upload
               </Button>
             </div>
           </div>
@@ -74,6 +88,11 @@ export function VaultBoard({ collections }: { collections: Collection[] }) {
         )}
 
         <CardModal open={creating} onOpenChange={setCreating} />
+        <VaultUploadModal
+          folders={openFolders}
+          open={uploading}
+          onOpenChange={setUploading}
+        />
       </PageBody>
     </PageShell>
   );
@@ -108,7 +127,7 @@ function CardTile({ collection }: { collection: Collection }) {
 
       <span className="text-fg-3 mt-auto font-mono text-xs">
         {count === 0
-          ? "Empty card"
+          ? "Empty folder"
           : `${count} ${count === 1 ? "document" : "documents"}`}
       </span>
     </Link>

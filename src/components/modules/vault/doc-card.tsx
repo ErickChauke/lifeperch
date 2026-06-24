@@ -21,8 +21,8 @@ const KIND_ICONS = {
   file: File,
 } as const;
 
-// A single document tile inside a card: file icon, title, format/size and date,
-// with a hover delete. Grouping now lives in the card, so there is no category.
+// A single document tile inside a folder: file icon, title, format/size and date,
+// with a hover delete. Grouping now lives in the folder, so there is no category.
 export function DocCard({ doc }: { doc: VaultDoc }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
