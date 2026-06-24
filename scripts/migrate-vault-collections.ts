@@ -17,16 +17,21 @@ neonConfig.webSocketConstructor = ws;
 // category goes to "Other"), then its collectionId is set. Run once with
 // npx tsx scripts/migrate-vault-collections.ts, before the migration that
 // makes collectionId required and drops the category column.
+// Raw SQL is used to read the old category column and the then-nullable
+// collectionId: both are gone from the schema after the finalize migration, so
+// the typed client can no longer name them. This is a one-off historical script.
+type OrphanDoc = { id: string; userId: string; category: string | null };
+
 async function main() {
   const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
   const prisma = new PrismaClient({ adapter });
 
-  const documents = await prisma.document.findMany({
-    where: { collectionId: null },
-  });
+  const documents = await prisma.$queryRaw<OrphanDoc[]>`
+    SELECT id, "userId", category FROM "Document" WHERE "collectionId" IS NULL
+  `;
 
   // Group orphan documents by user and old category.
-  const groups = new Map<string, typeof documents>();
+  const groups = new Map<string, OrphanDoc[]>();
   for (const doc of documents) {
     const title = doc.category?.trim() || "Other";
     const key = `${doc.userId}::${title}`;
@@ -41,10 +46,11 @@ async function main() {
     const card = await prisma.vaultCollection.create({
       data: { userId, title },
     });
-    await prisma.document.updateMany({
-      where: { id: { in: docs.map((d) => d.id) } },
-      data: { collectionId: card.id },
-    });
+    for (const doc of docs) {
+      await prisma.$executeRaw`
+        UPDATE "Document" SET "collectionId" = ${card.id} WHERE id = ${doc.id}
+      `;
+    }
     cards += 1;
   }
 

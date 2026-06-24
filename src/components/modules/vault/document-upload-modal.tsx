@@ -13,17 +13,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
-import { DOCUMENT_CATEGORIES, formatBytes } from "@/lib/vault";
+import { formatBytes } from "@/lib/vault";
 import { uploadFile, MAX_UPLOAD_BYTES } from "@/lib/upload";
 import { createDocument } from "@/actions/vault";
 
 type Phase = "idle" | "uploading" | "failed";
 
 export function DocumentUploadModal({
+  collectionId,
   open,
   onOpenChange,
 }: {
+  collectionId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -31,7 +32,6 @@ export function DocumentUploadModal({
   const fileInput = useRef<HTMLInputElement>(null);
   const [, startTransition] = useTransition();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string>(DOCUMENT_CATEGORIES[0]);
   const [file, setFile] = useState<File | null>(null);
   const [rejected, setRejected] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -39,7 +39,6 @@ export function DocumentUploadModal({
 
   function reset() {
     setTitle("");
-    setCategory(DOCUMENT_CATEGORIES[0]);
     setFile(null);
     setRejected(null);
     setPhase("idle");
@@ -66,7 +65,7 @@ export function DocumentUploadModal({
       try {
         const result = await uploadFile(file, "lifeperch/vault", setProgress);
         startTransition(async () => {
-          await createDocument({ title, category, ...result });
+          await createDocument(collectionId, { title, ...result });
           toast.success("Document uploaded");
           reset();
           onOpenChange(false);
@@ -101,21 +100,6 @@ export function DocumentUploadModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Lease agreement"
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="doc-category">Category</Label>
-            <Select
-              id="doc-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {DOCUMENT_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </Select>
           </div>
 
           <div className="space-y-1.5">
