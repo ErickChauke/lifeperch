@@ -4,7 +4,7 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UNTITLED } from "@/lib/notes";
 import { cn } from "@/lib/utils";
-import { NoteContent } from "./note-content";
+import { RichContent } from "@/components/rich-text/rich-content";
 import type { Note } from "./notes-board";
 
 // Read-only view of a single note: title, tags and the rendered body. Edit opens
@@ -59,7 +59,7 @@ export function NoteDetail({
         ) : null}
 
         {note.body.trim() ? (
-          <NoteContent body={note.body} bodyFormat={note.bodyFormat} />
+          <RichContent body={note.body} bodyFormat={note.bodyFormat} />
         ) : (
           <p className="text-fg-4 text-sm">This note is empty.</p>
         )}

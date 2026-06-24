@@ -8,11 +8,12 @@ function safeHref(href: string): boolean {
   return /^https?:\/\//i.test(h) || h.startsWith("/") || h.startsWith("#");
 }
 
-// Sanitizes rich note html before it is stored. Allows the small set of tags the
+// Sanitizes rich body html before it is stored. Allows the small set of tags the
 // editor produces (headings, lists, tables, task checkboxes, quotes, code) and
 // drops everything else, including scripts and event handlers. Runs server-side
-// only so sanitize-html never reaches the browser bundle.
-export function sanitizeNoteHtml(html: string): string {
+// only so sanitize-html never reaches the browser bundle. Shared by every module
+// that stores rich html (notes, journal, literature).
+export function sanitizeRichHtml(html: string): string {
   return sanitizeHtml(html, {
     allowedTags: [
       "h1",

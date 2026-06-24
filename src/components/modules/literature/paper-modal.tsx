@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Segmented } from "@/components/modules/money/segmented";
+import { RichEditor } from "@/components/rich-text/rich-editor";
+import { seedHtml } from "@/lib/rich-text";
 import { LIT_STATUSES, type LitStatus } from "@/lib/literature";
 import { uploadFile, MAX_UPLOAD_BYTES } from "@/lib/upload";
 import { formatBytes } from "@/lib/vault";
@@ -63,7 +64,9 @@ function PaperForm({ paper, onClose }: { paper: Paper | null; onClose: () => voi
   const [fileUrl, setFileUrl] = useState<string | null>(paper?.fileUrl ?? null);
   const [publicId, setPublicId] = useState<string | null>(paper?.publicId ?? null);
   const [file, setFile] = useState<File | null>(null);
-  const [notes, setNotes] = useState(paper?.notes ?? "");
+  const [notes, setNotes] = useState(() =>
+    seedHtml(paper?.notes ?? "", paper?.notesFormat ?? "markdown"),
+  );
   const [tags, setTags] = useState<string[]>(paper?.tags ?? []);
   const [tagDraft, setTagDraft] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -129,6 +132,7 @@ function PaperForm({ paper, onClose }: { paper: Paper | null; onClose: () => voi
         fileUrl: nextFileUrl,
         publicId: nextPublicId,
         notes,
+        notesFormat: "html" as const,
         tags,
       };
 
@@ -279,13 +283,12 @@ function PaperForm({ paper, onClose }: { paper: Paper | null; onClose: () => voi
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="lit-notes">Notes</Label>
-          <Textarea
-            id="lit-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+          <Label>Notes</Label>
+          <RichEditor
+            initialHtml={notes}
             placeholder="Why it matters, where you stopped…"
-            className="min-h-[80px]"
+            minHeightClass="min-h-[140px]"
+            onChange={setNotes}
           />
         </div>
 

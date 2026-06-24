@@ -3,6 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { dateToDay } from "@/lib/journal";
 import { previewText } from "@/lib/notes";
+import { htmlPreview } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import type { Entry } from "./journal-board";
 
@@ -28,9 +29,11 @@ export function PastEntries({
         entries.map((entry) => {
           const day = dateToDay(entry.date);
           const titled = !!entry.title?.trim();
-          const label = titled
-            ? entry.title!.trim()
-            : previewText(entry.body) || "-";
+          const snippet =
+            entry.bodyFormat === "html"
+              ? htmlPreview(entry.body)
+              : previewText(entry.body);
+          const label = titled ? entry.title!.trim() : snippet || "-";
           return (
             <button
               key={entry.id}

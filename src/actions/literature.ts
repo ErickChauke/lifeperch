@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { destroyAsset } from "@/lib/cloudinary";
 import { literatureSchema, type LiteratureInput } from "@/lib/literature";
 import { normalizeTags } from "@/lib/notes";
+import { sanitizeRichHtml } from "@/lib/rich-html";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -24,7 +25,8 @@ function toRecord(data: LiteratureInput) {
     url: data.url?.trim() || null,
     fileUrl: data.fileUrl || null,
     publicId: data.publicId || null,
-    notes: data.notes,
+    notes: data.notesFormat === "html" ? sanitizeRichHtml(data.notes) : data.notes,
+    notesFormat: data.notesFormat,
     tags: normalizeTags(data.tags),
   };
 }

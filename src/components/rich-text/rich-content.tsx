@@ -1,9 +1,9 @@
 import { Markdown } from "./markdown";
 
-// Renders a note body for reading. Rich html notes (sanitized on save) render in
-// a prose container styled to the app tokens; legacy markdown notes render
-// through the safe markdown component.
-export function NoteContent({
+// Renders a rich-text body for reading, shared across modules. Rich html bodies
+// (sanitized on save) render in a prose container styled to the app tokens;
+// legacy markdown/plain bodies render through the safe markdown component.
+export function RichContent({
   body,
   bodyFormat,
 }: {

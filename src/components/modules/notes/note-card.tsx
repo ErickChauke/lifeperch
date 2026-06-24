@@ -1,5 +1,6 @@
 import { differenceInDays, format, formatDistanceToNowStrict } from "date-fns";
-import { htmlPreview, previewText, UNTITLED } from "@/lib/notes";
+import { previewText, UNTITLED } from "@/lib/notes";
+import { htmlPreview } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import type { Note } from "./notes-board";
 

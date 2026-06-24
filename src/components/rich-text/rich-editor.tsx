@@ -224,15 +224,21 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 }
 
-// A Tiptap WYSIWYG editor for note bodies. Seeded from an html string, it emits
-// the current html on every change. Rendered client-side with immediatelyRender
-// off to avoid App Router hydration mismatches.
+// A Tiptap WYSIWYG editor for rich-text bodies, shared across modules. Seeded
+// from an html string, it emits the current html on every change. Rendered
+// client-side with immediatelyRender off to avoid App Router hydration
+// mismatches. minHeightClass tunes the editing area for compact (modal) versus
+// full-page surfaces.
 export function RichEditor({
   initialHtml,
   onChange,
+  placeholder = "Write something…",
+  minHeightClass = "min-h-[360px]",
 }: {
   initialHtml: string;
   onChange: (html: string) => void;
+  placeholder?: string;
+  minHeightClass?: string;
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -253,13 +259,12 @@ export function RichEditor({
       TableCell,
       TaskList,
       TaskItem.configure({ nested: true }),
-      Placeholder.configure({ placeholder: "Write your note…" }),
+      Placeholder.configure({ placeholder }),
     ],
     content: initialHtml,
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm max-w-none min-h-[360px] p-4 focus:outline-none",
+        class: `prose prose-sm max-w-none ${minHeightClass} p-4 focus:outline-none`,
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),

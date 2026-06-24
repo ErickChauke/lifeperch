@@ -71,15 +71,16 @@ model Note {
 }
 
 model DailyEntry {
-  id        String   @id @default(cuid())
-  userId    String
-  date      DateTime @db.Date
-  title     String?
-  body      String   @default("")
-  mood      Int      @default(5)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime @db.Date
+  title      String?
+  body       String   @default("") @db.Text
+  bodyFormat String   @default("markdown")
+  mood       Int      @default(5)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([userId, date])
 }
@@ -191,20 +192,21 @@ model Document {
 // A literature review entry. Either an uploaded PDF (fileUrl + publicId in
 // Cloudinary) or an external link (url). status is "to-read"/"reading"/"read".
 model Literature {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  authors   String   @default("")
-  year      Int?
-  status    String   @default("to-read")
-  url       String?
-  fileUrl   String?
-  publicId  String?
-  notes     String   @default("")
-  tags      String[] @default([])
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  authors     String   @default("")
+  year        Int?
+  status      String   @default("to-read")
+  url         String?
+  fileUrl     String?
+  publicId    String?
+  notes       String   @default("") @db.Text
+  notesFormat String   @default("markdown")
+  tags        String[] @default([])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // A habit to keep. kind is "boolean" (done/not-done) or "count" (toward a daily
