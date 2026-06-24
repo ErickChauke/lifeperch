@@ -1,8 +1,8 @@
-import { getNotes } from "@/actions/notes";
-import { NotesBoard } from "@/components/modules/notes/notes-board";
+import { getCollections } from "@/actions/notes";
+import { NotebooksBoard } from "@/components/modules/notes/notebooks-board";
 
-// Notes page. Fetches the user's notes and hands them to the board.
+// Notes landing: notebooks. Notes live inside a notebook.
 export default async function NotesPage() {
-  const notes = await getNotes();
-  return <NotesBoard notes={notes} />;
+  const notebooks = await getCollections();
+  return <NotebooksBoard notebooks={notebooks} />;
 }

@@ -53,10 +53,12 @@ const PRIORITY_OPTIONS = [...PRIORITIES]
 export function TodoModal({
   open,
   onOpenChange,
+  collectionId,
   todo,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  collectionId: string;
   todo: Todo | null;
 }) {
   const [pending, startTransition] = useTransition();
@@ -130,7 +132,7 @@ export function TodoModal({
     startTransition(async () => {
       try {
         if (todo) await updateTodo(todo.id, values);
-        else await createTodo(values);
+        else await createTodo(collectionId, values);
         toast.success(todo ? "Todo updated" : "Todo added");
         onOpenChange(false);
       } catch {

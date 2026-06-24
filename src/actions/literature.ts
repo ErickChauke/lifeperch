@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { destroyAsset } from "@/lib/cloudinary";
-import { literatureSchema, type LiteratureInput } from "@/lib/literature";
+import {
+  literatureSchema,
+  litCollectionSchema,
+  type LiteratureInput,
+  type LitCollectionInput,
+} from "@/lib/literature";
 import { normalizeTags } from "@/lib/notes";
 import { sanitizeRichHtml } from "@/lib/rich-html";
 
@@ -13,6 +18,11 @@ async function requireUserId(): Promise<string> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Not authenticated");
   return session.user.id;
+}
+
+function revalidateLit(id?: string) {
+  revalidatePath("/literature");
+  if (id) revalidatePath(`/literature/${id}`);
 }
 
 // Maps validated input to the fields stored on a Literature row.
@@ -31,25 +41,104 @@ function toRecord(data: LiteratureInput) {
   };
 }
 
-// Fetches the user's literature entries, newest first.
-export async function getLit() {
+// --- Topics (collections) ---
+
+// Fetches the user's topics, newest first, with their paper counts.
+export async function getCollections() {
   const userId = await requireUserId();
-  return prisma.literature.findMany({
+  return prisma.literatureCollection.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
+    include: { _count: { select: { papers: true } } },
   });
 }
 
-// Creates a literature entry.
-export async function createLit(input: LiteratureInput) {
+// Fetches one topic and its papers (newest first), scoped to the user.
+export async function getCollection(id: string) {
   const userId = await requireUserId();
-  const data = literatureSchema.parse(input);
-  await prisma.literature.create({ data: { userId, ...toRecord(data) } });
-  revalidatePath("/literature");
+  const collection = await prisma.literatureCollection.findFirst({
+    where: { id, userId },
+  });
+  if (!collection) return null;
+  const papers = await prisma.literature.findMany({
+    where: { userId, collectionId: id },
+    orderBy: { createdAt: "desc" },
+  });
+  return { ...collection, papers };
 }
 
-// Updates a literature entry, scoped to the current user. When the uploaded PDF
-// is replaced or removed, the old Cloudinary asset is cleaned up.
+// Creates a topic and returns it so the UI can navigate into it.
+export async function createCollection(input: LitCollectionInput) {
+  const userId = await requireUserId();
+  const data = litCollectionSchema.parse(input);
+  const collection = await prisma.literatureCollection.create({
+    data: {
+      userId,
+      title: data.title.trim(),
+      description: data.description?.trim() || null,
+    },
+  });
+  revalidateLit(collection.id);
+  return collection;
+}
+
+// Renames a topic.
+export async function renameCollection(id: string, title: string) {
+  const userId = await requireUserId();
+  const clean = title.trim();
+  if (!clean) return;
+  await prisma.literatureCollection.updateMany({
+    where: { id, userId },
+    data: { title: clean },
+  });
+  revalidateLit(id);
+}
+
+// Updates a topic's description (empty clears it).
+export async function updateCollectionDescription(id: string, description: string) {
+  const userId = await requireUserId();
+  await prisma.literatureCollection.updateMany({
+    where: { id, userId },
+    data: { description: description.trim() || null },
+  });
+  revalidateLit(id);
+}
+
+// Deletes a topic, its papers, and their uploaded PDFs.
+export async function deleteCollection(id: string) {
+  const userId = await requireUserId();
+  const collection = await prisma.literatureCollection.findFirst({
+    where: { id, userId },
+  });
+  if (!collection) return;
+  const papers = await prisma.literature.findMany({
+    where: { userId, collectionId: id },
+  });
+  for (const paper of papers) {
+    if (paper.publicId) await destroyAsset(paper.publicId);
+  }
+  await prisma.literatureCollection.deleteMany({ where: { id, userId } });
+  revalidateLit();
+}
+
+// --- Papers ---
+
+// Creates a paper inside a topic the user owns.
+export async function createLit(collectionId: string, input: LiteratureInput) {
+  const userId = await requireUserId();
+  const collection = await prisma.literatureCollection.findFirst({
+    where: { id: collectionId, userId },
+  });
+  if (!collection) throw new Error("Topic not found");
+  const data = literatureSchema.parse(input);
+  await prisma.literature.create({
+    data: { userId, collectionId, ...toRecord(data) },
+  });
+  revalidateLit(collectionId);
+}
+
+// Updates a paper, scoped to the current user. When the uploaded PDF is replaced
+// or removed, the old Cloudinary asset is cleaned up.
 export async function updateLit(id: string, input: LiteratureInput) {
   const userId = await requireUserId();
   const data = literatureSchema.parse(input);
@@ -59,15 +148,15 @@ export async function updateLit(id: string, input: LiteratureInput) {
     await destroyAsset(existing.publicId);
   }
   await prisma.literature.updateMany({ where: { id, userId }, data: toRecord(data) });
-  revalidatePath("/literature");
+  revalidateLit(existing.collectionId);
 }
 
-// Deletes a literature entry and its uploaded PDF (if any).
+// Deletes a paper and its uploaded PDF (if any).
 export async function deleteLit(id: string) {
   const userId = await requireUserId();
   const lit = await prisma.literature.findFirst({ where: { id, userId } });
   if (!lit) return;
   if (lit.publicId) await destroyAsset(lit.publicId);
   await prisma.literature.deleteMany({ where: { id, userId } });
-  revalidatePath("/literature");
+  revalidateLit(lit.collectionId);
 }

@@ -17,6 +17,14 @@ export function statusLabel(status: string): string {
   return LIT_STATUSES.find((s) => s.value === status)?.label ?? status;
 }
 
+// Validation for a literature topic: a title and an optional description.
+export const litCollectionSchema = z.object({
+  title: z.string().min(1, "Name the topic"),
+  description: z.string().nullable().optional(),
+});
+
+export type LitCollectionInput = z.infer<typeof litCollectionSchema>;
+
 // Shared validation for the literature form and the server actions. A paper has
 // either an uploaded PDF (fileUrl + publicId) or an external link (url), or
 // neither.
