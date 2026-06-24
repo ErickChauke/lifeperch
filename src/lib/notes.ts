@@ -14,6 +14,14 @@ export const noteSchema = z.object({
 
 export type NoteInput = z.infer<typeof noteSchema>;
 
+// Validation for a notebook: a title and an optional description.
+export const noteCollectionSchema = z.object({
+  title: z.string().min(1, "Name the notebook"),
+  description: z.string().nullable().optional(),
+});
+
+export type NoteCollectionInput = z.infer<typeof noteCollectionSchema>;
+
 // Fallback title for a note saved without one.
 export const UNTITLED = "Untitled note";
 

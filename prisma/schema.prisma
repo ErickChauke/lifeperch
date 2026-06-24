@@ -20,6 +20,7 @@ model User {
   accounts        Account[]
   sessions        Session[]
   timetableEvents TimetableEvent[]
+  noteCollections NoteCollection[]
   notes           Note[]
   dailyEntries    DailyEntry[]
   transactions    Transaction[]
@@ -60,16 +61,30 @@ model TimetableEvent {
   createdAt    DateTime  @default(now())
 }
 
+// A notebook: a titled folder that groups notes by topic. description optional.
+model NoteCollection {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  notes       Note[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Note {
-  id         String   @id @default(cuid())
-  userId     String
-  title      String
-  body       String   @default("") @db.Text
-  bodyFormat String   @default("markdown")
-  tags       String[] @default([])
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String         @id @default(cuid())
+  userId       String
+  collectionId String
+  title        String
+  body         String         @default("") @db.Text
+  bodyFormat   String         @default("markdown")
+  tags         String[]       @default([])
+  collection   NoteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model DailyEntry {

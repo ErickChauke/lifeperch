@@ -2,7 +2,11 @@ import { differenceInDays, format, formatDistanceToNowStrict } from "date-fns";
 import { previewText, UNTITLED } from "@/lib/notes";
 import { htmlPreview } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
-import type { Note } from "./notes-board";
+import type { getCollection } from "@/actions/notes";
+
+export type Note = NonNullable<
+  Awaited<ReturnType<typeof getCollection>>
+>["notes"][number];
 
 // Relative for the last week ("2 hours ago"), then a calendar day.
 function updatedLabel(date: Date): string {

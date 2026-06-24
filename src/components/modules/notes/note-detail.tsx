@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UNTITLED } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/rich-text/rich-content";
-import type { Note } from "./notes-board";
+import type { Note } from "./note-card";
 
 // Read-only view of a single note: title, tags and the rendered body. Edit opens
 // the note in the rich editor.

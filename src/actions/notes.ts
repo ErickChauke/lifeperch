@@ -3,7 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { noteSchema, normalizeTags, displayTitle, type NoteInput } from "@/lib/notes";
+import {
+  noteSchema,
+  noteCollectionSchema,
+  normalizeTags,
+  displayTitle,
+  type NoteInput,
+  type NoteCollectionInput,
+} from "@/lib/notes";
 import { sanitizeRichHtml } from "@/lib/rich-html";
 
 // Returns the current user id or throws when there is no session.
@@ -11,6 +18,11 @@ async function requireUserId(): Promise<string> {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Not authenticated");
   return session.user.id;
+}
+
+function revalidateNotes(id?: string) {
+  revalidatePath("/notes");
+  if (id) revalidatePath(`/notes/${id}`);
 }
 
 // Maps validated form input to the fields stored on a Note. Rich html bodies are
@@ -24,23 +36,90 @@ function toRecord(data: NoteInput) {
   };
 }
 
-// Fetches the current user's notes, newest first. An optional tag list narrows
-// to notes carrying every selected tag.
-export async function getNotes(tags?: string[]) {
+// --- Notebooks (collections) ---
+
+// Fetches the user's notebooks, newest first, with their note counts.
+export async function getCollections() {
   const userId = await requireUserId();
-  const active = normalizeTags(tags ?? []);
-  return prisma.note.findMany({
-    where: { userId, ...(active.length ? { tags: { hasEvery: active } } : {}) },
-    orderBy: { updatedAt: "desc" },
+  return prisma.noteCollection.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { notes: true } } },
   });
 }
 
-// Creates a new note for the current user.
-export async function createNote(input: NoteInput) {
+// Fetches one notebook and its notes (most recently edited first), scoped.
+export async function getCollection(id: string) {
   const userId = await requireUserId();
+  const collection = await prisma.noteCollection.findFirst({
+    where: { id, userId },
+  });
+  if (!collection) return null;
+  const notes = await prisma.note.findMany({
+    where: { userId, collectionId: id },
+    orderBy: { updatedAt: "desc" },
+  });
+  return { ...collection, notes };
+}
+
+// Creates a notebook and returns it so the UI can navigate into it.
+export async function createCollection(input: NoteCollectionInput) {
+  const userId = await requireUserId();
+  const data = noteCollectionSchema.parse(input);
+  const collection = await prisma.noteCollection.create({
+    data: {
+      userId,
+      title: data.title.trim(),
+      description: data.description?.trim() || null,
+    },
+  });
+  revalidateNotes(collection.id);
+  return collection;
+}
+
+// Renames a notebook.
+export async function renameCollection(id: string, title: string) {
+  const userId = await requireUserId();
+  const clean = title.trim();
+  if (!clean) return;
+  await prisma.noteCollection.updateMany({
+    where: { id, userId },
+    data: { title: clean },
+  });
+  revalidateNotes(id);
+}
+
+// Updates a notebook's description (empty clears it).
+export async function updateCollectionDescription(id: string, description: string) {
+  const userId = await requireUserId();
+  await prisma.noteCollection.updateMany({
+    where: { id, userId },
+    data: { description: description.trim() || null },
+  });
+  revalidateNotes(id);
+}
+
+// Deletes a notebook and its notes.
+export async function deleteCollection(id: string) {
+  const userId = await requireUserId();
+  await prisma.noteCollection.deleteMany({ where: { id, userId } });
+  revalidateNotes();
+}
+
+// --- Notes ---
+
+// Creates a new note inside a notebook the user owns.
+export async function createNote(collectionId: string, input: NoteInput) {
+  const userId = await requireUserId();
+  const collection = await prisma.noteCollection.findFirst({
+    where: { id: collectionId, userId },
+  });
+  if (!collection) throw new Error("Notebook not found");
   const data = noteSchema.parse(input);
-  const note = await prisma.note.create({ data: { userId, ...toRecord(data) } });
-  revalidatePath("/notes");
+  const note = await prisma.note.create({
+    data: { userId, collectionId, ...toRecord(data) },
+  });
+  revalidateNotes(collectionId);
   return note;
 }
 
@@ -48,13 +127,17 @@ export async function createNote(input: NoteInput) {
 export async function updateNote(id: string, input: NoteInput) {
   const userId = await requireUserId();
   const data = noteSchema.parse(input);
+  const existing = await prisma.note.findFirst({ where: { id, userId } });
+  if (!existing) return;
   await prisma.note.updateMany({ where: { id, userId }, data: toRecord(data) });
-  revalidatePath("/notes");
+  revalidateNotes(existing.collectionId);
 }
 
 // Deletes a note, scoped to the current user.
 export async function deleteNote(id: string) {
   const userId = await requireUserId();
+  const existing = await prisma.note.findFirst({ where: { id, userId } });
+  if (!existing) return;
   await prisma.note.deleteMany({ where: { id, userId } });
-  revalidatePath("/notes");
+  revalidateNotes(existing.collectionId);
 }

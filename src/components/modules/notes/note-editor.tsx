@@ -10,17 +10,19 @@ import { noteSchema, normalizeTags, type NoteInput } from "@/lib/notes";
 import { seedHtml } from "@/lib/rich-text";
 import { createNote, updateNote, deleteNote } from "@/actions/notes";
 import { RichEditor } from "@/components/rich-text/rich-editor";
-import type { Note } from "./notes-board";
+import type { Note } from "./note-card";
 
 // The note editor: title, tag set, and a rich WYSIWYG body, with explicit save.
 // Delete asks for one inline confirm. A null note is a new note that is not
-// persisted until first save. Legacy markdown notes are converted to html to
-// seed the editor and saved back as html.
+// persisted until first save (into collectionId). Legacy markdown notes are
+// converted to html to seed the editor and saved back as html.
 export function NoteEditor({
   note,
+  collectionId,
   onClose,
 }: {
   note: Note | null;
+  collectionId: string;
   onClose: () => void;
 }) {
   const [pending, startTransition] = useTransition();
@@ -71,7 +73,7 @@ export function NoteEditor({
     startTransition(async () => {
       try {
         if (note) await updateNote(note.id, payload);
-        else await createNote(payload);
+        else await createNote(collectionId, payload);
         toast.success(note ? "Note saved" : "Note created");
         onClose();
       } catch {
