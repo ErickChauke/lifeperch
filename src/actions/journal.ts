@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { entrySchema, dayToDate, type EntryInput } from "@/lib/journal";
+import { sanitizeRichHtml } from "@/lib/rich-html";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -17,7 +18,8 @@ async function requireUserId(): Promise<string> {
 function toRecord(data: EntryInput) {
   return {
     title: data.title?.trim() || null,
-    body: data.body,
+    body: data.bodyFormat === "html" ? sanitizeRichHtml(data.body) : data.body,
+    bodyFormat: data.bodyFormat,
     mood: data.mood,
   };
 }

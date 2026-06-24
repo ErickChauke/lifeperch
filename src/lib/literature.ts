@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RICH_BODY_MAX, bodyFormatSchema } from "@/lib/rich-text";
 
 // Reading status for a paper, shown as a badge.
 export const LIT_STATUSES = [
@@ -27,7 +28,8 @@ export const literatureSchema = z.object({
   url: z.string().nullable(),
   fileUrl: z.string().nullable(),
   publicId: z.string().nullable(),
-  notes: z.string(),
+  notes: z.string().max(RICH_BODY_MAX),
+  notesFormat: bodyFormatSchema,
   tags: z.array(z.string()),
 });
 

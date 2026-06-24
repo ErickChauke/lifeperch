@@ -5,7 +5,9 @@ import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MOOD_DEFAULT, type EntryInput } from "@/lib/journal";
+import { seedHtml } from "@/lib/rich-text";
 import { createEntry, updateEntry } from "@/actions/journal";
+import { RichEditor } from "@/components/rich-text/rich-editor";
 import type { Entry } from "./journal-board";
 
 // Editor for the selected day. One entry per day: a day with no entry opens
@@ -20,7 +22,11 @@ export function EntryEditor({
 }) {
   const exists = entry !== null;
   const [title, setTitle] = useState(entry?.title ?? "");
-  const [body, setBody] = useState(entry?.body ?? "");
+  // Seed the editor with html: rich entries pass through, legacy plain entries
+  // are converted best-effort.
+  const [body, setBody] = useState(() =>
+    seedHtml(entry?.body ?? "", entry?.bodyFormat ?? "markdown"),
+  );
   const mood = entry?.mood ?? MOOD_DEFAULT;
   const [pending, startTransition] = useTransition();
 
@@ -29,6 +35,7 @@ export function EntryEditor({
       date: day,
       title: title.trim() || null,
       body,
+      bodyFormat: "html",
       mood,
     };
     startTransition(async () => {
@@ -60,11 +67,11 @@ export function EntryEditor({
         className="placeholder:text-fg-4 w-full bg-transparent text-2xl font-semibold outline-none"
       />
 
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
+      <RichEditor
+        initialHtml={body}
         placeholder="How was today? A line or two is enough."
-        className="bg-surface-2 placeholder:text-fg-4 min-h-[280px] w-full rounded-md border border-border p-4 text-[15px] leading-relaxed outline-none focus-visible:border-accent-line"
+        minHeightClass="min-h-[280px]"
+        onChange={setBody}
       />
 
       <div className="flex justify-end pt-1">

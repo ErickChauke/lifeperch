@@ -6,14 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  noteSchema,
-  normalizeTags,
-  markdownToHtml,
-  type NoteInput,
-} from "@/lib/notes";
+import { noteSchema, normalizeTags, type NoteInput } from "@/lib/notes";
+import { seedHtml } from "@/lib/rich-text";
 import { createNote, updateNote, deleteNote } from "@/actions/notes";
-import { RichEditor } from "./rich-editor";
+import { RichEditor } from "@/components/rich-text/rich-editor";
 import type { Note } from "./notes-board";
 
 // The note editor: title, tag set, and a rich WYSIWYG body, with explicit save.
@@ -52,10 +48,7 @@ export function NoteEditor({
   // Seed the editor with html: rich notes pass through, legacy markdown notes
   // are converted best-effort.
   const initialHtml = useMemo(
-    () =>
-      note?.bodyFormat === "html"
-        ? note.body
-        : markdownToHtml(note?.body ?? ""),
+    () => seedHtml(note?.body ?? "", note?.bodyFormat ?? "markdown"),
     [note],
   );
 
@@ -150,6 +143,7 @@ export function NoteEditor({
 
         <RichEditor
           initialHtml={initialHtml}
+          placeholder="Write your note…"
           onChange={(html) => setValue("body", html, { shouldDirty: true })}
         />
 

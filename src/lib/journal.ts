@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RICH_BODY_MAX, bodyFormatSchema } from "@/lib/rich-text";
 
 // Mood is a 1-10 score. A day with no entry opens at the neutral default.
 export const MOOD_MIN = 1;
@@ -13,7 +14,8 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 export const entrySchema = z.object({
   date: z.string().regex(dateRegex, "Use yyyy-MM-dd"),
   title: z.string().nullable(),
-  body: z.string(),
+  body: z.string().max(RICH_BODY_MAX),
+  bodyFormat: bodyFormatSchema,
   mood: z.number().int().min(MOOD_MIN).max(MOOD_MAX),
 });
 
