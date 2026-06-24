@@ -1,20 +1,20 @@
 import { z } from "zod";
 
-// Document categories for the vault (per the design spec).
-export const DOCUMENT_CATEGORIES = [
-  "ID & Legal",
-  "Finance",
-  "Property",
-  "Medical",
-  "Education",
-  "Other",
-] as const;
+// Validation for a collection card. A card has a title, an optional
+// description, and an optional password (the second, inner lock).
+export const collectionSchema = z.object({
+  title: z.string().min(1, "Name the card"),
+  description: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+});
+
+export type CollectionInput = z.infer<typeof collectionSchema>;
 
 // Validation for creating a document. The upload fields come from the signed
-// browser upload, so the form itself only supplies title and category.
+// browser upload, so the form itself only supplies the title; the card the
+// document belongs to is supplied by the action.
 export const documentSchema = z.object({
   title: z.string().min(1, "Name the document"),
-  category: z.string().min(1, "Pick a category"),
   url: z.string().url(),
   publicId: z.string().min(1),
   format: z.string().nullable().optional(),

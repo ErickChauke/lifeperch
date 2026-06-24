@@ -28,6 +28,7 @@ model User {
   shoppingItems   ShoppingItem[]
   wishlistCollections WishlistCollection[]
   wishlistItems   WishlistItem[]
+  vaultCollections VaultCollection[]
   documents       Document[]
   literature      Literature[]
   habits          Habit[]
@@ -173,20 +174,36 @@ model WishlistItem {
   updatedAt    DateTime           @updatedAt
 }
 
-// A PIN-protected vault document. The file lives in Cloudinary; url is the
-// secure delivery URL and publicId is kept for deletion.
+// A vault collection card: a titled folder that groups documents. description
+// is optional; passwordHash is null for an open card or a salted hash for a
+// card with its own password (a second lock inside the global vault PIN).
+model VaultCollection {
+  id           String     @id @default(cuid())
+  userId       String
+  title        String
+  description  String?
+  passwordHash String?
+  documents    Document[]
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// A vault document inside a collection card. The file lives in Cloudinary; url
+// is the secure delivery URL and publicId is kept for deletion.
 model Document {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  category  String
-  url       String
-  publicId  String
-  format    String?
-  bytes     Int?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String          @id @default(cuid())
+  userId       String
+  collectionId String
+  title        String
+  url          String
+  publicId     String
+  format       String?
+  bytes        Int?
+  collection   VaultCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 }
 
 // A literature review entry. Either an uploaded PDF (fileUrl + publicId in
