@@ -59,14 +59,15 @@ model TimetableEvent {
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  body      String   @default("")
-  tags      String[] @default([])
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  title      String
+  body       String   @default("") @db.Text
+  bodyFormat String   @default("markdown")
+  tags       String[] @default([])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model DailyEntry {
