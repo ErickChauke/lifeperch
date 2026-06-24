@@ -183,6 +183,8 @@ model VaultCollection {
   title        String
   description  String?
   passwordHash String?
+  resetToken   String?
+  resetExpiry  DateTime?
   documents    Document[]
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())

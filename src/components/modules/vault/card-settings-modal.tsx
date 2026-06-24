@@ -18,8 +18,8 @@ import {
   setCollectionPassword,
 } from "@/actions/vault";
 
-// Card settings: edit the description and manage the optional password. A blank
-// password field leaves the lock unchanged; "Remove password" opens the card.
+// Folder settings: edit the description and manage the optional password. A blank
+// password field leaves the lock unchanged; "Remove password" opens the folder.
 export function CardSettingsModal({
   id,
   description,
@@ -59,7 +59,7 @@ export function CardSettingsModal({
         onOpenChange(false);
         router.refresh();
       } catch {
-        toast.error("Could not save the card");
+        toast.error("Could not save the folder");
       }
     });
   }
@@ -68,7 +68,7 @@ export function CardSettingsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>Card settings</DialogTitle>
+          <DialogTitle>Folder settings</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -78,7 +78,7 @@ export function CardSettingsModal({
               id="card-description"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="What lives in this card (optional)"
+              placeholder="What lives in this folder (optional)"
             />
           </div>
 
@@ -92,7 +92,7 @@ export function CardSettingsModal({
               value={password}
               disabled={remove}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={locked ? "Leave blank to keep current" : "Leave blank for an open card"}
+              placeholder={locked ? "Leave blank to keep current" : "Leave blank for an open folder"}
             />
             {locked ? (
               <label className="text-fg-2 mt-1 flex items-center gap-2 text-xs">
@@ -101,7 +101,7 @@ export function CardSettingsModal({
                   checked={remove}
                   onChange={(e) => setRemove(e.target.checked)}
                 />
-                Remove password (make this card open)
+                Remove password (make this folder open)
               </label>
             ) : null}
           </div>

@@ -1,11 +1,13 @@
 "use server";
 
-import { createHash } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { destroyAsset } from "@/lib/cloudinary";
+import { sendEmail } from "@/lib/email";
+import { buildPasswordResetEmail } from "@/lib/vault-email";
 import {
   collectionSchema,
   documentSchema,
@@ -84,6 +86,13 @@ function cardCookieToken(passwordHash: string): string {
 
 function cardCookieName(id: string): string {
   return `vault_card_${id}`;
+}
+
+// The salted hash of an emailed reset token. Only the hash is stored; the raw
+// token lives only in the emailed link.
+function hashResetToken(token: string): string {
+  const secret = process.env.NEXTAUTH_SECRET ?? "";
+  return createHash("sha256").update(`${token}:${secret}`).digest("hex");
 }
 
 function revalidateVault(id?: string) {
@@ -234,6 +243,69 @@ export async function lockCollection(id: string): Promise<void> {
   revalidateVault(id);
 }
 
+// Emails the user a one-time link to clear a forgotten folder password. The
+// link carries a raw token; only its salted hash is stored, with a 30 minute
+// expiry. No-ops (ok: false) for an open folder or a user with no email.
+export async function requestCollectionPasswordReset(
+  id: string,
+): Promise<{ ok: boolean }> {
+  const userId = await requireUnlockedVault();
+  const collection = await prisma.vaultCollection.findFirst({
+    where: { id, userId },
+  });
+  if (!collection || !collection.passwordHash) return { ok: false };
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, name: true },
+  });
+  if (!user?.email) return { ok: false };
+
+  const token = randomBytes(32).toString("hex");
+  await prisma.vaultCollection.update({
+    where: { id: collection.id },
+    data: {
+      resetToken: hashResetToken(token),
+      resetExpiry: new Date(Date.now() + 30 * 60 * 1000),
+    },
+  });
+
+  const base = process.env.NEXTAUTH_URL ?? "";
+  const link = `${base}/vault/reset?id=${collection.id}&token=${token}`;
+  const { subject, html } = buildPasswordResetEmail(
+    user.name ?? "there",
+    collection.title,
+    link,
+  );
+  await sendEmail({ to: user.email, subject, html });
+  return { ok: true };
+}
+
+// Consumes a reset token from the emailed link: clears the folder's password
+// (making it open) when the token matches and has not expired.
+export async function confirmCollectionPasswordReset(
+  id: string,
+  token: string,
+): Promise<{ ok: boolean }> {
+  const userId = await requireUserId();
+  const collection = await prisma.vaultCollection.findFirst({
+    where: { id, userId },
+  });
+  if (!collection || !collection.resetToken || !collection.resetExpiry) {
+    return { ok: false };
+  }
+  if (collection.resetExpiry.getTime() < Date.now()) return { ok: false };
+  if (collection.resetToken !== hashResetToken(token)) return { ok: false };
+
+  await prisma.vaultCollection.update({
+    where: { id: collection.id },
+    data: { passwordHash: null, resetToken: null, resetExpiry: null },
+  });
+  const store = await cookies();
+  store.delete(cardCookieName(id));
+  revalidateVault(id);
+  return { ok: true };
+}
+
 // --- Documents ---
 
 // Stores a document record after its file has been uploaded to Cloudinary. The
@@ -243,9 +315,9 @@ export async function createDocument(collectionId: string, input: DocumentInput)
   const collection = await prisma.vaultCollection.findFirst({
     where: { id: collectionId, userId },
   });
-  if (!collection) throw new Error("Card not found");
+  if (!collection) throw new Error("Folder not found");
   if (collection.passwordHash && !(await isCollectionUnlocked(collectionId))) {
-    throw new Error("Card locked");
+    throw new Error("Folder locked");
   }
   const data = documentSchema.parse(input);
   await prisma.document.create({

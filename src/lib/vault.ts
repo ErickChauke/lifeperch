@@ -3,7 +3,7 @@ import { z } from "zod";
 // Validation for a collection card. A card has a title, an optional
 // description, and an optional password (the second, inner lock).
 export const collectionSchema = z.object({
-  title: z.string().min(1, "Name the card"),
+  title: z.string().min(1, "Name the folder"),
   description: z.string().nullable().optional(),
   password: z.string().nullable().optional(),
 });

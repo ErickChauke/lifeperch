@@ -4,17 +4,22 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, ChevronLeft } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
-import { unlockCollection } from "@/actions/vault";
+import {
+  unlockCollection,
+  requestCollectionPasswordReset,
+} from "@/actions/vault";
 
-// A locked card: a password prompt and nothing else. The card's documents stay
-// hidden until a correct password unlocks it for the session.
+// A locked folder: a password prompt and nothing else. The folder's documents
+// stay hidden until a correct password unlocks it for the session.
 export function CardGate({ id, title }: { id: string; title: string }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+  const [sent, setSent] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function submit() {
@@ -26,6 +31,17 @@ export function CardGate({ id, title }: { id: string; title: string }) {
       } else {
         setError(true);
         setPassword("");
+      }
+    });
+  }
+
+  function forgot() {
+    startTransition(async () => {
+      const result = await requestCollectionPasswordReset(id);
+      if (result.ok) {
+        setSent(true);
+      } else {
+        toast.error("Could not send a reset email");
       }
     });
   }
@@ -45,7 +61,7 @@ export function CardGate({ id, title }: { id: string; title: string }) {
           </div>
           <h1 className="text-fg mt-5 text-xl font-semibold">{title}</h1>
           <p className="text-fg-2 mt-2 text-[15px]">
-            Locked. Enter this card&apos;s password to open it.
+            Locked. Enter this folder&apos;s password to open it.
           </p>
           <form
             onSubmit={(e) => {
@@ -78,6 +94,21 @@ export function CardGate({ id, title }: { id: string; title: string }) {
               Unlock
             </Button>
           </form>
+
+          {sent ? (
+            <p className="text-fg-3 mt-4 text-xs">
+              Check your email for a link to reset this folder&apos;s password.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={forgot}
+              disabled={pending}
+              className="text-fg-3 hover:text-fg-2 mt-4 text-xs underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              Forgot password?
+            </button>
+          )}
         </div>
       </PageBody>
     </PageShell>
