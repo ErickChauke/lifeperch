@@ -2,9 +2,10 @@ import { z } from "zod";
 
 const dayRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-// The four Kanban columns, in fixed order, and the result an application carries
-// once it reaches the outcome column.
-export const APP_STAGES = ["applied", "interview", "offer", "outcome"] as const;
+// The Kanban columns, in fixed order, and the result an application carries once
+// it reaches the outcome column. "to-apply" is the saved-but-not-yet-submitted
+// backlog at the front of the pipeline.
+export const APP_STAGES = ["to-apply", "applied", "interview", "offer", "outcome"] as const;
 export type AppStageKey = (typeof APP_STAGES)[number];
 
 export const APP_OUTCOMES = ["accepted", "rejected", "withdrawn"] as const;
@@ -13,6 +14,7 @@ export type AppOutcome = (typeof APP_OUTCOMES)[number];
 // Column metadata. The status dot rides a status token in the UI; the label
 // carries the stage so colour never stands alone.
 export const STAGE_META: Record<AppStageKey, { label: string }> = {
+  "to-apply": { label: "To apply" },
   applied: { label: "Applied" },
   interview: { label: "Interview" },
   offer: { label: "Offer" },
@@ -31,10 +33,12 @@ export const applicationSchema = z.object({
   organisation: z.string().min(1, "Who did you apply to?"),
   position: z.string().min(1, "What did you apply for?"),
   location: z.string().nullable(),
+  url: z.string().nullable(),
   value: z.number().min(0).nullable(),
   status: z.enum(APP_STAGES),
   outcome: z.enum(APP_OUTCOMES).nullable(),
   appliedDate: z.string().regex(dayRegex, "Use yyyy-MM-dd").nullable(),
+  deadline: z.string().regex(dayRegex, "Use yyyy-MM-dd").nullable(),
 });
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;

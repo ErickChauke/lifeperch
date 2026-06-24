@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { X, MapPin, Pencil, Trash2, Plus } from "lucide-react";
+import { X, MapPin, Pencil, Trash2, Plus, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -107,6 +107,21 @@ function DrawerBody({
               <span className="text-fg-3 font-mono text-xs tabular-nums">
                 {format(new Date(application.appliedDate), "dd MMM yyyy")}
               </span>
+            ) : null}
+            {application.deadline ? (
+              <span className="text-fg-3 font-mono text-xs tabular-nums">
+                Closes {format(new Date(application.deadline), "dd MMM yyyy")}
+              </span>
+            ) : null}
+            {application.url ? (
+              <button
+                type="button"
+                onClick={() => window.open(application.url!, "_blank", "noopener")}
+                className="text-fg-3 hover:text-fg-2 flex items-center gap-1 text-xs"
+              >
+                <ExternalLink className="size-3.5" strokeWidth={1.75} />
+                Posting
+              </button>
             ) : null}
           </div>
         </div>

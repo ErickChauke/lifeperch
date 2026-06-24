@@ -25,10 +25,12 @@ function emptyValues(): ApplicationInput {
     organisation: "",
     position: "",
     location: null,
+    url: null,
     value: null,
-    status: "applied",
+    status: "to-apply",
     outcome: null,
-    appliedDate: format(new Date(), "yyyy-MM-dd"),
+    appliedDate: null,
+    deadline: null,
   };
 }
 
@@ -66,10 +68,12 @@ export function ApplicationModal({
         organisation: application.organisation,
         position: application.position,
         location: application.location,
+        url: application.url,
         value: application.value == null ? null : centsToRand(application.value),
         status: application.status as ApplicationInput["status"],
         outcome: application.outcome as ApplicationInput["outcome"],
         appliedDate: application.appliedDate ? dateToDay(application.appliedDate) : null,
+        deadline: application.deadline ? dateToDay(application.deadline) : null,
       });
     } else {
       reset(emptyValues());
@@ -139,6 +143,16 @@ export function ApplicationModal({
             />
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="url">Link to posting</Label>
+            <Input
+              id="url"
+              placeholder="https://… (optional)"
+              className="font-mono"
+              {...register("url", { setValueAs: (v) => v || null })}
+            />
+          </div>
+
           <div className="flex gap-3">
             <div className="flex-1 space-y-1.5">
               <Label htmlFor="value">Value</Label>
@@ -168,6 +182,17 @@ export function ApplicationModal({
                 {...register("appliedDate", { setValueAs: (v) => v || null })}
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="deadline">Deadline</Label>
+            <Input
+              id="deadline"
+              type="date"
+              className="font-mono"
+              {...register("deadline", { setValueAs: (v) => v || null })}
+            />
+            <p className="text-fg-3 text-xs">Closing date - handy while still to apply.</p>
           </div>
 
           <div className="space-y-1.5">
