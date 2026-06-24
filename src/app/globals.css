@@ -257,6 +257,48 @@
   margin: 0;
 }
 
+/* Rich-text tables (editor and read-only view). Tailwind v4 resets every border
+   to 0 and the typography plugin does not emit table rules, so cells would render
+   with no visible grid. Restore explicit cell borders using the app tokens. */
+.prose table {
+  width: 100%;
+  margin: 0.75rem 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.prose table th,
+.prose table td {
+  border: 1px solid var(--border-2);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.prose table th {
+  background-color: var(--surface-3);
+  font-weight: 600;
+}
+
+/* Editing affordances for Tiptap tables: horizontal scroll, selected-cell tint,
+   and the draggable column resize handle. */
+.tiptap .tableWrapper {
+  overflow-x: auto;
+}
+.tiptap table {
+  position: relative;
+}
+.tiptap table .selectedCell {
+  background-color: var(--accent-soft);
+}
+.tiptap table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 3px;
+  background-color: var(--accent-line);
+  pointer-events: none;
+}
+
 /* Placeholder text for the empty Tiptap editor. */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
