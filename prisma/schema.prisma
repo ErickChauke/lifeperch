@@ -311,19 +311,23 @@ model Meal {
 }
 
 // An application in the pipeline (a job, bursary, scholarship, grant). status is
-// the Kanban column: "applied"/"interview"/"offer"/"outcome". outcome carries the
-// final result once in the outcome column: "accepted"/"rejected"/"withdrawn".
-// value is an optional amount in cents (salary or award).
+// the Kanban column: "to-apply"/"applied"/"interview"/"offer"/"outcome". A new
+// application starts in "to-apply" - saved but not yet submitted. outcome carries
+// the final result once in the outcome column: "accepted"/"rejected"/"withdrawn".
+// value is an optional amount in cents (salary or award). url links the posting;
+// deadline is the closing date, most useful while still to-apply.
 model JobApplication {
   id           String     @id @default(cuid())
   userId       String
   organisation String
   position     String
   location     String?
+  url          String?
   value        Int?
-  status       String     @default("applied")
+  status       String     @default("to-apply")
   outcome      String?
   appliedDate  DateTime?  @db.Date
+  deadline     DateTime?  @db.Date
   stages       AppStage[]
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())

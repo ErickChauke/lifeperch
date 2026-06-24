@@ -28,10 +28,12 @@ function toRecord(data: ApplicationInput) {
     organisation: data.organisation.trim(),
     position: data.position.trim(),
     location: data.location?.trim() || null,
+    url: data.url?.trim() || null,
     value: data.value == null ? null : randToCents(data.value),
     status: data.status,
     outcome,
     appliedDate: data.appliedDate ? dayToDate(data.appliedDate) : null,
+    deadline: data.deadline ? dayToDate(data.deadline) : null,
   };
 }
 

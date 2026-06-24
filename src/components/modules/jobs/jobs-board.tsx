@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, MapPin } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, MapPin, ExternalLink } from "lucide-react";
+import { format, differenceInCalendarDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
@@ -55,7 +55,7 @@ export function JobsBoard({ applications }: { applications: Application[] }) {
         <PageBody className="pt-6 md:pt-10">
           <MoneyEmpty
             eyebrow="Records · Applications"
-            message="No applications yet. Add the first thing you're applying for - a job, a bursary, a grant - and move it along as things happen: applied, interview, offer, outcome."
+            message="No applications yet. Save the first thing you're eyeing - a job, a bursary, a grant - and move it along as things happen: to apply, applied, interview, offer, outcome."
             action={
               <Button onClick={() => setCreating(true)}>
                 <Plus /> Add application
@@ -92,7 +92,7 @@ export function JobsBoard({ applications }: { applications: Application[] }) {
       </PageHeader>
 
       <PageBody className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
           {APP_STAGES.map((stage) => {
             const cards = applications.filter((a) => a.status === stage);
             const tone = STAGE_TONE[stage] ?? "var(--text-3)";
@@ -151,6 +151,21 @@ export function JobsBoard({ applications }: { applications: Application[] }) {
   );
 }
 
+// A short deadline label with an urgency tone, or null when there is no
+// deadline. Past deadlines on an unclosed application read in the danger tone.
+function deadlineLabel(
+  deadline: Date,
+  closed: boolean,
+): { text: string; tone: string } {
+  const days = differenceInCalendarDays(new Date(deadline), new Date());
+  const when = format(new Date(deadline), "dd MMM");
+  if (closed) return { text: `Closed ${when}`, tone: "var(--text-3)" };
+  if (days < 0) return { text: `Closed ${when}`, tone: "var(--danger)" };
+  if (days === 0) return { text: "Closes today", tone: "var(--danger)" };
+  if (days <= 7) return { text: `Closes in ${days}d`, tone: "var(--warning)" };
+  return { text: `Closes ${when}`, tone: "var(--text-3)" };
+}
+
 function ApplicationCard({
   application,
   onOpen,
@@ -166,6 +181,9 @@ function ApplicationCard({
   const oTone = application.outcome
     ? OUTCOME_TONE[application.outcome]
     : "var(--text-3)";
+  const deadline = application.deadline
+    ? deadlineLabel(application.deadline, application.status === "outcome")
+    : null;
   return (
     <div
       draggable
@@ -183,6 +201,27 @@ function ApplicationCard({
           <MapPin className="size-3" strokeWidth={1.75} />
           {application.location}
         </p>
+      ) : null}
+      {application.url ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(application.url!, "_blank", "noopener");
+          }}
+          className="text-fg-3 hover:text-fg-2 flex w-fit items-center gap-1 text-xs"
+        >
+          <ExternalLink className="size-3" strokeWidth={1.75} />
+          View posting
+        </button>
+      ) : null}
+      {deadline ? (
+        <span
+          className="w-fit rounded-full px-2 py-0.5 text-xs"
+          style={{ color: deadline.tone, background: tint(deadline.tone) }}
+        >
+          {deadline.text}
+        </span>
       ) : null}
       <div className="mt-1 flex items-center justify-between gap-2">
         {application.value != null ? (

@@ -1,6 +1,7 @@
 // Status tokens for the pipeline. Meaning rides these tokens, never the lime
 // accent. Stages and outcomes each map to a token; tint() makes the soft fill.
 export const STAGE_TONE: Record<string, string> = {
+  "to-apply": "var(--text-3)",
   applied: "var(--info)",
   interview: "var(--warning)",
   offer: "var(--success)",
