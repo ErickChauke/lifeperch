@@ -257,6 +257,15 @@
   margin: 0;
 }
 
+/* Placeholder text for the empty Tiptap editor. */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text-4);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 /* Hides scrollbars on scroll regions; wheel, keys and touch still scroll. */
 @utility scrollbar-hide {
   scrollbar-width: none;

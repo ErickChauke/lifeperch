@@ -1,19 +1,25 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { noteSchema, normalizeTags, type NoteInput } from "@/lib/notes";
+import {
+  noteSchema,
+  normalizeTags,
+  markdownToHtml,
+  type NoteInput,
+} from "@/lib/notes";
 import { createNote, updateNote, deleteNote } from "@/actions/notes";
-import { Markdown } from "./markdown";
+import { RichEditor } from "./rich-editor";
 import type { Note } from "./notes-board";
 
-// The note editor: title, tag set, markdown body with a write/preview toggle,
-// and explicit save. Delete asks for one inline confirm. A null note is a new
-// note that is not persisted until first save.
+// The note editor: title, tag set, and a rich WYSIWYG body, with explicit save.
+// Delete asks for one inline confirm. A null note is a new note that is not
+// persisted until first save. Legacy markdown notes are converted to html to
+// seed the editor and saved back as html.
 export function NoteEditor({
   note,
   onClose,
@@ -22,7 +28,6 @@ export function NoteEditor({
   onClose: () => void;
 }) {
   const [pending, startTransition] = useTransition();
-  const [mode, setMode] = useState<"write" | "preview">("write");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
 
@@ -43,7 +48,16 @@ export function NoteEditor({
   });
 
   const tags = useWatch({ control, name: "tags" }) ?? [];
-  const body = useWatch({ control, name: "body" }) ?? "";
+
+  // Seed the editor with html: rich notes pass through, legacy markdown notes
+  // are converted best-effort.
+  const initialHtml = useMemo(
+    () =>
+      note?.bodyFormat === "html"
+        ? note.body
+        : markdownToHtml(note?.body ?? ""),
+    [note],
+  );
 
   function addTag() {
     const next = normalizeTags([...tags, tagDraft]);
@@ -60,10 +74,11 @@ export function NoteEditor({
   }
 
   function onSubmit(values: NoteInput) {
+    const payload: NoteInput = { ...values, bodyFormat: "html" };
     startTransition(async () => {
       try {
-        if (note) await updateNote(note.id, values);
-        else await createNote(values);
+        if (note) await updateNote(note.id, payload);
+        else await createNote(payload);
         toast.success(note ? "Note saved" : "Note created");
         onClose();
       } catch {
@@ -133,41 +148,10 @@ export function NoteEditor({
           />
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-end gap-1">
-            <Button
-              type="button"
-              size="xs"
-              variant={mode === "write" ? "secondary" : "ghost"}
-              onClick={() => setMode("write")}
-            >
-              Write
-            </Button>
-            <Button
-              type="button"
-              size="xs"
-              variant={mode === "preview" ? "secondary" : "ghost"}
-              onClick={() => setMode("preview")}
-            >
-              Preview
-            </Button>
-          </div>
-          {mode === "write" ? (
-            <textarea
-              {...register("body")}
-              placeholder="Write in markdown…"
-              className="bg-surface-2 placeholder:text-fg-4 min-h-[360px] w-full rounded-md border border-border p-4 text-[15px] leading-relaxed outline-none focus-visible:border-accent-line"
-            />
-          ) : (
-            <div className="bg-surface-2 min-h-[360px] rounded-md border border-border p-4">
-              {body.trim() ? (
-                <Markdown source={body} />
-              ) : (
-                <p className="text-fg-4 text-sm">Nothing to preview.</p>
-              )}
-            </div>
-          )}
-        </div>
+        <RichEditor
+          initialHtml={initialHtml}
+          onChange={(html) => setValue("body", html, { shouldDirty: true })}
+        />
 
         <div className="flex items-center justify-between gap-2 pt-2">
           <div>
