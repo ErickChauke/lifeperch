@@ -37,6 +37,7 @@ export function NoteEditor({
     defaultValues: {
       title: note?.title ?? "",
       body: note?.body ?? "",
+      bodyFormat: note?.bodyFormat === "html" ? "html" : "markdown",
       tags: note?.tags ?? [],
     },
   });

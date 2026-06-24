@@ -237,6 +237,26 @@
   --tw-prose-td-borders: var(--border);
 }
 
+/* Task lists render as a flat checkbox-plus-text row in both the editor and the
+   read-only view (Tiptap wraps the row in label/div, the stored html does not). */
+.prose ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.prose ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.prose ul[data-type="taskList"] li > label,
+.prose ul[data-type="taskList"] li > input[type="checkbox"] {
+  margin-top: 0.4rem;
+}
+.prose ul[data-type="taskList"] li > div,
+.prose ul[data-type="taskList"] li > p {
+  margin: 0;
+}
+
 /* Hides scrollbars on scroll regions; wheel, keys and touch still scroll. */
 @utility scrollbar-hide {
   scrollbar-width: none;
