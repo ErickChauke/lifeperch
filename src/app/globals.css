@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -212,6 +214,56 @@
   ::selection {
     background: var(--accent-soft);
   }
+}
+
+/* Rendered note HTML. Repoints the typography plugin at the app design tokens so
+   prose matches the surrounding UI in both themes (tokens flip under .dark). */
+.prose {
+  --tw-prose-body: var(--text-2);
+  --tw-prose-headings: var(--text);
+  --tw-prose-lead: var(--text-2);
+  --tw-prose-links: var(--accent-read);
+  --tw-prose-bold: var(--text);
+  --tw-prose-counters: var(--text-3);
+  --tw-prose-bullets: var(--text-3);
+  --tw-prose-hr: var(--border-2);
+  --tw-prose-quotes: var(--text-2);
+  --tw-prose-quote-borders: var(--border-2);
+  --tw-prose-captions: var(--text-3);
+  --tw-prose-code: var(--text);
+  --tw-prose-pre-code: var(--text);
+  --tw-prose-pre-bg: var(--surface-2);
+  --tw-prose-th-borders: var(--border-2);
+  --tw-prose-td-borders: var(--border);
+}
+
+/* Task lists render as a flat checkbox-plus-text row in both the editor and the
+   read-only view (Tiptap wraps the row in label/div, the stored html does not). */
+.prose ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.prose ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.prose ul[data-type="taskList"] li > label,
+.prose ul[data-type="taskList"] li > input[type="checkbox"] {
+  margin-top: 0.4rem;
+}
+.prose ul[data-type="taskList"] li > div,
+.prose ul[data-type="taskList"] li > p {
+  margin: 0;
+}
+
+/* Placeholder text for the empty Tiptap editor. */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text-4);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
 /* Hides scrollbars on scroll regions; wheel, keys and touch still scroll. */

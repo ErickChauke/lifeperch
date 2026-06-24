@@ -11,6 +11,7 @@ import {
 } from "@/components/layout/page-shell";
 import { NoteCard } from "./note-card";
 import { NoteEditor } from "./note-editor";
+import { NoteDetail } from "./note-detail";
 import type { getNotes } from "@/actions/notes";
 
 export type Note = Awaited<ReturnType<typeof getNotes>>[number];
@@ -19,6 +20,7 @@ export type Note = Awaited<ReturnType<typeof getNotes>>[number];
 // active tag filter. Search and tag filters combine with AND, both client-side
 // for instant feedback over the user's full note set.
 export function NotesBoard({ notes }: { notes: Note[] }) {
+  const [viewing, setViewing] = useState<Note | null>(null);
   const [editing, setEditing] = useState<Note | null>(null);
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
@@ -63,6 +65,23 @@ export function NotesBoard({ notes }: { notes: Note[] }) {
       <PageShell>
         <PageBody className="pt-6 md:pt-10">
           <NoteEditor note={editing} onClose={closeEditor} />
+        </PageBody>
+      </PageShell>
+    );
+  }
+
+  if (viewing) {
+    return (
+      <PageShell>
+        <PageBody className="pt-6 md:pt-10">
+          <NoteDetail
+            note={viewing}
+            onClose={() => setViewing(null)}
+            onEdit={() => {
+              setEditing(viewing);
+              setViewing(null);
+            }}
+          />
         </PageBody>
       </PageShell>
     );
@@ -154,7 +173,7 @@ export function NotesBoard({ notes }: { notes: Note[] }) {
               <NoteCard
                 key={note.id}
                 note={note}
-                onClick={() => setEditing(note)}
+                onClick={() => setViewing(note)}
               />
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { differenceInDays, format, formatDistanceToNowStrict } from "date-fns";
-import { previewText, UNTITLED } from "@/lib/notes";
+import { htmlPreview, previewText, UNTITLED } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 import type { Note } from "./notes-board";
 
@@ -10,10 +10,13 @@ function updatedLabel(date: Date): string {
     : format(date, "MMM d");
 }
 
-// A single note in the list grid. The whole card opens the editor.
+// A single note in the list grid. The whole card opens the note.
 export function NoteCard({ note, onClick }: { note: Note; onClick: () => void }) {
   const untitled = note.title === UNTITLED;
-  const preview = previewText(note.body);
+  const preview =
+    note.bodyFormat === "html"
+      ? htmlPreview(note.body)
+      : previewText(note.body);
   const shown = note.tags.slice(0, 3);
   const extra = note.tags.length - shown.length;
 

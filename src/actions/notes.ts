@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { noteSchema, normalizeTags, displayTitle, type NoteInput } from "@/lib/notes";
+import { sanitizeNoteHtml } from "@/lib/note-html";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -12,11 +13,13 @@ async function requireUserId(): Promise<string> {
   return session.user.id;
 }
 
-// Maps validated form input to the fields stored on a Note.
+// Maps validated form input to the fields stored on a Note. Rich html bodies are
+// sanitized here so unsafe markup never reaches the database.
 function toRecord(data: NoteInput) {
   return {
     title: displayTitle(data.title),
-    body: data.body,
+    body: data.bodyFormat === "html" ? sanitizeNoteHtml(data.body) : data.body,
+    bodyFormat: data.bodyFormat,
     tags: normalizeTags(data.tags),
   };
 }
