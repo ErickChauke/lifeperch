@@ -45,7 +45,7 @@ export function TimelineBoard({
       <PageHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Timeline</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Milestones</h1>
             <p className="text-fg-3 mt-1 font-mono text-xs tabular-nums">
               {milestones.length}{" "}
               {milestones.length === 1 ? "milestone" : "milestones"}
@@ -60,8 +60,8 @@ export function TimelineBoard({
       <PageBody className="space-y-6">
         {milestones.length === 0 ? (
           <MoneyEmpty
-            eyebrow="Archive · Timeline"
-            message="Nothing on the timeline yet. Set a milestone you're aiming at - a move, a qualification, a trip - and watch the rail fill in by date."
+            eyebrow="Archive · Milestones"
+            message="No milestones yet. Set one you're aiming at - a move, a qualification, a trip - and watch the rail fill in by date."
             action={
               <Button onClick={() => setCreating(true)}>
                 <Plus /> Add milestone

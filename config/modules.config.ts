@@ -29,6 +29,6 @@ export const modules: ModuleConfig[] = [
   { id: "literature", label: "Literature", href: "/literature", icon: "literature", group: "Records", enabled: true },
   { id: "jobs", label: "Applications", href: "/jobs", icon: "jobs", group: "Records", enabled: true },
   // Archive
+  { id: "timeline", label: "Milestones", href: "/timeline", icon: "timeline", group: "Archive", enabled: true },
   { id: "vault", label: "Vault", href: "/vault", icon: "vault", group: "Archive", enabled: true },
-  { id: "timeline", label: "Timeline", href: "/timeline", icon: "timeline", group: "Archive", enabled: true },
 ];
