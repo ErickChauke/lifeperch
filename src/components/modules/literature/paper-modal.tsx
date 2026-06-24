@@ -20,7 +20,7 @@ import { LIT_STATUSES, type LitStatus } from "@/lib/literature";
 import { uploadFile, MAX_UPLOAD_BYTES } from "@/lib/upload";
 import { formatBytes } from "@/lib/vault";
 import { createLit, updateLit, deleteLit } from "@/actions/literature";
-import type { Paper } from "./literature-board";
+import type { Paper } from "./paper-card";
 
 const SOURCES = [
   { value: "pdf", label: "PDF" },
@@ -32,23 +32,39 @@ type Source = (typeof SOURCES)[number]["value"];
 export function PaperModal({
   open,
   onOpenChange,
+  collectionId,
   paper,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  collectionId: string;
   paper: Paper | null;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         {/* Mounted only while open, so the form initialises from the paper once. */}
-        {open ? <PaperForm paper={paper} onClose={() => onOpenChange(false)} /> : null}
+        {open ? (
+          <PaperForm
+            paper={paper}
+            collectionId={collectionId}
+            onClose={() => onOpenChange(false)}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   );
 }
 
-function PaperForm({ paper, onClose }: { paper: Paper | null; onClose: () => void }) {
+function PaperForm({
+  paper,
+  collectionId,
+  onClose,
+}: {
+  paper: Paper | null;
+  collectionId: string;
+  onClose: () => void;
+}) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -139,7 +155,7 @@ function PaperForm({ paper, onClose }: { paper: Paper | null; onClose: () => voi
       startTransition(async () => {
         try {
           if (paper) await updateLit(paper.id, input);
-          else await createLit(input);
+          else await createLit(collectionId, input);
           toast.success(paper ? "Paper updated" : "Paper added");
           onClose();
         } catch {

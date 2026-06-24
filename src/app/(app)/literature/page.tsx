@@ -1,8 +1,8 @@
-import { getLit } from "@/actions/literature";
-import { LiteratureBoard } from "@/components/modules/literature/literature-board";
+import { getCollections } from "@/actions/literature";
+import { LiteratureTopics } from "@/components/modules/literature/literature-topics";
 
-// Literature tracker.
+// Literature landing: topic folders. Papers live inside a topic.
 export default async function LiteraturePage() {
-  const papers = await getLit();
-  return <LiteratureBoard papers={papers} />;
+  const topics = await getCollections();
+  return <LiteratureTopics topics={topics} />;
 }
