@@ -50,7 +50,7 @@ export const LINKABLE_MODULES = [
   { value: "literature", label: "Literature", hrefBase: "/literature" },
   { value: "money", label: "Money", hrefBase: "/money" },
   { value: "health", label: "Health", hrefBase: "/health" },
-  { value: "timeline", label: "Timeline", hrefBase: "/timeline" },
+  { value: "timeline", label: "Milestones", hrefBase: "/timeline" },
   { value: "timetable", label: "Timetable", hrefBase: "/timetable" },
 ] as const;
 
