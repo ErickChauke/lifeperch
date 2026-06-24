@@ -25,6 +25,10 @@ import {
   Table as TableIcon,
   Trash2,
   Link as LinkIcon,
+  BetweenHorizontalStart,
+  BetweenVerticalStart,
+  Columns3,
+  Rows3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -170,6 +174,34 @@ function Toolbar({ editor }: { editor: Editor }) {
         }
       >
         <TableIcon />
+      </ToolButton>
+      <ToolButton
+        label="Add column"
+        disabled={!editor.isActive("table")}
+        onClick={() => editor.chain().focus().addColumnAfter().run()}
+      >
+        <BetweenVerticalStart />
+      </ToolButton>
+      <ToolButton
+        label="Add row"
+        disabled={!editor.isActive("table")}
+        onClick={() => editor.chain().focus().addRowAfter().run()}
+      >
+        <BetweenHorizontalStart />
+      </ToolButton>
+      <ToolButton
+        label="Delete column"
+        disabled={!editor.isActive("table")}
+        onClick={() => editor.chain().focus().deleteColumn().run()}
+      >
+        <Columns3 />
+      </ToolButton>
+      <ToolButton
+        label="Delete row"
+        disabled={!editor.isActive("table")}
+        onClick={() => editor.chain().focus().deleteRow().run()}
+      >
+        <Rows3 />
       </ToolButton>
       <ToolButton
         label="Delete table"
