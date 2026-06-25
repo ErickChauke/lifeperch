@@ -213,6 +213,8 @@ model BudgetItem {
   amount    Int          @default(0)
   note      String?
   goalId    String?
+  completed Boolean      @default(false)
+  transactionId String?
   plan      BudgetPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   goal      SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)

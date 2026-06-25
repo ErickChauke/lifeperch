@@ -3,14 +3,23 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Pencil, Trash2, Plus, Copy, Target } from "lucide-react";
+import {
+  ChevronLeft,
+  Pencil,
+  Trash2,
+  Plus,
+  Copy,
+  Target,
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatZAR } from "@/lib/utils";
+import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
 import { goalPercent } from "@/lib/goals";
-import { deletePlan, duplicatePlan } from "@/actions/budget";
+import { deletePlan, duplicatePlan, toggleItemComplete } from "@/actions/budget";
 import { PlanModal } from "./plan-modal";
 import { PlanItemModal } from "./plan-item-modal";
 import type { getPlan, getPlans } from "@/actions/budget";
@@ -67,6 +76,19 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
 
   function openItem(item: Item | null, kind: "income" | "expense") {
     setItemModal({ open: true, item, kind });
+  }
+
+  // Marks a line done or undone. Done logs a transaction and greys the line; the
+  // refresh pulls the updated plan (and actuals) back from the server.
+  function toggleComplete(id: string) {
+    startTransition(async () => {
+      try {
+        await toggleItemComplete(id);
+        router.refresh();
+      } catch {
+        toast.error("Could not update the line");
+      }
+    });
   }
 
   function onDelete() {
@@ -176,29 +198,43 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
           const received = plan.actual.income[item.category] ?? 0;
           const sub = subFor(item);
           return (
-            <button
+            <div
               key={item.id}
-              type="button"
-              onClick={() => openItem(item, "income")}
-              className="bg-surface hover:bg-surface-2 hover:border-border-2 flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors"
+              className="bg-surface hover:border-border-2 rounded-lg border p-3 transition-colors"
             >
-              <span className="min-w-0">
-                <span className="text-fg block text-sm font-medium">
-                  {headingFor(item)}
+              <button
+                type="button"
+                onClick={() => openItem(item, "income")}
+                className={cn(
+                  "flex w-full items-center justify-between gap-3 text-left",
+                  item.completed && "opacity-50",
+                )}
+              >
+                <span className="min-w-0">
+                  <span className="text-fg block text-sm font-medium">
+                    {headingFor(item)}
+                  </span>
+                  {sub ? (
+                    <span className="text-fg-3 block truncate text-xs">{sub}</span>
+                  ) : null}
                 </span>
-                {sub ? (
-                  <span className="text-fg-3 block truncate text-xs">{sub}</span>
-                ) : null}
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="text-fg block font-mono text-sm">
-                  {formatZAR(centsToRand(item.amount))}
+                <span className="shrink-0 text-right">
+                  <span className="text-fg block font-mono text-sm">
+                    {formatZAR(centsToRand(item.amount))}
+                  </span>
+                  <span className="text-fg-3 font-mono text-xs">
+                    received {formatZAR(centsToRand(received))}
+                  </span>
                 </span>
-                <span className="text-fg-3 font-mono text-xs">
-                  received {formatZAR(centsToRand(received))}
-                </span>
-              </span>
-            </button>
+              </button>
+              <div className="mt-2 flex justify-end">
+                <CompleteToggle
+                  completed={item.completed}
+                  pending={pending}
+                  onToggle={() => toggleComplete(item.id)}
+                />
+              </div>
+            </div>
           );
         })}
       </Section>
@@ -217,7 +253,9 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
             cumulative={cumulative}
             plannedIn={plannedIn}
             goal={item.goalId ? (goalsById.get(item.goalId) ?? null) : null}
+            pending={pending}
             onEdit={() => openItem(item, "expense")}
+            onToggleComplete={() => toggleComplete(item.id)}
           />
         ))}
       </Section>
@@ -294,42 +332,56 @@ function ExpenseRow({
   cumulative,
   plannedIn,
   goal,
+  pending,
   onEdit,
+  onToggleComplete,
 }: {
   item: Item;
   cumulative: number;
   plannedIn: number;
   goal: Goal | null;
+  pending: boolean;
   onEdit: () => void;
+  onToggleComplete: () => void;
 }) {
   const planned = item.amount;
+  const dim = item.completed && "opacity-50";
 
   // A goal-funded line shows the goal and its overall progress instead of the
   // running draw-down bar.
   if (goal) {
     const pct = goalPercent(goal.currentAmount, goal.targetAmount);
     return (
-      <button
-        type="button"
-        onClick={onEdit}
-        className="bg-surface hover:bg-surface-2 hover:border-border-2 flex w-full flex-col gap-2 rounded-lg border p-3 text-left transition-colors"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-accent-read flex items-center gap-1.5 text-sm font-medium">
-            <Target className="size-3.5" /> {headingFor(item)}
+      <div className="bg-surface hover:border-border-2 rounded-lg border p-3 transition-colors">
+        <button
+          type="button"
+          onClick={onEdit}
+          className={cn("flex w-full flex-col gap-2 text-left", dim)}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-accent-read flex items-center gap-1.5 text-sm font-medium">
+              <Target className="size-3.5" /> {headingFor(item)}
+            </span>
+            <span className="text-fg font-mono text-sm">
+              {formatZAR(centsToRand(planned))}
+            </span>
+          </div>
+          <span className="text-fg-3 font-mono text-xs">
+            funding {goal.name}
+            {pct !== null ? ` · ${pct}% of target` : ""}
           </span>
-          <span className="text-fg font-mono text-sm">
-            {formatZAR(centsToRand(planned))}
-          </span>
+          {item.note ? (
+            <span className="text-fg-3 truncate text-xs">{item.note}</span>
+          ) : null}
+        </button>
+        <div className="mt-2 flex justify-end">
+          <CompleteToggle
+            completed={item.completed}
+            pending={pending}
+            onToggle={onToggleComplete}
+          />
         </div>
-        <span className="text-fg-3 font-mono text-xs">
-          funding {goal.name}
-          {pct !== null ? ` · ${pct}% of target` : ""}
-        </span>
-        {item.note ? (
-          <span className="text-fg-3 truncate text-xs">{item.note}</span>
-        ) : null}
-      </button>
+      </div>
     );
   }
 
@@ -346,40 +398,80 @@ function ExpenseRow({
   const sub = subFor(item);
 
   return (
-    <button
-      type="button"
-      onClick={onEdit}
-      className="bg-surface hover:bg-surface-2 hover:border-border-2 flex w-full flex-col gap-2 rounded-lg border p-3 text-left transition-colors"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className="min-w-0">
-          <span className="text-fg block text-sm font-medium">{headingFor(item)}</span>
-          {sub ? (
-            <span className="text-fg-3 block truncate text-xs">{sub}</span>
-          ) : null}
+    <div className="bg-surface hover:border-border-2 rounded-lg border p-3 transition-colors">
+      <button
+        type="button"
+        onClick={onEdit}
+        className={cn("flex w-full flex-col gap-2 text-left", dim)}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0">
+            <span className="text-fg block text-sm font-medium">{headingFor(item)}</span>
+            {sub ? (
+              <span className="text-fg-3 block truncate text-xs">{sub}</span>
+            ) : null}
+          </span>
+          <span className="text-fg shrink-0 font-mono text-sm">
+            {formatZAR(centsToRand(planned))}
+          </span>
+        </div>
+        <div className="bg-surface-3 h-1.5 overflow-hidden rounded-full">
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${pct}%`,
+              background: over ? "var(--danger)" : "var(--accent)",
+            }}
+          />
+        </div>
+        <span
+          className="font-mono text-xs"
+          style={{ color: over ? "var(--danger)" : "var(--text-3)" }}
+        >
+          spent {formatZAR(centsToRand(cumulative))} ·{" "}
+          {over
+            ? `over by ${formatZAR(centsToRand(-remaining))}`
+            : `${formatZAR(centsToRand(remaining))} left`}
         </span>
-        <span className="text-fg shrink-0 font-mono text-sm">
-          {formatZAR(centsToRand(planned))}
-        </span>
-      </div>
-      <div className="bg-surface-3 h-1.5 overflow-hidden rounded-full">
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: `${pct}%`,
-            background: over ? "var(--danger)" : "var(--accent)",
-          }}
+      </button>
+      <div className="mt-2 flex justify-end">
+        <CompleteToggle
+          completed={item.completed}
+          pending={pending}
+          onToggle={onToggleComplete}
         />
       </div>
-      <span
-        className="font-mono text-xs"
-        style={{ color: over ? "var(--danger)" : "var(--text-3)" }}
-      >
-        spent {formatZAR(centsToRand(cumulative))} ·{" "}
-        {over
-          ? `over by ${formatZAR(centsToRand(-remaining))}`
-          : `${formatZAR(centsToRand(remaining))} left`}
-      </span>
+    </div>
+  );
+}
+
+// The bottom-right tick on a plan line. Marking it done logs a transaction and
+// greys the line; the label spells out the colour so it never stands alone.
+function CompleteToggle({
+  completed,
+  pending,
+  onToggle,
+}: {
+  completed: boolean;
+  pending: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={pending}
+      className={cn(
+        "inline-flex items-center gap-1.5 font-mono text-xs transition-colors",
+        completed ? "text-accent-read" : "text-fg-3 hover:text-fg-2",
+      )}
+    >
+      {completed ? (
+        <CheckCircle2 className="size-4" />
+      ) : (
+        <Circle className="size-4" />
+      )}
+      {completed ? "Done" : "Mark done"}
     </button>
   );
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { randToCents, dayToDate } from "@/lib/money";
+import { randToCents, dayToDate, dateToDay } from "@/lib/money";
 import {
   planSchema,
   budgetItemSchema,
@@ -173,11 +173,62 @@ export async function updateItem(id: string, input: BudgetItemInput) {
   revalidateBudget(existing.planId);
 }
 
-// Deletes a line, scoped to the current user.
+// Deletes a line, scoped to the current user. Removes the transaction it logged
+// when completed so no orphan is left behind.
 export async function deleteItem(id: string) {
   const userId = await requireUserId();
   const existing = await prisma.budgetItem.findFirst({ where: { id, userId } });
   if (!existing) return;
+  if (existing.transactionId) {
+    await prisma.transaction.deleteMany({ where: { id: existing.transactionId, userId } });
+  }
   await prisma.budgetItem.deleteMany({ where: { id, userId } });
   revalidateBudget(existing.planId);
+  revalidatePath("/money/transactions");
+}
+
+// Toggles a line done. Marking it done logs a matching transaction in the plan's
+// period (so it shows in the actual spend and the transactions log) and greys the
+// line; un-marking removes that transaction. The transaction is dated today,
+// clamped into the plan's period so it always lands in the matched range.
+export async function toggleItemComplete(id: string) {
+  const userId = await requireUserId();
+  const item = await prisma.budgetItem.findFirst({
+    where: { id, userId },
+    include: { plan: { select: { startDate: true, endDate: true } } },
+  });
+  if (!item) return;
+
+  if (!item.completed) {
+    const start = dateToDay(item.plan.startDate);
+    const end = dateToDay(item.plan.endDate);
+    const today = dateToDay(new Date());
+    const day = today < start ? start : today > end ? end : today;
+    const txn = await prisma.transaction.create({
+      data: {
+        userId,
+        type: item.kind,
+        amount: item.amount,
+        category: item.category,
+        description: item.title?.trim() || item.note?.trim() || null,
+        date: dayToDate(day),
+      },
+    });
+    await prisma.budgetItem.update({
+      where: { id },
+      data: { completed: true, transactionId: txn.id },
+    });
+  } else {
+    if (item.transactionId) {
+      await prisma.transaction.deleteMany({ where: { id: item.transactionId, userId } });
+    }
+    await prisma.budgetItem.update({
+      where: { id },
+      data: { completed: false, transactionId: null },
+    });
+  }
+
+  revalidateBudget(item.planId);
+  revalidatePath("/money/transactions");
+  revalidatePath("/money");
 }
