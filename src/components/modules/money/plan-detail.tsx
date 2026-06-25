@@ -23,6 +23,19 @@ type PlanForEdit = Awaited<ReturnType<typeof getPlans>>[number];
 
 const sum = (items: Item[]) => items.reduce((s, i) => s + i.amount, 0);
 
+// The bold line heading: the chosen title, falling back to the category.
+function headingFor(item: Item): string {
+  return item.title?.trim() || item.category;
+}
+
+// The muted line under the heading: the category (only when a custom title has
+// taken its place) and the description, joined.
+function subFor(item: Item): string {
+  return [item.title?.trim() ? item.category : null, item.note?.trim() || null]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -40,6 +53,15 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
   const plannedIn = sum(income);
   const plannedOut = sum(expense);
   const left = plannedIn - plannedOut;
+
+  // Each planned-out line draws down the money in. cumulative is the running total
+  // allocated through that line, so a line shows what is spent so far and what is
+  // left of the income after it.
+  let runningOut = 0;
+  const expenseRows = expense.map((item) => {
+    runningOut += item.amount;
+    return { item, cumulative: runningOut };
+  });
   const actualIn = Object.values(plan.actual.income).reduce((s, v) => s + v, 0);
   const actualOut = Object.values(plan.actual.expense).reduce((s, v) => s + v, 0);
 
@@ -152,6 +174,7 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
       >
         {income.map((item) => {
           const received = plan.actual.income[item.category] ?? 0;
+          const sub = subFor(item);
           return (
             <button
               key={item.id}
@@ -161,10 +184,10 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
             >
               <span className="min-w-0">
                 <span className="text-fg block text-sm font-medium">
-                  {item.category}
+                  {headingFor(item)}
                 </span>
-                {item.note ? (
-                  <span className="text-fg-3 block truncate text-xs">{item.note}</span>
+                {sub ? (
+                  <span className="text-fg-3 block truncate text-xs">{sub}</span>
                 ) : null}
               </span>
               <span className="shrink-0 text-right">
@@ -187,11 +210,12 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
         empty="Nothing allocated yet. Plan where the money goes."
         show={expense.length > 0}
       >
-        {expense.map((item) => (
+        {expenseRows.map(({ item, cumulative }) => (
           <ExpenseRow
             key={item.id}
             item={item}
-            spent={plan.actual.expense[item.category] ?? 0}
+            cumulative={cumulative}
+            plannedIn={plannedIn}
             goal={item.goalId ? (goalsById.get(item.goalId) ?? null) : null}
             onEdit={() => openItem(item, "expense")}
           />
@@ -267,19 +291,21 @@ function Section({
 
 function ExpenseRow({
   item,
-  spent,
+  cumulative,
+  plannedIn,
   goal,
   onEdit,
 }: {
   item: Item;
-  spent: number;
+  cumulative: number;
+  plannedIn: number;
   goal: Goal | null;
   onEdit: () => void;
 }) {
   const planned = item.amount;
 
-  // A goal-funded line shows the goal and its overall progress instead of a
-  // per-category spend bar.
+  // A goal-funded line shows the goal and its overall progress instead of the
+  // running draw-down bar.
   if (goal) {
     const pct = goalPercent(goal.currentAmount, goal.targetAmount);
     return (
@@ -290,14 +316,14 @@ function ExpenseRow({
       >
         <div className="flex items-center justify-between gap-3">
           <span className="text-accent-read flex items-center gap-1.5 text-sm font-medium">
-            <Target className="size-3.5" /> {goal.name}
+            <Target className="size-3.5" /> {headingFor(item)}
           </span>
           <span className="text-fg font-mono text-sm">
             {formatZAR(centsToRand(planned))}
           </span>
         </div>
         <span className="text-fg-3 font-mono text-xs">
-          funding this goal
+          funding {goal.name}
           {pct !== null ? ` · ${pct}% of target` : ""}
         </span>
         {item.note ? (
@@ -307,9 +333,17 @@ function ExpenseRow({
     );
   }
 
-  const over = spent > planned;
-  const remaining = planned - spent;
-  const pct = planned > 0 ? Math.min((spent / planned) * 100, 100) : 0;
+  // Running draw-down: cumulative is everything planned out through this line, so
+  // "spent" climbs down the list and "left" is the income remaining after it.
+  const remaining = plannedIn - cumulative;
+  const over = remaining < 0;
+  const pct =
+    plannedIn > 0
+      ? Math.min((cumulative / plannedIn) * 100, 100)
+      : cumulative > 0
+        ? 100
+        : 0;
+  const sub = subFor(item);
 
   return (
     <button
@@ -319,9 +353,9 @@ function ExpenseRow({
     >
       <div className="flex items-center justify-between gap-3">
         <span className="min-w-0">
-          <span className="text-fg block text-sm font-medium">{item.category}</span>
-          {item.note ? (
-            <span className="text-fg-3 block truncate text-xs">{item.note}</span>
+          <span className="text-fg block text-sm font-medium">{headingFor(item)}</span>
+          {sub ? (
+            <span className="text-fg-3 block truncate text-xs">{sub}</span>
           ) : null}
         </span>
         <span className="text-fg shrink-0 font-mono text-sm">
@@ -333,7 +367,7 @@ function ExpenseRow({
           className="h-full rounded-full"
           style={{
             width: `${pct}%`,
-            background: over ? "var(--danger)" : "var(--text-3)",
+            background: over ? "var(--danger)" : "var(--accent)",
           }}
         />
       </div>
@@ -341,7 +375,7 @@ function ExpenseRow({
         className="font-mono text-xs"
         style={{ color: over ? "var(--danger)" : "var(--text-3)" }}
       >
-        spent {formatZAR(centsToRand(spent))} ·{" "}
+        spent {formatZAR(centsToRand(cumulative))} ·{" "}
         {over
           ? `over by ${formatZAR(centsToRand(-remaining))}`
           : `${formatZAR(centsToRand(remaining))} left`}

@@ -51,6 +51,7 @@ export function PlanItemModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [category, setCategory] = useState("");
+  const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [goalId, setGoalId] = useState("");
@@ -63,12 +64,14 @@ export function PlanItemModal({
     if (item) {
       setKind(item.kind as Kind);
       setCategory(item.category);
+      setTitle(item.title ?? "");
       setAmount((item.amount / 100).toString());
       setNote(item.note ?? "");
       setGoalId(item.goalId ?? "");
     } else {
       setKind(defaultKind);
       setCategory(categoriesFor(defaultKind)[0].value);
+      setTitle("");
       setAmount("");
       setNote("");
       setGoalId("");
@@ -97,6 +100,7 @@ export function PlanItemModal({
     const input = {
       kind,
       category,
+      title: title.trim() || null,
       amount: value,
       note: note.trim() || null,
       goalId: kind === "expense" && goalId ? goalId : null,
@@ -156,6 +160,16 @@ export function PlanItemModal({
                 </option>
               ))}
             </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="item-title">Title</Label>
+            <Input
+              id="item-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={`Defaults to ${category || "the category"}`}
+            />
           </div>
 
           {kind === "expense" && goals.length > 0 ? (

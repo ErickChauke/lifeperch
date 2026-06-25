@@ -209,6 +209,7 @@ model BudgetItem {
   planId    String
   kind      String       @default("expense")
   category  String
+  title     String?
   amount    Int          @default(0)
   note      String?
   goalId    String?
