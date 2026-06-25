@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,9 +17,10 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
-import { priorityRank } from "@/lib/wishlist";
+import { priorityRank, PRIORITIES, type Priority } from "@/lib/wishlist";
 import { goalPercent } from "@/lib/goals";
 import { WishModal } from "./wish-modal";
 import {
@@ -50,15 +51,43 @@ export function CollectionDetailView({
   const [titleDraft, setTitleDraft] = useState(collection.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Bought wishes sink to the bottom; the rest sort by priority then price.
-  const wishes = [...collection.items].sort(
-    (a, b) =>
-      Number(a.completed) - Number(b.completed) ||
-      priorityRank(a.priority) - priorityRank(b.priority) ||
-      b.price - a.price,
+  const [priorityFilter, setPriorityFilter] = useState<"all" | Priority>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "bought">("all");
+  const [sortBy, setSortBy] = useState<"priority" | "price-desc" | "price-asc" | "newest">(
+    "priority",
   );
+
   const worth = collection.items.reduce((sum, w) => sum + w.price, 0);
   const bought = collection.items.filter((w) => w.completed).length;
+
+  // Apply the filters, then sort. The default sort sinks bought wishes to the
+  // bottom and orders the rest by priority then price.
+  const wishes = useMemo(() => {
+    const filtered = collection.items.filter((w) => {
+      if (priorityFilter !== "all" && w.priority !== priorityFilter) return false;
+      if (statusFilter === "open" && w.completed) return false;
+      if (statusFilter === "bought" && !w.completed) return false;
+      return true;
+    });
+    return filtered.sort((a, b) => {
+      if (sortBy === "price-desc") return b.price - a.price;
+      if (sortBy === "price-asc") return a.price - b.price;
+      if (sortBy === "newest")
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return (
+        Number(a.completed) - Number(b.completed) ||
+        priorityRank(a.priority) - priorityRank(b.priority) ||
+        b.price - a.price
+      );
+    });
+  }, [collection.items, priorityFilter, statusFilter, sortBy]);
+
+  const filtersOn = priorityFilter !== "all" || statusFilter !== "all";
+
+  function clearFilters() {
+    setPriorityFilter("all");
+    setStatusFilter("all");
+  }
   const goalByName = new Map(goals.map((g) => [g.name, g]));
 
   function saveRename() {
@@ -178,16 +207,69 @@ export function CollectionDetailView({
           Nothing in this list yet. Add the first thing you want.
         </p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {wishes.map((wish) => (
-            <WishCard
-              key={wish.id}
-              wish={wish}
-              goal={goalByName.get(wish.name) ?? null}
-              onEdit={() => setEditing(wish)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              className="w-auto min-w-[140px]"
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as "all" | Priority)}
+            >
+              <option value="all">All priorities</option>
+              {PRIORITIES.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </Select>
+            <Select
+              className="w-auto min-w-[120px]"
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as "all" | "open" | "bought")
+              }
+            >
+              <option value="all">All items</option>
+              <option value="open">To buy</option>
+              <option value="bought">Bought</option>
+            </Select>
+            <Select
+              className="ml-auto w-auto min-w-[170px]"
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(
+                  e.target.value as "priority" | "price-desc" | "price-asc" | "newest",
+                )
+              }
+            >
+              <option value="priority">Sort: Priority</option>
+              <option value="price-desc">Price: high to low</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="newest">Newest</option>
+            </Select>
+          </div>
+
+          {wishes.length === 0 ? (
+            <div className="text-fg-3 flex flex-col items-start gap-3 py-10 text-sm">
+              <p>No wishes match.</p>
+              {filtersOn ? (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {wishes.map((wish) => (
+                <WishCard
+                  key={wish.id}
+                  wish={wish}
+                  goal={goalByName.get(wish.name) ?? null}
+                  onEdit={() => setEditing(wish)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <WishModal
