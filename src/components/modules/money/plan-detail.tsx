@@ -159,8 +159,15 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
               onClick={() => openItem(item, "income")}
               className="bg-surface hover:bg-surface-2 hover:border-border-2 flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors"
             >
-              <span className="text-fg text-sm font-medium">{item.category}</span>
-              <span className="text-right">
+              <span className="min-w-0">
+                <span className="text-fg block text-sm font-medium">
+                  {item.category}
+                </span>
+                {item.note ? (
+                  <span className="text-fg-3 block truncate text-xs">{item.note}</span>
+                ) : null}
+              </span>
+              <span className="shrink-0 text-right">
                 <span className="text-fg block font-mono text-sm">
                   {formatZAR(centsToRand(item.amount))}
                 </span>
@@ -293,6 +300,9 @@ function ExpenseRow({
           funding this goal
           {pct !== null ? ` · ${pct}% of target` : ""}
         </span>
+        {item.note ? (
+          <span className="text-fg-3 truncate text-xs">{item.note}</span>
+        ) : null}
       </button>
     );
   }
@@ -308,8 +318,13 @@ function ExpenseRow({
       className="bg-surface hover:bg-surface-2 hover:border-border-2 flex w-full flex-col gap-2 rounded-lg border p-3 text-left transition-colors"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="text-fg text-sm font-medium">{item.category}</span>
-        <span className="text-fg font-mono text-sm">
+        <span className="min-w-0">
+          <span className="text-fg block text-sm font-medium">{item.category}</span>
+          {item.note ? (
+            <span className="text-fg-3 block truncate text-xs">{item.note}</span>
+          ) : null}
+        </span>
+        <span className="text-fg shrink-0 font-mono text-sm">
           {formatZAR(centsToRand(planned))}
         </span>
       </div>

@@ -73,6 +73,9 @@
 }
 
 :root {
+  /* Native controls (select popups, date pickers, scrollbars) follow the theme. */
+  color-scheme: light;
+
   /* Accent - Lime (theme-independent brand) */
   --accent: #a3e635;
   --accent-hover: #94d626;
@@ -164,6 +167,9 @@
 }
 
 .dark {
+  /* Native controls render dark to match the primary theme. */
+  color-scheme: dark;
+
   /* Accent ramp is theme-independent; only accent-as-text changes */
   --accent-read: #cbf576;
 
