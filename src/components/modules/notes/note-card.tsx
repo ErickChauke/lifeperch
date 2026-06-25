@@ -1,4 +1,5 @@
 import { differenceInDays, format, formatDistanceToNowStrict } from "date-fns";
+import { Paperclip } from "lucide-react";
 import { previewText, UNTITLED } from "@/lib/notes";
 import { htmlPreview } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
@@ -60,9 +61,15 @@ export function NoteCard({ note, onClick }: { note: Note; onClick: () => void })
             </span>
           ) : null}
         </div>
-        <span className="text-fg-3 shrink-0 font-mono text-xs">
-          {updatedLabel(note.updatedAt)}
-        </span>
+        <div className="text-fg-3 flex shrink-0 items-center gap-2 font-mono text-xs">
+          {note.attachments.length > 0 ? (
+            <span className="flex items-center gap-0.5">
+              <Paperclip className="size-3" />
+              {note.attachments.length}
+            </span>
+          ) : null}
+          <span>{updatedLabel(note.updatedAt)}</span>
+        </div>
       </div>
     </button>
   );

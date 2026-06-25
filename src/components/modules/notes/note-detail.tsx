@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UNTITLED } from "@/lib/notes";
 import { cn } from "@/lib/utils";
 import { RichContent } from "@/components/rich-text/rich-content";
+import { NoteAttachments } from "./note-attachments";
 import type { Note } from "./note-card";
 
 // Read-only view of a single note: title, tags and the rendered body. Edit opens
@@ -63,6 +64,8 @@ export function NoteDetail({
         ) : (
           <p className="text-fg-4 text-sm">This note is empty.</p>
         )}
+
+        <NoteAttachments noteId={note.id} initial={note.attachments} />
       </div>
     </div>
   );
