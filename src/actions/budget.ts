@@ -7,8 +7,11 @@ import { randToCents, dayToDate } from "@/lib/money";
 import {
   planSchema,
   budgetItemSchema,
+  nextPeriod,
+  defaultTitle,
   type PlanInput,
   type BudgetItemInput,
+  type PeriodType,
 } from "@/lib/budget";
 
 // Returns the current user id or throws when there is no session.
@@ -100,6 +103,39 @@ export async function deletePlan(id: string) {
   revalidateBudget();
 }
 
+// Templates a plan into the next period: copies its lines into a fresh plan for
+// the following month/week/range. Returns the new plan to navigate into.
+export async function duplicatePlan(id: string) {
+  const userId = await requireUserId();
+  const plan = await prisma.budgetPlan.findFirst({
+    where: { id, userId },
+    include: { items: true },
+  });
+  if (!plan) throw new Error("Plan not found");
+  const type = plan.periodType as PeriodType;
+  const range = nextPeriod(type, plan.startDate, plan.endDate);
+  const created = await prisma.budgetPlan.create({
+    data: {
+      userId,
+      title: defaultTitle(type, range.start, range.end),
+      periodType: plan.periodType,
+      startDate: dayToDate(range.start),
+      endDate: dayToDate(range.end),
+      items: {
+        create: plan.items.map((i) => ({
+          userId,
+          kind: i.kind,
+          category: i.category,
+          amount: i.amount,
+          goalId: i.goalId,
+        })),
+      },
+    },
+  });
+  revalidateBudget(created.id);
+  return created;
+}
+
 // --- Lines ---
 
 function toItemRecord(data: BudgetItemInput) {
@@ -107,6 +143,8 @@ function toItemRecord(data: BudgetItemInput) {
     kind: data.kind,
     category: data.category,
     amount: randToCents(data.amount),
+    // Only an expense line can fund a goal.
+    goalId: data.kind === "expense" ? (data.goalId ?? null) : null,
   };
 }
 

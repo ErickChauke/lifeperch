@@ -3,28 +3,32 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Pencil, Trash2, Plus } from "lucide-react";
+import { ChevronLeft, Pencil, Trash2, Plus, Copy, Target } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
-import { deletePlan } from "@/actions/budget";
+import { goalPercent } from "@/lib/goals";
+import { deletePlan, duplicatePlan } from "@/actions/budget";
 import { PlanModal } from "./plan-modal";
 import { PlanItemModal } from "./plan-item-modal";
 import type { getPlan, getPlans } from "@/actions/budget";
+import type { getGoals } from "@/actions/goals";
 
 type Plan = NonNullable<Awaited<ReturnType<typeof getPlan>>>;
 type Item = Plan["items"][number];
+type Goal = Awaited<ReturnType<typeof getGoals>>[number];
 type PlanForEdit = Awaited<ReturnType<typeof getPlans>>[number];
 
 const sum = (items: Item[]) => items.reduce((s, i) => s + i.amount, 0);
 
-export function PlanDetailView({ plan }: { plan: Plan }) {
+export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editingPlan, setEditingPlan] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const goalsById = new Map(goals.map((g) => [g.id, g]));
   const [itemModal, setItemModal] = useState<{
     open: boolean;
     item: Item | null;
@@ -54,6 +58,17 @@ export function PlanDetailView({ plan }: { plan: Plan }) {
         router.push("/money/plan");
       } catch {
         toast.error("Could not delete the plan");
+      }
+    });
+  }
+
+  function onDuplicate() {
+    startTransition(async () => {
+      try {
+        const created = await duplicatePlan(plan.id);
+        router.push(`/money/plan/${created.id}`);
+      } catch {
+        toast.error("Could not duplicate the plan");
       }
     });
   }
@@ -88,6 +103,15 @@ export function PlanDetailView({ plan }: { plan: Plan }) {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            aria-label="Duplicate to next period"
+            onClick={onDuplicate}
+            disabled={pending}
+          >
+            <Copy className="text-fg-3 size-4" />
+          </Button>
           <Button
             size="icon-sm"
             variant="ghost"
@@ -161,6 +185,7 @@ export function PlanDetailView({ plan }: { plan: Plan }) {
             key={item.id}
             item={item}
             spent={plan.actual.expense[item.category] ?? 0}
+            goal={item.goalId ? (goalsById.get(item.goalId) ?? null) : null}
             onEdit={() => openItem(item, "expense")}
           />
         ))}
@@ -173,6 +198,7 @@ export function PlanDetailView({ plan }: { plan: Plan }) {
         planId={plan.id}
         item={itemModal.item}
         defaultKind={itemModal.kind}
+        goals={goals}
       />
     </div>
   );
@@ -235,13 +261,42 @@ function Section({
 function ExpenseRow({
   item,
   spent,
+  goal,
   onEdit,
 }: {
   item: Item;
   spent: number;
+  goal: Goal | null;
   onEdit: () => void;
 }) {
   const planned = item.amount;
+
+  // A goal-funded line shows the goal and its overall progress instead of a
+  // per-category spend bar.
+  if (goal) {
+    const pct = goalPercent(goal.currentAmount, goal.targetAmount);
+    return (
+      <button
+        type="button"
+        onClick={onEdit}
+        className="bg-surface hover:bg-surface-2 hover:border-border-2 flex w-full flex-col gap-2 rounded-lg border p-3 text-left transition-colors"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-accent-read flex items-center gap-1.5 text-sm font-medium">
+            <Target className="size-3.5" /> {goal.name}
+          </span>
+          <span className="text-fg font-mono text-sm">
+            {formatZAR(centsToRand(planned))}
+          </span>
+        </div>
+        <span className="text-fg-3 font-mono text-xs">
+          funding this goal
+          {pct !== null ? ` · ${pct}% of target` : ""}
+        </span>
+      </button>
+    );
+  }
+
   const over = spent > planned;
   const remaining = planned - spent;
   const pct = planned > 0 ? Math.min((spent / planned) * 100, 100) : 0;

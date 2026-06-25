@@ -17,9 +17,11 @@ import { Segmented } from "./segmented";
 import { categoriesFor } from "@/lib/money";
 import { addItem, updateItem, deleteItem } from "@/actions/budget";
 import type { getPlan } from "@/actions/budget";
+import type { getGoals } from "@/actions/goals";
 
 type Plan = NonNullable<Awaited<ReturnType<typeof getPlan>>>;
 type Item = Plan["items"][number];
+type Goal = Awaited<ReturnType<typeof getGoals>>[number];
 
 const KIND_OPTIONS = [
   { value: "expense", label: "Money out" },
@@ -34,12 +36,14 @@ export function PlanItemModal({
   planId,
   item,
   defaultKind = "expense",
+  goals = [],
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   planId: string;
   item: Item | null;
   defaultKind?: Kind;
+  goals?: Goal[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -47,6 +51,7 @@ export function PlanItemModal({
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
+  const [goalId, setGoalId] = useState("");
 
   const categories = categoriesFor(kind);
 
@@ -57,18 +62,22 @@ export function PlanItemModal({
       setKind(item.kind as Kind);
       setCategory(item.category);
       setAmount((item.amount / 100).toString());
+      setGoalId(item.goalId ?? "");
     } else {
       setKind(defaultKind);
       setCategory(categoriesFor(defaultKind)[0].value);
       setAmount("");
+      setGoalId("");
     }
   }, [open, item, defaultKind]);
 
-  // Keep the category valid when switching between in and out.
+  // Keep the category valid when switching between in and out; goals only fund
+  // an expense, so clear the link on income.
   function changeKind(next: Kind) {
     setKind(next);
     const list = categoriesFor(next);
     if (!list.some((c) => c.value === category)) setCategory(list[0].value);
+    if (next === "income") setGoalId("");
   }
 
   function save() {
@@ -81,7 +90,12 @@ export function PlanItemModal({
       toast.error("Enter an amount greater than 0");
       return;
     }
-    const input = { kind, category, amount: value };
+    const input = {
+      kind,
+      category,
+      amount: value,
+      goalId: kind === "expense" && goalId ? goalId : null,
+    };
     startTransition(async () => {
       try {
         if (item) await updateItem(item.id, input);
@@ -138,6 +152,29 @@ export function PlanItemModal({
               ))}
             </Select>
           </div>
+
+          {kind === "expense" && goals.length > 0 ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="item-goal">Fund a savings goal</Label>
+              <Select
+                id="item-goal"
+                value={goalId}
+                onChange={(e) => setGoalId(e.target.value)}
+              >
+                <option value="">None</option>
+                {goals.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </Select>
+              {goalId ? (
+                <p className="text-fg-3 text-xs">
+                  This allocation funds the goal; it shows its progress instead of category spend.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="space-y-1.5">
             <Label htmlFor="item-amount">Planned amount</Label>
