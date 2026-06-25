@@ -86,7 +86,7 @@ function PaperForm({
   const [title, setTitle] = useState(paper?.title ?? "");
   const [authors, setAuthors] = useState(paper?.authors ?? "");
   const [year, setYear] = useState(paper?.year?.toString() ?? "");
-  const [status, setStatus] = useState<LitStatus>((paper?.status as LitStatus) ?? "to-read");
+  const [status, setStatus] = useState<LitStatus | "">((paper?.status as LitStatus) ?? "");
   const [source, setSource] = useState<Source>(
     paper?.fileUrl ? "pdf" : paper?.url ? "link" : "pdf",
   );
@@ -135,6 +135,10 @@ function PaperForm({
     }
     if (!fixed && creatingTopic && !newTopic.trim()) {
       toast.error("Name the topic");
+      return;
+    }
+    if (!status) {
+      toast.error("Pick a status");
       return;
     }
     (async () => {
@@ -290,6 +294,7 @@ function PaperForm({
             <Label htmlFor="lit-status">Status</Label>
             <Select
               id="lit-status"
+              placeholder="Select a status"
               value={status}
               onChange={(e) => setStatus(e.target.value as LitStatus)}
             >

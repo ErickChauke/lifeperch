@@ -22,7 +22,7 @@ import {
 } from "@/lib/shopping";
 import { createShoppingList } from "@/actions/shopping";
 
-const EMPTY: ShoppingListInput = { title: "", category: SPENDING_CATEGORIES[0].value };
+const EMPTY: ShoppingListInput = { title: "", category: "" };
 
 // New-list modal. On create it opens the new (empty) list so the user can add.
 export function ShoppingListModal({
@@ -78,13 +78,16 @@ export function ShoppingListModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="category">Category</Label>
-            <Select id="category" {...register("category")}>
+            <Select id="category" placeholder="Select a category" {...register("category")}>
               {SPENDING_CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.value}
                 </option>
               ))}
             </Select>
+            {errors.category ? (
+              <p className="text-destructive text-xs">{errors.category.message}</p>
+            ) : null}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

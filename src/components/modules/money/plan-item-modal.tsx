@@ -64,7 +64,7 @@ export function PlanItemModal({
       setGoalId(item.goalId ?? "");
     } else {
       setKind(defaultKind);
-      setCategory(categoriesFor(defaultKind)[0].value);
+      setCategory("");
       setTitle("");
       setAmount("");
       setNote("");
@@ -151,6 +151,7 @@ export function PlanItemModal({
             <Label htmlFor="item-category">Category</Label>
             <Select
               id="item-category"
+              placeholder="Select a category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >

@@ -49,7 +49,12 @@ export async function createCollection(input: CollectionInput) {
   const userId = await requireUserId();
   const data = collectionSchema.parse(input);
   const collection = await prisma.wishlistCollection.create({
-    data: { userId, title: data.title.trim(), category: data.category },
+    data: {
+      userId,
+      title: data.title.trim(),
+      category: data.category?.trim() || null,
+      description: data.description?.trim() || null,
+    },
   });
   revalidateWishlist(collection.id);
   return collection;
@@ -111,7 +116,7 @@ export async function updateWish(id: string, input: WishlistInput) {
 
   if (wish.completed) {
     const price = record.price;
-    const category = wish.collection.category;
+    const category = wish.collection.category || "Other";
     const description = record.note || record.name;
     if (price > 0 && wish.transactionId) {
       await prisma.transaction.updateMany({
@@ -174,7 +179,7 @@ export async function toggleWishComplete(id: string) {
           userId,
           type: "expense",
           amount: wish.price,
-          category: wish.collection.category,
+          category: wish.collection.category || "Other",
           description: wish.note?.trim() || wish.name,
           date: dayToDate(dateToDay(new Date())),
         },

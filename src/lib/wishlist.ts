@@ -20,8 +20,9 @@ export function priorityRank(priority: string): number {
 // Shared validation for the new-collection modal. A collection carries the
 // category; its wishes inherit it.
 export const collectionSchema = z.object({
-  title: z.string().min(1, "Name the collection"),
-  category: z.string().min(1, "Pick a category"),
+  title: z.string().min(1, "Name the list"),
+  category: z.string().nullable(),
+  description: z.string().nullable(),
 });
 
 export type CollectionInput = z.infer<typeof collectionSchema>;
