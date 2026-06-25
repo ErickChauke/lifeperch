@@ -245,6 +245,8 @@ model WishlistItem {
   price        Int                @default(0)
   priority     String             @default("medium")
   note         String?
+  completed    Boolean            @default(false)
+  transactionId String?
   collection   WishlistCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime           @default(now())

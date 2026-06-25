@@ -3,7 +3,17 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Pencil, Trash2, Plus, Star, Sparkles, Target } from "lucide-react";
+import {
+  ChevronLeft,
+  Pencil,
+  Trash2,
+  Plus,
+  Star,
+  Sparkles,
+  Target,
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +22,12 @@ import { centsToRand } from "@/lib/money";
 import { priorityRank } from "@/lib/wishlist";
 import { goalPercent } from "@/lib/goals";
 import { WishModal } from "./wish-modal";
-import { renameCollection, deleteCollection, saveForWish } from "@/actions/wishlist";
+import {
+  renameCollection,
+  deleteCollection,
+  saveForWish,
+  toggleWishComplete,
+} from "@/actions/wishlist";
 import type { getCollection } from "@/actions/wishlist";
 import type { getGoals } from "@/actions/goals";
 
@@ -35,10 +50,15 @@ export function CollectionDetailView({
   const [titleDraft, setTitleDraft] = useState(collection.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Bought wishes sink to the bottom; the rest sort by priority then price.
   const wishes = [...collection.items].sort(
-    (a, b) => priorityRank(a.priority) - priorityRank(b.priority) || b.price - a.price,
+    (a, b) =>
+      Number(a.completed) - Number(b.completed) ||
+      priorityRank(a.priority) - priorityRank(b.priority) ||
+      b.price - a.price,
   );
   const worth = collection.items.reduce((sum, w) => sum + w.price, 0);
+  const bought = collection.items.filter((w) => w.completed).length;
   const goalByName = new Map(goals.map((g) => [g.name, g]));
 
   function saveRename() {
@@ -49,7 +69,7 @@ export function CollectionDetailView({
         await renameCollection(collection.id, clean);
         setRenaming(false);
       } catch {
-        toast.error("Could not rename the collection");
+        toast.error("Could not rename the list");
       }
     });
   }
@@ -64,7 +84,7 @@ export function CollectionDetailView({
         await deleteCollection(collection.id);
         router.push("/money/wishlist");
       } catch {
-        toast.error("Could not delete the collection");
+        toast.error("Could not delete the list");
       }
     });
   }
@@ -115,11 +135,12 @@ export function CollectionDetailView({
           <div className="flex shrink-0 items-center gap-3">
             <span className="text-fg-2 hidden font-mono text-sm sm:inline">
               worth {formatZAR(centsToRand(worth))} · {collection.items.length} items
+              {bought > 0 ? ` · ${bought} bought` : ""}
             </span>
             <Button
               size="icon-sm"
               variant="ghost"
-              aria-label="Rename collection"
+              aria-label="Rename list"
               onClick={() => {
                 setTitleDraft(collection.title);
                 setRenaming(true);
@@ -130,11 +151,11 @@ export function CollectionDetailView({
             <Button
               size="sm"
               variant={confirmDelete ? "destructive" : "ghost"}
-              aria-label="Delete collection"
+              aria-label="Delete list"
               onClick={onDelete}
               disabled={pending}
             >
-              {confirmDelete ? "Delete collection?" : <Trash2 className="text-fg-3 size-4" />}
+              {confirmDelete ? "Delete list?" : <Trash2 className="text-fg-3 size-4" />}
             </Button>
           </div>
         ) : null}
@@ -148,7 +169,7 @@ export function CollectionDetailView({
 
       {collection.items.length === 0 ? (
         <p className="text-fg-3 text-sm">
-          Nothing in this collection yet. Add the first thing you want.
+          Nothing in this list yet. Add the first thing you want.
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -198,29 +219,63 @@ function WishCard({
     });
   }
 
+  function toggleBought() {
+    startTransition(async () => {
+      try {
+        await toggleWishComplete(wish.id);
+        router.refresh();
+      } catch {
+        toast.error("Could not update the wish");
+      }
+    });
+  }
+
   return (
     <div
       onClick={onEdit}
-      className="bg-surface hover:bg-surface-2 hover:border-border-2 flex cursor-pointer flex-col gap-3 rounded-lg border p-4 transition-all hover:-translate-y-px"
+      className="bg-surface hover:border-border-2 flex cursor-pointer flex-col gap-3 rounded-lg border p-4 transition-all hover:-translate-y-px"
     >
-      <span
-        className={cn(
-          "flex items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.10em]",
-          high ? "text-fg-2" : "text-fg-3",
-        )}
-      >
-        {high ? <Star className="size-3" /> : null}
-        {wish.priority}
-      </span>
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "flex items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.10em]",
+            high ? "text-fg-2" : "text-fg-3",
+          )}
+        >
+          {high ? <Star className="size-3" /> : null}
+          {wish.priority}
+        </span>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleBought();
+          }}
+          className={cn(
+            "inline-flex items-center gap-1.5 font-mono text-xs transition-colors",
+            wish.completed ? "text-accent-read" : "text-fg-3 hover:text-fg-2",
+          )}
+        >
+          {wish.completed ? (
+            <CheckCircle2 className="size-4" />
+          ) : (
+            <Circle className="size-4" />
+          )}
+          {wish.completed ? "Bought" : "Mark bought"}
+        </button>
+      </div>
 
-      <p className="text-fg truncate text-lg font-semibold">{wish.name}</p>
-      {wish.note ? <p className="text-fg-2 line-clamp-2 text-sm">{wish.note}</p> : null}
+      <div className={cn("flex flex-1 flex-col gap-3", wish.completed && "opacity-50")}>
+        <p className="text-fg truncate text-lg font-semibold">{wish.name}</p>
+        {wish.note ? <p className="text-fg-2 line-clamp-2 text-sm">{wish.note}</p> : null}
 
-      <p className="text-fg mt-auto font-mono text-xl font-medium">
-        {formatZAR(centsToRand(wish.price))}
-      </p>
+        <p className="text-fg mt-auto font-mono text-xl font-medium">
+          {formatZAR(centsToRand(wish.price))}
+        </p>
+      </div>
 
-      {goal ? (
+      {wish.completed ? null : goal ? (
         <button
           type="button"
           onClick={(e) => {

@@ -34,10 +34,10 @@ export function WishlistOverview({
       <>
         <MoneyEmpty
           eyebrow="Records · Money · Wishlist"
-          message="No wishlists yet. Make a collection for the things you want - a camera kit, a home office - and price them up."
+          message="No wishlists yet. Make a list for the things you want - a camera kit, a home office - and price them up."
           action={
             <Button onClick={() => setCreating(true)}>
-              <Plus /> New collection
+              <Plus /> New list
             </Button>
           }
         />
@@ -50,11 +50,11 @@ export function WishlistOverview({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-fg-2 text-sm">
-          {collections.length} {collections.length === 1 ? "collection" : "collections"} · worth{" "}
+          {collections.length} {collections.length === 1 ? "list" : "lists"} · worth{" "}
           <span className="text-fg font-mono">{formatZAR(centsToRand(totalWorth))}</span>
         </p>
         <Button onClick={() => setCreating(true)}>
-          <Plus /> New collection
+          <Plus /> New list
         </Button>
       </div>
 
@@ -81,7 +81,7 @@ function CollectionCard({
 
   const meta =
     collection.items.length === 0
-      ? "Empty collection"
+      ? "Empty list"
       : `${collection.items.length} ${collection.items.length === 1 ? "item" : "items"}`;
 
   return (
