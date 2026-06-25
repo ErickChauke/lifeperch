@@ -95,13 +95,48 @@ export async function createWish(collectionId: string, input: WishlistInput) {
   revalidateWishlist(collectionId);
 }
 
-// Updates a wish, scoped to the current user.
+// Updates a wish, scoped to the current user. When the wish is already bought, its
+// logged transaction is kept in step: the amount/description follow the edit, and
+// crossing to or from a free (price 0) wish creates or removes the transaction.
 export async function updateWish(id: string, input: WishlistInput) {
   const userId = await requireUserId();
   const data = wishlistSchema.parse(input);
-  const wish = await prisma.wishlistItem.findFirst({ where: { id, userId } });
+  const wish = await prisma.wishlistItem.findFirst({
+    where: { id, userId },
+    include: { collection: { select: { category: true } } },
+  });
   if (!wish) return;
-  await prisma.wishlistItem.updateMany({ where: { id, userId }, data: toRecord(data) });
+  const record = toRecord(data);
+  await prisma.wishlistItem.updateMany({ where: { id, userId }, data: record });
+
+  if (wish.completed) {
+    const price = record.price;
+    const category = wish.collection.category;
+    const description = record.note || record.name;
+    if (price > 0 && wish.transactionId) {
+      await prisma.transaction.updateMany({
+        where: { id: wish.transactionId, userId },
+        data: { amount: price, category, description },
+      });
+    } else if (price > 0 && !wish.transactionId) {
+      const txn = await prisma.transaction.create({
+        data: {
+          userId,
+          type: "expense",
+          amount: price,
+          category,
+          description,
+          date: dayToDate(dateToDay(new Date())),
+        },
+      });
+      await prisma.wishlistItem.update({ where: { id }, data: { transactionId: txn.id } });
+    } else if (price === 0 && wish.transactionId) {
+      await prisma.transaction.deleteMany({ where: { id: wish.transactionId, userId } });
+      await prisma.wishlistItem.update({ where: { id }, data: { transactionId: null } });
+    }
+    revalidatePath("/money/transactions");
+  }
+
   revalidateWishlist(wish.collectionId);
 }
 

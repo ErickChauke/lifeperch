@@ -163,13 +163,27 @@ export async function addItem(planId: string, input: BudgetItemInput) {
   revalidateBudget(planId);
 }
 
-// Updates a line, scoped to the current user.
+// Updates a line, scoped to the current user. When the line is already marked
+// done, its logged transaction is kept in step with the new amount/category/note.
 export async function updateItem(id: string, input: BudgetItemInput) {
   const userId = await requireUserId();
   const data = budgetItemSchema.parse(input);
   const existing = await prisma.budgetItem.findFirst({ where: { id, userId } });
   if (!existing) return;
-  await prisma.budgetItem.updateMany({ where: { id, userId }, data: toItemRecord(data) });
+  const record = toItemRecord(data);
+  await prisma.budgetItem.updateMany({ where: { id, userId }, data: record });
+  if (existing.completed && existing.transactionId) {
+    await prisma.transaction.updateMany({
+      where: { id: existing.transactionId, userId },
+      data: {
+        type: record.kind,
+        amount: record.amount,
+        category: record.category,
+        description: record.title || record.note || null,
+      },
+    });
+    revalidatePath("/money/transactions");
+  }
   revalidateBudget(existing.planId);
 }
 
