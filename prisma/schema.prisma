@@ -22,6 +22,7 @@ model User {
   timetableEvents TimetableEvent[]
   noteCollections NoteCollection[]
   notes           Note[]
+  noteAttachments NoteAttachment[]
   dailyEntries    DailyEntry[]
   transactions    Transaction[]
   savingsGoals    SavingsGoal[]
@@ -86,8 +87,26 @@ model Note {
   tags         String[]       @default([])
   collection   NoteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments  NoteAttachment[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+// A file uploaded to Cloudinary and attached to a note. publicId is kept so the
+// asset can be deleted when the attachment or its note is removed.
+model NoteAttachment {
+  id        String   @id @default(cuid())
+  userId    String
+  noteId    String
+  name      String
+  url       String
+  publicId  String
+  format    String?
+  bytes     Int?
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model DailyEntry {

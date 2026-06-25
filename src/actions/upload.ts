@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { cloudinary } from "@/lib/cloudinary";
 
-const ALLOWED_FOLDERS = ["lifeperch/vault", "lifeperch/literature"];
+const ALLOWED_FOLDERS = ["lifeperch/vault", "lifeperch/literature", "lifeperch/notes"];
 
 // Returns a short-lived signature so the browser can upload a file directly to
 // Cloudinary. The file never passes through the server, sidestepping the serverless

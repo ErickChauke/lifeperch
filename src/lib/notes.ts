@@ -22,6 +22,18 @@ export const noteCollectionSchema = z.object({
 
 export type NoteCollectionInput = z.infer<typeof noteCollectionSchema>;
 
+// Validation for a note attachment. The upload fields come from the signed browser
+// upload; name defaults to the original file name.
+export const attachmentSchema = z.object({
+  name: z.string().min(1),
+  url: z.string().url(),
+  publicId: z.string().min(1),
+  format: z.string().nullable().optional(),
+  bytes: z.number().nullable().optional(),
+});
+
+export type AttachmentInput = z.infer<typeof attachmentSchema>;
+
 // Fallback title for a note saved without one.
 export const UNTITLED = "Untitled note";
 
