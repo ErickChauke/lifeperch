@@ -72,8 +72,9 @@ export function VaultBoard({ collections }: { collections: Collection[] }) {
               Archive · Vault
             </p>
             <p className="text-fg-2 mt-3 text-[15px]">
-              The vault is open and empty. Upload your first document - an ID, a
-              contract, a certificate - or make a folder to group them in.
+              The vault is open and empty. Upload anything worth keeping safe - an
+              ID or contract, a photo, a slide deck, a spreadsheet - or make a
+              folder to group them in.
             </p>
             <div className="mt-6 flex justify-center gap-2">
               <Button variant="outline" onClick={() => setCreating(true)}>
