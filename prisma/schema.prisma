@@ -29,6 +29,8 @@ model User {
   shoppingItems   ShoppingItem[]
   wishlistCollections WishlistCollection[]
   wishlistItems   WishlistItem[]
+  budgetPlans     BudgetPlan[]
+  budgetItems     BudgetItem[]
   vaultCollections VaultCollection[]
   documents       Document[]
   literatureCollections LiteratureCollection[]
@@ -160,6 +162,38 @@ model ShoppingItem {
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+}
+
+// A budget plan for a period: a monthly/weekly/custom envelope of expected money
+// in and planned allocations out. periodType is "month"/"week"/"custom"; the
+// startDate/endDate range drives the planned-vs-actual match against transactions.
+model BudgetPlan {
+  id         String       @id @default(cuid())
+  userId     String
+  title      String
+  periodType String       @default("month")
+  startDate  DateTime     @db.Date
+  endDate    DateTime     @db.Date
+  items      BudgetItem[]
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+// A line in a budget plan. kind is "income" (expected money in) or "expense"
+// (a planned allocation). category matches the transaction categories so actual
+// spend/income for the plan's period can be summed by category. amount in cents.
+model BudgetItem {
+  id        String     @id @default(cuid())
+  userId    String
+  planId    String
+  kind      String     @default("expense")
+  category  String
+  amount    Int        @default(0)
+  plan      BudgetPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 // A titled wishlist collection scoped to one category (e.g. "Photography kit").
