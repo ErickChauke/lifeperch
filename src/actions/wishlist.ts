@@ -9,7 +9,7 @@ import {
   type CollectionInput,
   type WishlistInput,
 } from "@/lib/wishlist";
-import { randToCents } from "@/lib/money";
+import { randToCents, dayToDate, dateToDay } from "@/lib/money";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -105,13 +105,63 @@ export async function updateWish(id: string, input: WishlistInput) {
   revalidateWishlist(wish.collectionId);
 }
 
-// Deletes a wish, scoped to the current user.
+// Deletes a wish, scoped to the current user. Removes the transaction it logged
+// when bought so no orphan is left behind.
 export async function deleteWish(id: string) {
   const userId = await requireUserId();
   const wish = await prisma.wishlistItem.findFirst({ where: { id, userId } });
   if (!wish) return;
+  if (wish.transactionId) {
+    await prisma.transaction.deleteMany({ where: { id: wish.transactionId, userId } });
+  }
   await prisma.wishlistItem.deleteMany({ where: { id, userId } });
   revalidateWishlist(wish.collectionId);
+  revalidatePath("/money/transactions");
+}
+
+// Toggles a wish as bought. Marking it bought logs an expense transaction in the
+// list's category (so the spend shows in the transactions log) and greys the
+// card; un-marking removes that transaction. A free wish (price 0) just flips the
+// flag with nothing to log.
+export async function toggleWishComplete(id: string) {
+  const userId = await requireUserId();
+  const wish = await prisma.wishlistItem.findFirst({
+    where: { id, userId },
+    include: { collection: { select: { category: true } } },
+  });
+  if (!wish) return;
+
+  if (!wish.completed) {
+    let transactionId: string | null = null;
+    if (wish.price > 0) {
+      const txn = await prisma.transaction.create({
+        data: {
+          userId,
+          type: "expense",
+          amount: wish.price,
+          category: wish.collection.category,
+          description: wish.note?.trim() || wish.name,
+          date: dayToDate(dateToDay(new Date())),
+        },
+      });
+      transactionId = txn.id;
+    }
+    await prisma.wishlistItem.update({
+      where: { id },
+      data: { completed: true, transactionId },
+    });
+  } else {
+    if (wish.transactionId) {
+      await prisma.transaction.deleteMany({ where: { id: wish.transactionId, userId } });
+    }
+    await prisma.wishlistItem.update({
+      where: { id },
+      data: { completed: false, transactionId: null },
+    });
+  }
+
+  revalidateWishlist(wish.collectionId);
+  revalidatePath("/money/transactions");
 }
 
 // Turns a wish into a savings goal (target = the wish price), linked by name.

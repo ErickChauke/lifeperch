@@ -52,7 +52,7 @@ export function CollectionModal({
         onOpenChange(false);
         router.push(`/money/wishlist/${collection.id}`);
       } catch {
-        toast.error("Could not create the collection");
+        toast.error("Could not create the list");
       }
     });
   }
@@ -61,7 +61,7 @@ export function CollectionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>New collection</DialogTitle>
+          <DialogTitle>New list</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -95,7 +95,7 @@ export function CollectionModal({
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={pending}>
-              Create collection
+              Create list
             </Button>
           </div>
         </form>
