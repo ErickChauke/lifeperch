@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Segmented } from "./segmented";
 import { categoriesFor } from "@/lib/money";
 import { addItem, updateItem, deleteItem } from "@/actions/budget";
 import type { getPlan } from "@/actions/budget";
@@ -23,11 +22,6 @@ import type { getGoals } from "@/actions/goals";
 type Plan = NonNullable<Awaited<ReturnType<typeof getPlan>>>;
 type Item = Plan["items"][number];
 type Goal = Awaited<ReturnType<typeof getGoals>>[number];
-
-const KIND_OPTIONS = [
-  { value: "expense", label: "Money out" },
-  { value: "income", label: "Money in" },
-] as const;
 
 type Kind = "income" | "expense";
 
@@ -77,15 +71,6 @@ export function PlanItemModal({
       setGoalId("");
     }
   }, [open, item, defaultKind]);
-
-  // Keep the category valid when switching between in and out; goals only fund
-  // an expense, so clear the link on income.
-  function changeKind(next: Kind) {
-    setKind(next);
-    const list = categoriesFor(next);
-    if (!list.some((c) => c.value === category)) setCategory(list[0].value);
-    if (next === "income") setGoalId("");
-  }
 
   function save() {
     const value = Number(amount);
@@ -143,8 +128,23 @@ export function PlanItemModal({
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Type</Label>
-            <Segmented options={KIND_OPTIONS} value={kind} onChange={changeKind} />
+            <Label htmlFor="item-title">Title</Label>
+            <Input
+              id="item-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={`Defaults to ${category || "the category"}`}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="item-note">Description</Label>
+            <Textarea
+              id="item-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Optional note for this line"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -160,16 +160,6 @@ export function PlanItemModal({
                 </option>
               ))}
             </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="item-title">Title</Label>
-            <Input
-              id="item-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={`Defaults to ${category || "the category"}`}
-            />
           </div>
 
           {kind === "expense" && goals.length > 0 ? (
@@ -212,16 +202,6 @@ export function PlanItemModal({
                 className="pl-7 font-mono"
               />
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="item-note">Description</Label>
-            <Textarea
-              id="item-note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Optional note for this line"
-            />
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-2">

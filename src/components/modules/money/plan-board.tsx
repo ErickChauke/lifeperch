@@ -80,6 +80,9 @@ function PlanCard({ plan }: { plan: Plan }) {
       <span className="text-fg-3 font-mono text-xs">
         {periodLabel(plan.startDate, plan.endDate)}
       </span>
+      <span className="text-fg-3 mt-1 font-mono text-[10.5px] uppercase tracking-[0.08em]">
+        {left < 0 ? "over budget" : "left to allocate"}
+      </span>
       <span
         className="text-fg font-mono text-2xl font-medium"
         style={left < 0 ? { color: "var(--danger)" } : undefined}
@@ -87,8 +90,7 @@ function PlanCard({ plan }: { plan: Plan }) {
         {formatZAR(centsToRand(left))}
       </span>
       <span className="text-fg-3 font-mono text-xs">
-        {left < 0 ? "over by" : "left to allocate"} · in{" "}
-        {formatZAR(centsToRand(income))}
+        of {formatZAR(centsToRand(income))} money in
       </span>
     </Link>
   );
