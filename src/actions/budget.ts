@@ -143,6 +143,7 @@ function toItemRecord(data: BudgetItemInput) {
     kind: data.kind,
     category: data.category,
     amount: randToCents(data.amount),
+    note: data.note?.trim() || null,
     // Only an expense line can fund a goal.
     goalId: data.kind === "expense" ? (data.goalId ?? null) : null,
   };

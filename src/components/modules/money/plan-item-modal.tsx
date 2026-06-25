@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Segmented } from "./segmented";
 import { categoriesFor } from "@/lib/money";
 import { addItem, updateItem, deleteItem } from "@/actions/budget";
@@ -51,6 +52,7 @@ export function PlanItemModal({
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
   const [goalId, setGoalId] = useState("");
 
   const categories = categoriesFor(kind);
@@ -62,11 +64,13 @@ export function PlanItemModal({
       setKind(item.kind as Kind);
       setCategory(item.category);
       setAmount((item.amount / 100).toString());
+      setNote(item.note ?? "");
       setGoalId(item.goalId ?? "");
     } else {
       setKind(defaultKind);
       setCategory(categoriesFor(defaultKind)[0].value);
       setAmount("");
+      setNote("");
       setGoalId("");
     }
   }, [open, item, defaultKind]);
@@ -94,6 +98,7 @@ export function PlanItemModal({
       kind,
       category,
       amount: value,
+      note: note.trim() || null,
       goalId: kind === "expense" && goalId ? goalId : null,
     };
     startTransition(async () => {
@@ -193,6 +198,16 @@ export function PlanItemModal({
                 className="pl-7 font-mono"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="item-note">Description</Label>
+            <Textarea
+              id="item-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Optional note for this line"
+            />
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-2">

@@ -191,6 +191,7 @@ model BudgetItem {
   kind      String       @default("expense")
   category  String
   amount    Int          @default(0)
+  note      String?
   goalId    String?
   plan      BudgetPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   goal      SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
