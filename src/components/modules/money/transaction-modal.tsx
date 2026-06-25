@@ -39,7 +39,7 @@ function emptyValues(): TransactionInput {
   return {
     type: "expense",
     amount: undefined as unknown as number,
-    category: "Groceries",
+    category: "",
     date: format(new Date(), "yyyy-MM-dd"),
     description: null,
   };
@@ -88,10 +88,11 @@ export function TransactionModal({
     }
   }, [transaction, open, reset]);
 
-  // Keeps the category valid when the type flips between income and expense.
+  // Clears the category when the type flips to one whose list does not contain it,
+  // so a stale pick never carries over. An unpicked (blank) category stays blank.
   useEffect(() => {
-    if (!categories.some((c) => c.value === category)) {
-      setValue("category", categories[0].value);
+    if (category && !categories.some((c) => c.value === category)) {
+      setValue("category", "");
     }
   }, [type, category, categories, setValue]);
 
@@ -166,13 +167,16 @@ export function TransactionModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="category">Category</Label>
-            <Select id="category" {...register("category")}>
+            <Select id="category" placeholder="Select a category" {...register("category")}>
               {categories.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.value}
                 </option>
               ))}
             </Select>
+            {errors.category ? (
+              <p className="text-destructive text-xs">{errors.category.message}</p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">

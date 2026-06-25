@@ -27,7 +27,7 @@ import type { TimetableEvent } from "./timetable-board";
 
 const EMPTY: EventInput = {
   title: "",
-  type: "lecture",
+  type: "" as EventInput["type"],
   startTime: "09:00",
   endTime: "10:00",
   isRecurring: true,
@@ -125,13 +125,16 @@ export function EventModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="type">Type</Label>
-            <Select id="type" {...register("type")}>
+            <Select id="type" placeholder="Select a type" {...register("type")}>
               {EVENT_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>
                   {t.label}
                 </option>
               ))}
             </Select>
+            {errors.type ? (
+              <p className="text-destructive text-xs">{errors.type.message}</p>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

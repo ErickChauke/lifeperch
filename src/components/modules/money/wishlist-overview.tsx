@@ -91,9 +91,11 @@ function CollectionCard({
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-fg truncate font-semibold">{collection.title}</span>
-        <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-xs">
-          {collection.category}
-        </span>
+        {collection.category ? (
+          <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-xs">
+            {collection.category}
+          </span>
+        ) : null}
       </div>
       <span className="text-fg font-mono text-2xl font-medium">
         {formatZAR(centsToRand(worth))}

@@ -126,9 +126,11 @@ export function CollectionDetailView({
         ) : (
           <div className="flex min-w-0 items-center gap-3">
             <h1 className="text-fg truncate text-2xl font-semibold">{collection.title}</h1>
-            <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-xs">
-              {collection.category}
-            </span>
+            {collection.category ? (
+              <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-xs">
+                {collection.category}
+              </span>
+            ) : null}
           </div>
         )}
         {!renaming ? (
@@ -160,6 +162,10 @@ export function CollectionDetailView({
           </div>
         ) : null}
       </div>
+
+      {collection.description ? (
+        <p className="text-fg-2 text-sm">{collection.description}</p>
+      ) : null}
 
       <div className="flex justify-end">
         <Button onClick={() => setCreating(true)}>

@@ -15,11 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { collectionSchema, type CollectionInput } from "@/lib/wishlist";
 import { SPENDING_CATEGORIES } from "@/lib/shopping";
 import { createCollection } from "@/actions/wishlist";
 
-const EMPTY: CollectionInput = { title: "", category: SPENDING_CATEGORIES[0].value };
+const EMPTY: CollectionInput = { title: "", category: null, description: null };
 
 // New-collection modal. On create it opens the new (empty) collection.
 export function CollectionModal({
@@ -75,13 +76,27 @@ export function CollectionModal({
 
           <div className="space-y-1.5">
             <Label htmlFor="category">Category</Label>
-            <Select id="category" {...register("category")}>
+            <Select id="category" {...register("category", { setValueAs: (v) => v || null })}>
+              <option value="">No category</option>
               {SPENDING_CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.value}
                 </option>
               ))}
             </Select>
+            <p className="text-fg-3 text-xs">
+              Optional - sets where a bought wish is filed in transactions.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Optional - what this list is for"
+              rows={3}
+              {...register("description", { setValueAs: (v) => v || null })}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

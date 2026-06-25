@@ -38,7 +38,7 @@ export function VaultUploadModal({
   const fileInput = useRef<HTMLInputElement>(null);
   const [, startTransition] = useTransition();
   const [title, setTitle] = useState("");
-  const [folderId, setFolderId] = useState(folders[0]?.id ?? NEW_FOLDER);
+  const [folderId, setFolderId] = useState("");
   const [newFolder, setNewFolder] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [rejected, setRejected] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export function VaultUploadModal({
 
   function reset() {
     setTitle("");
-    setFolderId(folders[0]?.id ?? NEW_FOLDER);
+    setFolderId("");
     setNewFolder("");
     setFile(null);
     setRejected(null);
@@ -104,7 +104,10 @@ export function VaultUploadModal({
 
   const uploading = phase === "uploading";
   const saveDisabled =
-    !file || !title.trim() || (creatingFolder && !newFolder.trim()) || uploading;
+    !file ||
+    !title.trim() ||
+    (creatingFolder ? !newFolder.trim() : !folderId) ||
+    uploading;
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -129,6 +132,7 @@ export function VaultUploadModal({
             {folders.length > 0 ? (
               <Select
                 id="upload-folder"
+                placeholder="Select a folder"
                 value={folderId}
                 onChange={(e) => setFolderId(e.target.value)}
               >

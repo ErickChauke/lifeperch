@@ -224,11 +224,12 @@ model BudgetItem {
 
 // A titled wishlist collection scoped to one category (e.g. "Photography kit").
 model WishlistCollection {
-  id        String         @id @default(cuid())
-  userId    String
-  title     String
-  category  String
-  items     WishlistItem[]
+  id          String         @id @default(cuid())
+  userId      String
+  title       String
+  category    String?
+  description String?
+  items       WishlistItem[]
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt

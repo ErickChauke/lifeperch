@@ -228,6 +228,11 @@
     background-color: var(--surface);
     color: var(--text);
   }
+  /* A select sitting on its empty placeholder reads as muted, so an un-picked
+     dropdown looks like a placeholder rather than a real choice. */
+  [data-slot="select"]:has(option[value=""]:checked) {
+    color: var(--text-3);
+  }
 }
 
 /* Rendered note HTML. Repoints the typography plugin at the app design tokens so
