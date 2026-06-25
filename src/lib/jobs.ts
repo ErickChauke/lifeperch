@@ -34,6 +34,7 @@ export const applicationSchema = z.object({
   position: z.string().min(1, "What did you apply for?"),
   location: z.string().nullable(),
   url: z.string().nullable(),
+  description: z.string().nullable(),
   value: z.number().min(0).nullable(),
   status: z.enum(APP_STAGES),
   outcome: z.enum(APP_OUTCOMES).nullable(),

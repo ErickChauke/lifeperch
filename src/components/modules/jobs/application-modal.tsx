@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { centsToRand, dateToDay } from "@/lib/money";
 import { applicationSchema, APP_STAGES, STAGE_META, type ApplicationInput } from "@/lib/jobs";
 import { createJob, updateJob, deleteJob } from "@/actions/jobs";
@@ -26,6 +27,7 @@ function emptyValues(): ApplicationInput {
     position: "",
     location: null,
     url: null,
+    description: null,
     value: null,
     status: "to-apply",
     outcome: null,
@@ -69,6 +71,7 @@ export function ApplicationModal({
         position: application.position,
         location: application.location,
         url: application.url,
+        description: application.description,
         value: application.value == null ? null : centsToRand(application.value),
         status: application.status as ApplicationInput["status"],
         outcome: application.outcome as ApplicationInput["outcome"],
@@ -150,6 +153,16 @@ export function ApplicationModal({
               placeholder="https://… (optional)"
               className="font-mono"
               {...register("url", { setValueAs: (v) => v || null })}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Optional - what the role is, why it caught your eye, anything to remember"
+              rows={3}
+              {...register("description", { setValueAs: (v) => v || null })}
             />
           </div>
 

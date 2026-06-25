@@ -381,6 +381,7 @@ model JobApplication {
   position     String
   location     String?
   url          String?
+  description  String?    @db.Text
   value        Int?
   status       String     @default("to-apply")
   outcome      String?

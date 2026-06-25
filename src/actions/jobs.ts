@@ -29,6 +29,7 @@ function toRecord(data: ApplicationInput) {
     position: data.position.trim(),
     location: data.location?.trim() || null,
     url: data.url?.trim() || null,
+    description: data.description?.trim() || null,
     value: data.value == null ? null : randToCents(data.value),
     status: data.status,
     outcome,

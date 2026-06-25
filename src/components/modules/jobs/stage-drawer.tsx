@@ -132,6 +132,15 @@ function DrawerBody({
 
       <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto p-5">
         {/* Detail */}
+        {application.description ? (
+          <div className="mb-5">
+            <p className="text-fg-3 mb-1 font-mono text-xs">DESCRIPTION</p>
+            <p className="text-fg text-sm whitespace-pre-wrap">
+              {application.description}
+            </p>
+          </div>
+        ) : null}
+
         {application.value != null ? (
           <div className="mb-5">
             <p className="text-fg-3 font-mono text-xs">VALUE</p>
