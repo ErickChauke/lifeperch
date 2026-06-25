@@ -50,12 +50,17 @@ export function VaultBoard({ collections }: { collections: Collection[] }) {
             <Button variant="ghost" size="sm" onClick={relock} disabled={pending}>
               <Lock /> Re-lock
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
-              <FolderPlus /> New folder
-            </Button>
-            <Button size="sm" onClick={() => setUploading(true)}>
-              <Upload /> Upload
-            </Button>
+            {/* The empty state shows these centered, so the header drops them then. */}
+            {collections.length > 0 ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+                  <FolderPlus /> New folder
+                </Button>
+                <Button size="sm" onClick={() => setUploading(true)}>
+                  <Upload /> Upload
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
       </PageHeader>

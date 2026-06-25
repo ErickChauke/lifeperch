@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, FolderOpen } from "lucide-react";
+import { FolderOpen, FolderPlus, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   PageShell,
@@ -11,13 +11,17 @@ import {
 } from "@/components/layout/page-shell";
 import { MoneyEmpty } from "@/components/modules/money/money-empty";
 import { TopicModal } from "./topic-modal";
+import { PaperModal } from "./paper-modal";
 import type { getCollections } from "@/actions/literature";
 
 type Topic = Awaited<ReturnType<typeof getCollections>>[number];
 
-// Literature landing: a board of topic folders. Papers live inside a topic.
+// Literature landing: a board of topic folders. Papers live inside a topic, but
+// you can also add a paper straight from here and pick or create its topic.
 export function LiteratureTopics({ topics }: { topics: Topic[] }) {
   const [creating, setCreating] = useState(false);
+  const [addingPaper, setAddingPaper] = useState(false);
+  const topicOptions = topics.map((t) => ({ id: t.id, title: t.title }));
 
   if (topics.length === 0) {
     return (
@@ -25,14 +29,25 @@ export function LiteratureTopics({ topics }: { topics: Topic[] }) {
         <PageBody className="pt-6 md:pt-10">
           <MoneyEmpty
             eyebrow="Records · Literature"
-            message="No topics yet. Make one for a subject you're reading into - a thesis review, a reading list - and group its papers inside."
+            message="No topics yet. Add a paper - it makes its first topic - or set up a topic to group papers in."
             action={
-              <Button onClick={() => setCreating(true)}>
-                <Plus /> New topic
-              </Button>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => setCreating(true)}>
+                  <FolderPlus /> New topic
+                </Button>
+                <Button onClick={() => setAddingPaper(true)}>
+                  <FilePlus /> Add paper
+                </Button>
+              </div>
             }
           />
           <TopicModal open={creating} onOpenChange={setCreating} />
+          <PaperModal
+            open={addingPaper}
+            onOpenChange={setAddingPaper}
+            topics={topicOptions}
+            paper={null}
+          />
         </PageBody>
       </PageShell>
     );
@@ -48,9 +63,14 @@ export function LiteratureTopics({ topics }: { topics: Topic[] }) {
               {topics.length} {topics.length === 1 ? "topic" : "topics"}
             </p>
           </div>
-          <Button onClick={() => setCreating(true)}>
-            <Plus /> New topic
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+              <FolderPlus /> New topic
+            </Button>
+            <Button size="sm" onClick={() => setAddingPaper(true)}>
+              <FilePlus /> Add paper
+            </Button>
+          </div>
         </div>
       </PageHeader>
 
@@ -61,6 +81,12 @@ export function LiteratureTopics({ topics }: { topics: Topic[] }) {
           ))}
         </div>
         <TopicModal open={creating} onOpenChange={setCreating} />
+        <PaperModal
+          open={addingPaper}
+          onOpenChange={setAddingPaper}
+          topics={topicOptions}
+          paper={null}
+        />
       </PageBody>
     </PageShell>
   );

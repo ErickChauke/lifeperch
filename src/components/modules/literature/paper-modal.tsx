@@ -19,7 +19,12 @@ import { seedHtml } from "@/lib/rich-text";
 import { LIT_STATUSES, type LitStatus } from "@/lib/literature";
 import { uploadFile, MAX_UPLOAD_BYTES } from "@/lib/upload";
 import { formatBytes } from "@/lib/vault";
-import { createLit, updateLit, deleteLit } from "@/actions/literature";
+import {
+  createLit,
+  updateLit,
+  deleteLit,
+  createCollection,
+} from "@/actions/literature";
 import type { Paper } from "./paper-card";
 
 const SOURCES = [
@@ -29,15 +34,21 @@ const SOURCES = [
 
 type Source = (typeof SOURCES)[number]["value"];
 
+const NEW_TOPIC = "__new__";
+
+// Either fixed to one topic (in-topic, with collectionId) or top-level, where a
+// topic is picked or created inline (topics).
 export function PaperModal({
   open,
   onOpenChange,
   collectionId,
+  topics,
   paper,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  collectionId: string;
+  collectionId?: string;
+  topics?: { id: string; title: string }[];
   paper: Paper | null;
 }) {
   return (
@@ -48,6 +59,7 @@ export function PaperModal({
           <PaperForm
             paper={paper}
             collectionId={collectionId}
+            topics={topics ?? []}
             onClose={() => onOpenChange(false)}
           />
         ) : null}
@@ -59,10 +71,12 @@ export function PaperModal({
 function PaperForm({
   paper,
   collectionId,
+  topics,
   onClose,
 }: {
   paper: Paper | null;
-  collectionId: string;
+  collectionId?: string;
+  topics: { id: string; title: string }[];
   onClose: () => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
@@ -89,6 +103,12 @@ function PaperForm({
   const [progress, setProgress] = useState(0);
   const [rejected, setRejected] = useState<string | null>(null);
 
+  // Top-level mode (no fixed collectionId): pick an existing topic or create one.
+  const fixed = collectionId != null;
+  const [topicId, setTopicId] = useState(topics[0]?.id ?? NEW_TOPIC);
+  const [newTopic, setNewTopic] = useState("");
+  const creatingTopic = !fixed && (topics.length === 0 || topicId === NEW_TOPIC);
+
   function pick(f: File | null) {
     if (!f) return;
     if (f.size > MAX_UPLOAD_BYTES) {
@@ -111,6 +131,10 @@ function PaperForm({
   function save() {
     if (!title.trim()) {
       toast.error("Title is required");
+      return;
+    }
+    if (!fixed && creatingTopic && !newTopic.trim()) {
+      toast.error("Name the topic");
       return;
     }
     (async () => {
@@ -154,8 +178,17 @@ function PaperForm({
 
       startTransition(async () => {
         try {
-          if (paper) await updateLit(paper.id, input);
-          else await createLit(collectionId, input);
+          if (paper) {
+            await updateLit(paper.id, input);
+          } else {
+            let targetId = collectionId;
+            if (!targetId) {
+              targetId = creatingTopic
+                ? (await createCollection({ title: newTopic.trim() })).id
+                : topicId;
+            }
+            await createLit(targetId, input);
+          }
           toast.success(paper ? "Paper updated" : "Paper added");
           onClose();
         } catch {
@@ -189,6 +222,38 @@ function PaperForm({
       </DialogHeader>
 
       <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+        {!fixed ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="lit-topic">Topic</Label>
+            {topics.length > 0 ? (
+              <Select
+                id="lit-topic"
+                value={topicId}
+                onChange={(e) => setTopicId(e.target.value)}
+              >
+                {topics.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+                <option value={NEW_TOPIC}>+ New topic</option>
+              </Select>
+            ) : (
+              <p className="text-fg-4 text-xs">
+                No topics yet. Name one and it is created with your paper inside.
+              </p>
+            )}
+            {creatingTopic ? (
+              <Input
+                value={newTopic}
+                onChange={(e) => setNewTopic(e.target.value)}
+                placeholder="New topic name"
+                className="mt-1.5"
+              />
+            ) : null}
+          </div>
+        ) : null}
+
         <div className="space-y-1.5">
           <Label htmlFor="lit-title">Title</Label>
           <Input
