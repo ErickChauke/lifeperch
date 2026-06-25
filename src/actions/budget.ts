@@ -126,6 +126,7 @@ export async function duplicatePlan(id: string) {
           userId,
           kind: i.kind,
           category: i.category,
+          title: i.title,
           amount: i.amount,
           goalId: i.goalId,
         })),
@@ -142,6 +143,7 @@ function toItemRecord(data: BudgetItemInput) {
   return {
     kind: data.kind,
     category: data.category,
+    title: data.title?.trim() || null,
     amount: randToCents(data.amount),
     note: data.note?.trim() || null,
     // Only an expense line can fund a goal.

@@ -40,6 +40,7 @@ export type PlanInput = z.infer<typeof planSchema>;
 export const budgetItemSchema = z.object({
   kind: z.enum(["income", "expense"]),
   category: z.string().min(1, "Pick a category"),
+  title: z.string().nullable().optional(),
   amount: z.number().positive("Enter an amount greater than 0"),
   note: z.string().nullable().optional(),
   goalId: z.string().nullable().optional(),
