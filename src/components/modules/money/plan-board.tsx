@@ -77,7 +77,7 @@ function PlanCard({ plan }: { plan: Plan }) {
           <CalendarRange className="size-4" strokeWidth={1.75} />
         </span>
       </div>
-      <span className="text-fg-3 font-mono text-xs">
+      <span className="font-mono text-xs" style={{ color: "var(--info)" }}>
         {periodLabel(plan.startDate, plan.endDate)}
       </span>
       <span className="text-fg-3 mt-1 font-mono text-[10.5px] uppercase tracking-[0.08em]">

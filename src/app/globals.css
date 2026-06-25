@@ -220,6 +220,14 @@
   ::selection {
     background: var(--accent-soft);
   }
+  /* Native select popups: some browsers (notably on Windows) ignore color-scheme
+     for the open option list and fall back to a light OS listbox. Tinting the
+     rows directly keeps the dropdown blended with the app surface. */
+  select option,
+  select optgroup {
+    background-color: var(--surface);
+    color: var(--text);
+  }
 }
 
 /* Rendered note HTML. Repoints the typography plugin at the app design tokens so
