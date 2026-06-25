@@ -1,0 +1,194 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Segmented } from "./segmented";
+import { categoriesFor } from "@/lib/money";
+import { addItem, updateItem, deleteItem } from "@/actions/budget";
+import type { getPlan } from "@/actions/budget";
+
+type Plan = NonNullable<Awaited<ReturnType<typeof getPlan>>>;
+type Item = Plan["items"][number];
+
+const KIND_OPTIONS = [
+  { value: "expense", label: "Money out" },
+  { value: "income", label: "Money in" },
+] as const;
+
+type Kind = "income" | "expense";
+
+export function PlanItemModal({
+  open,
+  onOpenChange,
+  planId,
+  item,
+  defaultKind = "expense",
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  planId: string;
+  item: Item | null;
+  defaultKind?: Kind;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [kind, setKind] = useState<Kind>(defaultKind);
+  const [category, setCategory] = useState("");
+  const [amount, setAmount] = useState("");
+
+  const categories = categoriesFor(kind);
+
+  useEffect(() => {
+    if (!open) return;
+    setConfirmDelete(false);
+    if (item) {
+      setKind(item.kind as Kind);
+      setCategory(item.category);
+      setAmount((item.amount / 100).toString());
+    } else {
+      setKind(defaultKind);
+      setCategory(categoriesFor(defaultKind)[0].value);
+      setAmount("");
+    }
+  }, [open, item, defaultKind]);
+
+  // Keep the category valid when switching between in and out.
+  function changeKind(next: Kind) {
+    setKind(next);
+    const list = categoriesFor(next);
+    if (!list.some((c) => c.value === category)) setCategory(list[0].value);
+  }
+
+  function save() {
+    const value = Number(amount);
+    if (!category) {
+      toast.error("Pick a category");
+      return;
+    }
+    if (!value || value <= 0) {
+      toast.error("Enter an amount greater than 0");
+      return;
+    }
+    const input = { kind, category, amount: value };
+    startTransition(async () => {
+      try {
+        if (item) await updateItem(item.id, input);
+        else await addItem(planId, input);
+        onOpenChange(false);
+        router.refresh();
+      } catch {
+        toast.error("Could not save the line");
+      }
+    });
+  }
+
+  function onDelete() {
+    if (!item) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await deleteItem(item.id);
+        onOpenChange(false);
+        router.refresh();
+      } catch {
+        toast.error("Could not delete the line");
+      }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>{item ? "Edit line" : "Add line"}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Type</Label>
+            <Segmented options={KIND_OPTIONS} value={kind} onChange={changeKind} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="item-category">Category</Label>
+            <Select
+              id="item-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {categories.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.value}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="item-amount">Planned amount</Label>
+            <div className="relative">
+              <span className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 font-mono text-sm">
+                R
+              </span>
+              <Input
+                id="item-amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="pl-7 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {item ? (
+              <Button
+                type="button"
+                variant={confirmDelete ? "destructive" : "ghost"}
+                size="sm"
+                onClick={onDelete}
+                disabled={pending}
+              >
+                {confirmDelete ? "Delete line?" : "Delete"}
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                disabled={pending}
+              >
+                Cancel
+              </Button>
+              <Button type="button" size="sm" onClick={save} disabled={pending}>
+                {item ? "Save" : "Add"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
