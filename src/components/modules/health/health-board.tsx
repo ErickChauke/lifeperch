@@ -41,9 +41,11 @@ const TYPE_ICONS: Record<MealType, LucideIcon> = {
 };
 
 // Groups a thousands-separated kcal figure, or a dash when there is no value.
+const NB = String.fromCharCode(160);
+
 function kcal(value: number | null): string {
   if (value == null) return "-";
-  return `${String(value).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} kcal`;
+  return `${String(value).replace(/\B(?=(\d{3})+(?!\d))/g, NB)}${NB}kcal`;
 }
 
 // Returns the "yyyy-MM-dd" day shifted by delta days, computed in UTC.

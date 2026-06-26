@@ -76,7 +76,10 @@ export function HabitCard({
             </button>
             <div className="flex flex-col items-center">
               <span
-                className={cn("font-mono text-base tabular-nums", complete ? "" : "text-fg")}
+                className={cn(
+                  "font-mono text-base whitespace-nowrap tabular-nums",
+                  complete ? "" : "text-fg",
+                )}
                 style={complete ? { color: "var(--success)" } : undefined}
               >
                 {done} / {habit.target}
