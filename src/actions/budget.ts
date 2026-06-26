@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { randToCents, dayToDate, dateToDay } from "@/lib/money";
+import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 import {
   planSchema,
   budgetItemSchema,
@@ -197,6 +198,7 @@ export async function deleteItem(id: string) {
     await prisma.transaction.deleteMany({ where: { id: existing.transactionId, userId } });
   }
   await prisma.budgetItem.deleteMany({ where: { id, userId } });
+  await clearInboundLinks(userId, id);
   revalidateBudget(existing.planId);
   revalidatePath("/money/transactions");
 }
@@ -242,6 +244,7 @@ export async function toggleItemComplete(id: string) {
     });
   }
 
+  await syncLinkedStatus(userId, "plan", id, !item.completed);
   revalidateBudget(item.planId);
   revalidatePath("/money/transactions");
   revalidatePath("/money");

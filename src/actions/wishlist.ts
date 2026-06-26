@@ -10,6 +10,7 @@ import {
   type WishlistInput,
 } from "@/lib/wishlist";
 import { randToCents, dayToDate, dateToDay } from "@/lib/money";
+import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -155,6 +156,7 @@ export async function deleteWish(id: string) {
     await prisma.transaction.deleteMany({ where: { id: wish.transactionId, userId } });
   }
   await prisma.wishlistItem.deleteMany({ where: { id, userId } });
+  await clearInboundLinks(userId, id);
   revalidateWishlist(wish.collectionId);
   revalidatePath("/money/transactions");
 }
@@ -200,6 +202,7 @@ export async function toggleWishComplete(id: string) {
     });
   }
 
+  await syncLinkedStatus(userId, "wish", id, !wish.completed);
   revalidateWishlist(wish.collectionId);
   revalidatePath("/money/transactions");
 }
