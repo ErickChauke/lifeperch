@@ -210,8 +210,8 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
                   item.completed && "opacity-50",
                 )}
               >
-                <span className="min-w-0">
-                  <span className="text-fg block text-sm font-medium">
+                <span className="min-w-0 flex-1">
+                  <span className="text-fg block truncate text-sm font-medium">
                     {headingFor(item)}
                   </span>
                   {sub ? (
@@ -405,8 +405,8 @@ function ExpenseRow({
         className={cn("flex w-full flex-col gap-2 text-left", dim)}
       >
         <div className="flex items-center justify-between gap-3">
-          <span className="min-w-0">
-            <span className="text-fg block text-sm font-medium">{headingFor(item)}</span>
+          <span className="min-w-0 flex-1">
+            <span className="text-fg block truncate text-sm font-medium">{headingFor(item)}</span>
             {sub ? (
               <span className="text-fg-3 block truncate text-xs">{sub}</span>
             ) : null}

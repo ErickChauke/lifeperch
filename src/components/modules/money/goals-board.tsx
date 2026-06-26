@@ -87,7 +87,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
       className="bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-3 rounded-lg border p-4 text-left transition-all hover:-translate-y-px"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-fg truncate font-medium">{goal.name}</span>
+        <span className="text-fg min-w-0 truncate font-medium">{goal.name}</span>
         {reached ? (
           <span className="shrink-0 rounded-full bg-[color-mix(in_oklch,var(--success)_15%,transparent)] px-2 py-0.5 text-[11px] text-[var(--success)]">
             Reached
@@ -163,14 +163,14 @@ function GoalFoot({
   }
   if (monthly <= 0 || eta === null) {
     return (
-      <p className="font-mono text-xs">
+      <p className="font-mono text-xs break-words">
         <span className="text-fg-3">{formatZAR(centsToRand(remaining))} to go</span>
         <span className="text-[var(--warning)]"> · set a monthly amount for an ETA</span>
       </p>
     );
   }
   return (
-    <p className="font-mono text-xs">
+    <p className="font-mono text-xs break-words">
       <span className="text-fg-3">{formatZAR(centsToRand(remaining))} to go</span>
       <span className="text-fg-2">
         {" · ≈ "}
