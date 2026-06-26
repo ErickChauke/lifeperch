@@ -89,6 +89,23 @@ export async function createShoppingItem(listId: string, input: ShoppingItemInpu
   revalidateShopping(listId);
 }
 
+// Edits an item's name, price (rand to cents), and quantity, scoped to the user.
+export async function updateShoppingItem(id: string, input: ShoppingItemInput) {
+  const userId = await requireUserId();
+  const data = shoppingItemSchema.parse(input);
+  const item = await prisma.shoppingItem.findFirst({ where: { id, userId } });
+  if (!item) return;
+  await prisma.shoppingItem.updateMany({
+    where: { id, userId },
+    data: {
+      name: data.name.trim(),
+      price: randToCents(data.price),
+      quantity: data.quantity,
+    },
+  });
+  revalidateShopping(item.listId);
+}
+
 // Moves an item between to-buy and the basket.
 export async function toggleBought(id: string) {
   const userId = await requireUserId();
