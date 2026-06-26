@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatZAR } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { MoneyEmpty } from "./money-empty";
 import { CollectionModal } from "./collection-modal";
@@ -51,7 +51,9 @@ export function WishlistOverview({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-fg-2 text-sm">
           {collections.length} {collections.length === 1 ? "list" : "lists"} · worth{" "}
-          <span className="text-fg font-mono">{formatZAR(centsToRand(totalWorth))}</span>
+          <span className="text-fg font-mono" title={formatCurrency(centsToRand(totalWorth))}>
+            {formatCurrencyShort(centsToRand(totalWorth))}
+          </span>
         </p>
         <Button onClick={() => setCreating(true)}>
           <Plus /> New list
@@ -97,8 +99,11 @@ function CollectionCard({
           </span>
         ) : null}
       </div>
-      <span className="text-fg font-mono text-2xl font-medium">
-        {formatZAR(centsToRand(worth))}
+      <span
+        className="text-fg truncate font-mono text-2xl font-medium"
+        title={formatCurrency(centsToRand(worth))}
+      >
+        {formatCurrencyShort(centsToRand(worth))}
       </span>
       <span className="text-fg-3 font-mono text-xs">
         {meta}

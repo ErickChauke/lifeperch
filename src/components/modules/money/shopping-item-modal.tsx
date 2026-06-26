@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { shoppingItemSchema, type ShoppingItemInput } from "@/lib/shopping";
-import { centsToRand } from "@/lib/money";
+import { centsToRand, stripNegative } from "@/lib/money";
+import { MAX_AMOUNT } from "@/lib/currency";
 import { updateShoppingItem } from "@/actions/shopping";
 import type { Item } from "./shopping-list-detail";
 
@@ -39,6 +40,8 @@ export function ShoppingItemModal({
     resolver: zodResolver(shoppingItemSchema),
     defaultValues: EMPTY,
   });
+  const priceReg = register("price", { valueAsNumber: true });
+  const quantityReg = register("quantity", { valueAsNumber: true });
 
   useEffect(() => {
     if (item) {
@@ -89,8 +92,13 @@ export function ShoppingItemModal({
                   type="number"
                   step="0.01"
                   min="0"
+                  max={MAX_AMOUNT}
                   className="pl-7 font-mono"
-                  {...register("price", { valueAsNumber: true })}
+                  {...priceReg}
+                  onChange={(e) => {
+                    e.target.value = stripNegative(e.target.value);
+                    priceReg.onChange(e);
+                  }}
                 />
               </div>
               {errors.price ? (
@@ -106,7 +114,11 @@ export function ShoppingItemModal({
                 step="1"
                 min="1"
                 className="font-mono"
-                {...register("quantity", { valueAsNumber: true })}
+                {...quantityReg}
+                onChange={(e) => {
+                  e.target.value = stripNegative(e.target.value);
+                  quantityReg.onChange(e);
+                }}
               />
               {errors.quantity ? (
                 <p className="text-destructive text-xs">{errors.quantity.message}</p>

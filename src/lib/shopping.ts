@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_AMOUNT } from "@/lib/currency";
 
 // Lists deal only in spending categories (re-exported from money, which already
 // excludes investing).
@@ -17,7 +18,10 @@ export type ShoppingListInput = z.infer<typeof shoppingListSchema>;
 // converted to cents in the action; the category comes from the parent list.
 export const shoppingItemSchema = z.object({
   name: z.string().min(1, "Name the item"),
-  price: z.number().min(0, "Price cannot be negative"),
+  price: z
+    .number()
+    .min(0, "Price cannot be negative")
+    .max(MAX_AMOUNT, "Price is too large"),
   quantity: z.number().int().min(1, "Quantity is at least 1"),
 });
 

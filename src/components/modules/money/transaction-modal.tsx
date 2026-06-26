@@ -21,8 +21,10 @@ import {
   categoriesFor,
   centsToRand,
   dateToDay,
+  stripNegative,
   type TransactionInput,
 } from "@/lib/money";
+import { MAX_AMOUNT } from "@/lib/currency";
 import {
   createTransaction,
   updateTransaction,
@@ -71,6 +73,7 @@ export function TransactionModal({
   const type = watch("type");
   const category = watch("category");
   const categories = categoriesFor(type);
+  const amountReg = register("amount", { valueAsNumber: true });
 
   // Loads the selected transaction into the form, or resets to a blank expense.
   useEffect(() => {
@@ -156,8 +159,13 @@ export function TransactionModal({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_AMOUNT}
                 className="pl-7 font-mono"
-                {...register("amount", { valueAsNumber: true })}
+                {...amountReg}
+                onChange={(e) => {
+                  e.target.value = stripNegative(e.target.value);
+                  amountReg.onChange(e);
+                }}
               />
             </div>
             {errors.amount ? (

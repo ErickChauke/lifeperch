@@ -20,7 +20,8 @@ import {
   Plus,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { cn, formatZAR } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import {
   summarize,
@@ -182,12 +183,13 @@ function Summary({
             {cell.label}
           </span>
           <span
+            title={formatCurrency(centsToRand(cell.cents))}
             className={cn(
-              "font-mono text-[25px] font-medium",
+              "min-w-0 truncate font-mono text-[25px] font-medium",
               cell.danger ? "text-[var(--danger)]" : "text-fg",
             )}
           >
-            {formatZAR(centsToRand(cell.cents))}
+            {formatCurrencyShort(centsToRand(cell.cents))}
           </span>
           <span className="text-fg-3 hidden font-mono text-xs sm:block">{cell.sub}</span>
         </div>
@@ -241,8 +243,9 @@ function Expectations({ transactions, period }: { transactions: Transaction[]; p
               {f.label}
             </span>
             <span
+              title={f.cents === null ? undefined : formatCurrency(centsToRand(f.cents))}
               className={cn(
-                "font-mono text-xl",
+                "min-w-0 truncate font-mono text-xl",
                 f.cents !== null && f.cents < 0
                   ? "text-[var(--danger)]"
                   : f.accent
@@ -250,7 +253,7 @@ function Expectations({ transactions, period }: { transactions: Transaction[]; p
                     : "text-fg",
               )}
             >
-              {f.cents === null ? "-" : formatZAR(centsToRand(f.cents))}
+              {f.cents === null ? "-" : formatCurrencyShort(centsToRand(f.cents))}
             </span>
           </div>
         ))}
@@ -278,8 +281,9 @@ function PlanningHub({
       title: "Shopping list",
       status:
         toBuy.length > 0
-          ? `${formatZAR(centsToRand(shopEstimate))} · ${toBuy.length} to buy`
+          ? `${formatCurrencyShort(centsToRand(shopEstimate))} · ${toBuy.length} to buy`
           : "List is clear",
+      statusFull: toBuy.length > 0 ? formatCurrency(centsToRand(shopEstimate)) : undefined,
     },
     {
       href: "/money/wishlist",
@@ -287,8 +291,9 @@ function PlanningHub({
       title: "Wishlist",
       status:
         wishes.length > 0
-          ? `${wishes.length} items · ${formatZAR(centsToRand(wishWorth))}`
+          ? `${wishes.length} items · ${formatCurrencyShort(centsToRand(wishWorth))}`
           : "Nothing parked yet",
+      statusFull: wishes.length > 0 ? formatCurrency(centsToRand(wishWorth)) : undefined,
     },
   ];
 
@@ -305,7 +310,12 @@ function PlanningHub({
           </span>
           <span className="min-w-0 flex-1">
             <span className="text-fg block truncate font-semibold">{card.title}</span>
-            <span className="text-fg-3 block truncate font-mono text-xs">{card.status}</span>
+            <span
+              className="text-fg-3 block truncate font-mono text-xs"
+              title={card.statusFull}
+            >
+              {card.status}
+            </span>
           </span>
           <ChevronRight className="text-fg-4 size-4 shrink-0" />
         </Link>
@@ -354,16 +364,25 @@ function GoalRow({ goal }: { goal: Goal }) {
     : unset
       ? "set a target"
       : eta === null
-        ? `${formatZAR(centsToRand(remaining))} to go · set a monthly amount`
+        ? `${formatCurrencyShort(centsToRand(remaining))} to go · set a monthly amount`
         : `≈ ${eta} months to go`;
+  const etaTitle =
+    !reached && !unset && eta === null ? formatCurrency(centsToRand(remaining)) : undefined;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-fg min-w-0 truncate font-medium">{goal.name}</span>
-        <span className="text-fg-2 shrink-0 font-mono text-sm tabular-nums">
-          {formatZAR(centsToRand(goal.currentAmount))} /{" "}
-          {unset ? "-" : formatZAR(centsToRand(goal.targetAmount))}
+        <span
+          className="text-fg-2 shrink-0 font-mono text-sm tabular-nums"
+          title={
+            unset
+              ? formatCurrency(centsToRand(goal.currentAmount))
+              : `${formatCurrency(centsToRand(goal.currentAmount))} / ${formatCurrency(centsToRand(goal.targetAmount))}`
+          }
+        >
+          {formatCurrencyShort(centsToRand(goal.currentAmount))} /{" "}
+          {unset ? "-" : formatCurrencyShort(centsToRand(goal.targetAmount))}
         </span>
       </div>
       <div className="bg-surface-3 h-2 overflow-hidden rounded-full">
@@ -376,6 +395,7 @@ function GoalRow({ goal }: { goal: Goal }) {
         />
       </div>
       <p
+        title={etaTitle}
         className={cn(
           "font-mono text-xs",
           reached

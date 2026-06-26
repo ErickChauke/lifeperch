@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatZAR } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { MoneyEmpty } from "./money-empty";
 import { ShoppingListModal } from "./shopping-list-modal";
@@ -48,7 +48,10 @@ export function ShoppingOverview({ lists }: { lists: ShoppingListWithItems[] }) 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-fg-2 text-sm">
           {lists.length} {lists.length === 1 ? "list" : "lists"} ·{" "}
-          <span className="text-fg font-mono">{formatZAR(centsToRand(combinedToBuy))}</span> to buy
+          <span className="text-fg font-mono" title={formatCurrency(centsToRand(combinedToBuy))}>
+            {formatCurrencyShort(centsToRand(combinedToBuy))}
+          </span>{" "}
+          to buy
         </p>
         <Button onClick={() => setCreating(true)}>
           <Plus /> New list
@@ -89,8 +92,11 @@ function ListCard({ list }: { list: ShoppingListWithItems }) {
           {list.category}
         </span>
       </div>
-      <span className="text-fg font-mono text-2xl font-medium">
-        {formatZAR(centsToRand(estimate))}
+      <span
+        className="text-fg truncate font-mono text-2xl font-medium"
+        title={formatCurrency(centsToRand(estimate))}
+      >
+        {formatCurrencyShort(centsToRand(estimate))}
       </span>
       <span className="text-fg-3 font-mono text-xs">{meta}</span>
       {basket.length > 0 ? (

@@ -217,6 +217,29 @@
   .font-mono {
     font-feature-settings: "tnum" 1;
   }
+  /* Tabular figures everywhere so a digit never changes width as a live value
+     ticks (money totals, counters), preventing layout jitter. */
+  * {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Drop the number-input spinners so a money field keeps a stable width and the
+     value is never clipped behind the stepper. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  /* On phones, let flex children shrink below their content so truncate can kick
+     in instead of a long amount overflowing its tile. */
+  @media (max-width: 640px) {
+    [class*="flex"] > * {
+      min-width: 0;
+    }
+  }
   ::selection {
     background: var(--accent-soft);
   }

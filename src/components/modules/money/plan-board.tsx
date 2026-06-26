@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus, CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatZAR } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
 import { MoneyEmpty } from "./money-empty";
@@ -84,13 +84,17 @@ function PlanCard({ plan }: { plan: Plan }) {
         {left < 0 ? "over budget" : "left to allocate"}
       </span>
       <span
-        className="text-fg font-mono text-2xl font-medium"
+        className="text-fg truncate font-mono text-2xl font-medium"
         style={left < 0 ? { color: "var(--danger)" } : undefined}
+        title={formatCurrency(centsToRand(left))}
       >
-        {formatZAR(centsToRand(left))}
+        {formatCurrencyShort(centsToRand(left))}
       </span>
-      <span className="text-fg-3 font-mono text-xs">
-        of {formatZAR(centsToRand(income))} money in
+      <span
+        className="text-fg-3 truncate font-mono text-xs"
+        title={formatCurrency(centsToRand(income))}
+      >
+        of {formatCurrencyShort(centsToRand(income))} money in
       </span>
     </Link>
   );

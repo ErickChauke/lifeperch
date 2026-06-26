@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { addMonths, format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { cn, formatZAR } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { goalPercent, monthsToGoal } from "@/lib/goals";
 import { MoneyEmpty } from "./money-empty";
@@ -50,7 +51,9 @@ export function GoalsBoard({ goals }: { goals: Goal[] }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-fg-2 text-sm">
           Saved{" "}
-          <span className="text-fg font-mono">{formatZAR(centsToRand(totalSaved))}</span>{" "}
+          <span className="text-fg font-mono" title={formatCurrency(centsToRand(totalSaved))}>
+            {formatCurrencyShort(centsToRand(totalSaved))}
+          </span>{" "}
           across {goals.length} {goals.length === 1 ? "goal" : "goals"}
         </p>
         <Button onClick={() => setCreating(true)}>
@@ -110,13 +113,20 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
       </div>
 
       <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono">
+        <span
+          className="min-w-0 truncate font-mono"
+          title={
+            unset
+              ? formatCurrency(centsToRand(goal.currentAmount))
+              : `${formatCurrency(centsToRand(goal.currentAmount))} / ${formatCurrency(centsToRand(goal.targetAmount))}`
+          }
+        >
           <span className="text-fg text-lg font-medium">
-            {formatZAR(centsToRand(goal.currentAmount))}
+            {formatCurrencyShort(centsToRand(goal.currentAmount))}
           </span>
           <span className="text-fg-2 text-sm">
             {" / "}
-            {unset ? "-" : formatZAR(centsToRand(goal.targetAmount))}
+            {unset ? "-" : formatCurrencyShort(centsToRand(goal.targetAmount))}
           </span>
         </span>
         {percent !== null ? (
@@ -164,14 +174,18 @@ function GoalFoot({
   if (monthly <= 0 || eta === null) {
     return (
       <p className="font-mono text-xs break-words">
-        <span className="text-fg-3">{formatZAR(centsToRand(remaining))} to go</span>
+        <span className="text-fg-3" title={formatCurrency(centsToRand(remaining))}>
+          {formatCurrencyShort(centsToRand(remaining))} to go
+        </span>
         <span className="text-[var(--warning)]"> · set a monthly amount for an ETA</span>
       </p>
     );
   }
   return (
     <p className="font-mono text-xs break-words">
-      <span className="text-fg-3">{formatZAR(centsToRand(remaining))} to go</span>
+      <span className="text-fg-3" title={formatCurrency(centsToRand(remaining))}>
+        {formatCurrencyShort(centsToRand(remaining))} to go
+      </span>
       <span className="text-fg-2">
         {" · ≈ "}
         {eta} months · {format(addMonths(new Date(), eta), "MMM yyyy")}

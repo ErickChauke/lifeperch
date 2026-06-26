@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Plus, MapPin, ExternalLink } from "lucide-react";
 import { format, differenceInCalendarDays } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { formatZAR } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import {
   PageShell,
@@ -225,8 +225,11 @@ function ApplicationCard({
       ) : null}
       <div className="mt-1 flex items-center justify-between gap-2">
         {application.value != null ? (
-          <span className="text-fg-2 font-mono text-xs tabular-nums">
-            {formatZAR(centsToRand(application.value))}
+          <span
+            className="text-fg-2 min-w-0 truncate font-mono text-xs tabular-nums"
+            title={formatCurrency(centsToRand(application.value))}
+          >
+            {formatCurrencyShort(centsToRand(application.value))}
           </span>
         ) : (
           <span />
