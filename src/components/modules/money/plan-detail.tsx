@@ -181,10 +181,15 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
         <Figure label="Money in" value={plannedIn} />
         <Figure label="Planned out" value={plannedOut} />
         <Figure label="Left" value={left} danger={left < 0} />
-        <p className="text-fg-3 col-span-1 font-mono text-xs sm:col-span-3">
-          Actual this period · in {formatZAR(centsToRand(actualIn))} · out{" "}
-          {formatZAR(centsToRand(actualOut))}
-        </p>
+        <div className="text-fg-3 col-span-1 flex flex-col gap-0.5 font-mono text-xs sm:col-span-3 sm:flex-row sm:gap-0">
+          <span>Actual this period</span>
+          <span>
+            <span className="hidden sm:inline"> · </span>in {formatZAR(centsToRand(actualIn))}
+          </span>
+          <span>
+            <span className="hidden sm:inline"> · </span>out {formatZAR(centsToRand(actualOut))}
+          </span>
+        </div>
       </div>
 
       {/* Money in */}
