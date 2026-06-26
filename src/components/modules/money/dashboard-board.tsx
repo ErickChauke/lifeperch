@@ -298,8 +298,8 @@ function PlanningHub({
             <card.icon className="size-5" strokeWidth={1.75} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="text-fg block font-semibold">{card.title}</span>
-            <span className="text-fg-3 block font-mono text-xs">{card.status}</span>
+            <span className="text-fg block truncate font-semibold">{card.title}</span>
+            <span className="text-fg-3 block truncate font-mono text-xs">{card.status}</span>
           </span>
           <ChevronRight className="text-fg-4 size-4 shrink-0" />
         </Link>
@@ -354,8 +354,8 @@ function GoalRow({ goal }: { goal: Goal }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-fg truncate font-medium">{goal.name}</span>
-        <span className="text-fg-2 shrink-0 font-mono text-sm">
+        <span className="text-fg min-w-0 truncate font-medium">{goal.name}</span>
+        <span className="text-fg-2 shrink-0 font-mono text-sm tabular-nums">
           {formatZAR(centsToRand(goal.currentAmount))} /{" "}
           {unset ? "-" : formatZAR(centsToRand(goal.targetAmount))}
         </span>

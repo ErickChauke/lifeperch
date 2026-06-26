@@ -187,7 +187,7 @@ function TransactionRow({
       <span className="bg-surface-2 text-fg-2 flex size-8 shrink-0 items-center justify-center rounded-sm">
         <CategoryIcon category={transaction.category} className="size-[17px]" />
       </span>
-      <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-xs">
+      <span className="bg-surface-3 text-fg-2 hidden shrink-0 rounded-full px-2 py-0.5 text-xs sm:inline-flex">
         {transaction.category}
       </span>
       <span
@@ -200,7 +200,7 @@ function TransactionRow({
       </span>
       <span
         className={cn(
-          "flex shrink-0 items-center gap-1 font-mono text-[15px] font-medium",
+          "flex shrink-0 items-center gap-1 font-mono text-[15px] font-medium tabular-nums",
           income ? "text-[var(--success)]" : "text-fg",
         )}
       >

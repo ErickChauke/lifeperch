@@ -90,7 +90,7 @@ function CollectionCard({
       className="bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-fg truncate font-semibold">{collection.title}</span>
+        <span className="text-fg min-w-0 truncate font-semibold">{collection.title}</span>
         {collection.category ? (
           <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-xs">
             {collection.category}

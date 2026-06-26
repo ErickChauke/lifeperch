@@ -233,7 +233,7 @@ export function CollectionDetailView({
               <option value="bought">Bought</option>
             </Select>
             <Select
-              className="ml-auto w-auto min-w-[170px]"
+              className="w-full min-w-[170px] sm:ml-auto sm:w-auto"
               value={sortBy}
               onChange={(e) =>
                 setSortBy(
@@ -326,11 +326,11 @@ function WishCard({
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(
-            "flex items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.10em]",
+            "flex min-w-0 items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.10em]",
             high ? "text-fg-2" : "text-fg-3",
           )}
         >
-          {high ? <Star className="size-3" /> : null}
+          {high ? <Star className="size-3 shrink-0" /> : null}
           {wish.priority}
         </span>
         <button
@@ -341,7 +341,7 @@ function WishCard({
             toggleBought();
           }}
           className={cn(
-            "inline-flex items-center gap-1.5 font-mono text-xs transition-colors",
+            "inline-flex shrink-0 items-center gap-1.5 font-mono text-xs transition-colors",
             wish.completed ? "text-accent-read" : "text-fg-3 hover:text-fg-2",
           )}
         >
