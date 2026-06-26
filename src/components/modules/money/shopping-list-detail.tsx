@@ -320,8 +320,13 @@ function ItemRow({
         >
           {item.name}
         </button>
-        <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end sm:gap-3">
-          <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          {item.quantity > 1 ? (
+            <span className="text-fg-3 shrink-0 font-mono text-sm tabular-nums sm:hidden">
+              × {item.quantity}
+            </span>
+          ) : null}
+          <div className="hidden shrink-0 items-center gap-1 sm:flex">
             <button
               type="button"
               onClick={() => onQty(item.quantity - 1)}
