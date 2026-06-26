@@ -12,6 +12,8 @@ import {
   Target,
   CheckCircle2,
   Circle,
+  Download,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,9 +21,10 @@ import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
 import { goalPercent } from "@/lib/goals";
-import { deletePlan, duplicatePlan, toggleItemComplete } from "@/actions/budget";
+import { deletePlan, duplicatePlan, toggleItemComplete, importToPlan } from "@/actions/budget";
 import { PlanModal } from "./plan-modal";
 import { PlanItemModal } from "./plan-item-modal";
+import { ImportPickerModal, type ImportSource } from "./import-picker-modal";
 import type { getPlan, getPlans } from "@/actions/budget";
 import type { getGoals } from "@/actions/goals";
 
@@ -37,6 +40,15 @@ function headingFor(item: Item): string {
   return item.title?.trim() || item.category;
 }
 
+// Label for the chip on a line that was imported from another module.
+function originLabel(originType: string): string {
+  return originType === "wish"
+    ? "from wishlist"
+    : originType === "shopping"
+      ? "from shopping"
+      : "from plan";
+}
+
 // The muted line under the heading: the category (only when a custom title has
 // taken its place) and the description, joined.
 function subFor(item: Item): string {
@@ -45,11 +57,20 @@ function subFor(item: Item): string {
     .join(" · ");
 }
 
-export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
+export function PlanDetailView({
+  plan,
+  goals,
+  importSources,
+}: {
+  plan: Plan;
+  goals: Goal[];
+  importSources: ImportSource[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editingPlan, setEditingPlan] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [importing, setImporting] = useState(false);
   const goalsById = new Map(goals.map((g) => [g.id, g]));
   const [itemModal, setItemModal] = useState<{
     open: boolean;
@@ -248,6 +269,7 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
       <Section
         title="Planned out"
         onAdd={() => openItem(null, "expense")}
+        onImport={importSources.length > 0 ? () => setImporting(true) : undefined}
         empty="Nothing allocated yet. Plan where the money goes."
         show={expense.length > 0}
       >
@@ -273,6 +295,15 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
         item={itemModal.item}
         defaultKind={itemModal.kind}
         goals={goals}
+      />
+      <ImportPickerModal
+        open={importing}
+        onOpenChange={setImporting}
+        title="Import to this plan"
+        sources={importSources}
+        onImport={(picked) =>
+          importToPlan(plan.id, picked as { type: "wish" | "shopping"; id: string }[])
+        }
       />
     </div>
   );
@@ -305,12 +336,14 @@ function Figure({
 function Section({
   title,
   onAdd,
+  onImport,
   empty,
   show,
   children,
 }: {
   title: string;
   onAdd: () => void;
+  onImport?: () => void;
   empty: string;
   show: boolean;
   children: React.ReactNode;
@@ -319,9 +352,16 @@ function Section({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-fg-2 text-sm font-semibold">{title}</h2>
-        <Button size="sm" variant="outline" onClick={onAdd}>
-          <Plus /> Add
-        </Button>
+        <div className="flex items-center gap-2">
+          {onImport ? (
+            <Button size="sm" variant="outline" onClick={onImport}>
+              <Download /> Import
+            </Button>
+          ) : null}
+          <Button size="sm" variant="outline" onClick={onAdd}>
+            <Plus /> Add
+          </Button>
+        </div>
       </div>
       {show ? (
         <div className="space-y-2">{children}</div>
@@ -414,6 +454,11 @@ function ExpenseRow({
             <span className="text-fg block truncate text-sm font-medium">{headingFor(item)}</span>
             {sub ? (
               <span className="text-fg-3 block truncate text-xs">{sub}</span>
+            ) : null}
+            {item.originType ? (
+              <span className="text-fg-3 mt-0.5 flex w-fit items-center gap-1 font-mono text-[10px] uppercase tracking-[0.08em]">
+                <Link2 className="size-3" /> {originLabel(item.originType)}
+              </span>
             ) : null}
           </span>
           <span className="text-fg shrink-0 font-mono text-sm">

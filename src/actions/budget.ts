@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { randToCents, dayToDate, dateToDay } from "@/lib/money";
+import { randToCents, dayToDate, dateToDay, EXPENSE_CATEGORIES } from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 import {
   planSchema,
@@ -248,4 +248,82 @@ export async function toggleItemComplete(id: string) {
   revalidateBudget(item.planId);
   revalidatePath("/money/transactions");
   revalidatePath("/money");
+}
+
+// Imports wishes and shopping items into a plan as linked expense lines. The
+// category follows the source when it is a known expense category, else "Other".
+// Sources already linked into this plan are skipped. Returns how many were added.
+export async function importToPlan(
+  planId: string,
+  sources: { type: "wish" | "shopping"; id: string }[],
+) {
+  const userId = await requireUserId();
+  const plan = await prisma.budgetPlan.findFirst({ where: { id: planId, userId } });
+  if (!plan) throw new Error("Plan not found");
+
+  const wishIds = sources.filter((s) => s.type === "wish").map((s) => s.id);
+  const shopIds = sources.filter((s) => s.type === "shopping").map((s) => s.id);
+  const [wishes, items, existing] = await Promise.all([
+    wishIds.length
+      ? prisma.wishlistItem.findMany({
+          where: { userId, id: { in: wishIds } },
+          include: { collection: { select: { category: true } } },
+        })
+      : Promise.resolve([]),
+    shopIds.length
+      ? prisma.shoppingItem.findMany({
+          where: { userId, id: { in: shopIds } },
+          include: { list: { select: { category: true } } },
+        })
+      : Promise.resolve([]),
+    prisma.budgetItem.findMany({
+      where: { userId, planId, originId: { in: sources.map((s) => s.id) } },
+      select: { originId: true },
+    }),
+  ]);
+
+  const valid = new Set<string>(EXPENSE_CATEGORIES.map((c) => c.value));
+  const cat = (c: string | null | undefined) => (c && valid.has(c) ? c : "Other");
+  const taken = new Set(existing.map((e) => e.originId));
+  const rows: {
+    userId: string;
+    planId: string;
+    kind: string;
+    category: string;
+    title: string;
+    amount: number;
+    originType: string;
+    originId: string;
+  }[] = [];
+  for (const w of wishes) {
+    if (taken.has(w.id)) continue;
+    rows.push({
+      userId,
+      planId,
+      kind: "expense",
+      category: cat(w.collection.category),
+      title: w.name,
+      amount: w.price,
+      originType: "wish",
+      originId: w.id,
+    });
+  }
+  for (const it of items) {
+    if (taken.has(it.id)) continue;
+    rows.push({
+      userId,
+      planId,
+      kind: "expense",
+      category: cat(it.list.category),
+      title: it.name,
+      amount: it.price * it.quantity,
+      originType: "shopping",
+      originId: it.id,
+    });
+  }
+  if (rows.length) await prisma.budgetItem.createMany({ data: rows });
+
+  revalidateBudget(planId);
+  revalidatePath("/money");
+  return rows.length;
 }
