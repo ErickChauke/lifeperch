@@ -20,9 +20,10 @@ import {
   deleteShoppingList,
 } from "@/actions/shopping";
 import type { getShoppingList } from "@/actions/shopping";
+import { ShoppingItemModal } from "./shopping-item-modal";
 
 type ShoppingListDetail = NonNullable<Awaited<ReturnType<typeof getShoppingList>>>;
-type Item = ShoppingListDetail["items"][number];
+export type Item = ShoppingListDetail["items"][number];
 
 export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
   const router = useRouter();
@@ -32,6 +33,7 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
   const [renaming, setRenaming] = useState(false);
   const [titleDraft, setTitleDraft] = useState(list.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editing, setEditing] = useState<Item | null>(null);
 
   const toBuy = list.items.filter((i) => !i.bought);
   const basket = list.items.filter((i) => i.bought);
@@ -171,12 +173,12 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
         ) : null}
       </div>
 
-      <div className="flex items-baseline gap-3">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
           Estimated
         </span>
         <span className="text-fg font-mono text-2xl">{formatZAR(centsToRand(estimate))}</span>
-        <span className="text-fg-3 text-sm">
+        <span className="text-fg-3 text-sm whitespace-nowrap">
           {toBuy.length} {toBuy.length === 1 ? "item" : "items"} to buy
         </span>
       </div>
@@ -187,26 +189,28 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
           placeholder="Add an item…"
-          className="h-9 min-w-[180px] flex-1"
+          className="h-9 w-full sm:w-auto sm:min-w-[180px] sm:flex-1"
         />
-        <div className="relative w-28">
-          <span className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 font-mono text-sm">
-            R
-          </span>
-          <Input
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            className="h-9 pl-7 font-mono"
-          />
+        <div className="flex w-full gap-2 sm:w-auto">
+          <div className="relative flex-1 sm:w-28 sm:flex-none">
+            <span className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 font-mono text-sm">
+              R
+            </span>
+            <Input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && add()}
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              className="h-9 pl-7 font-mono"
+            />
+          </div>
+          <Button onClick={add} disabled={pending} className="shrink-0">
+            <Plus /> Add
+          </Button>
         </div>
-        <Button onClick={add} disabled={pending}>
-          <Plus /> Add
-        </Button>
       </div>
 
       {list.items.length === 0 ? (
@@ -223,6 +227,7 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
                   onToggle={() => run(() => toggleBought(item.id), "Could not update")}
                   onQty={(q) => run(() => setQuantity(item.id, q), "Could not update")}
                   onRemove={() => run(() => deleteShoppingItem(item.id), "Could not remove")}
+                  onEdit={() => setEditing(item)}
                 />
               ))}
             </div>
@@ -242,6 +247,7 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
                     onToggle={() => run(() => toggleBought(item.id), "Could not update")}
                     onQty={(q) => run(() => setQuantity(item.id, q), "Could not update")}
                     onRemove={() => run(() => deleteShoppingItem(item.id), "Could not remove")}
+                    onEdit={() => setEditing(item)}
                   />
                 ))}
               </div>
@@ -249,6 +255,12 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
           ) : null}
         </div>
       )}
+
+      <ShoppingItemModal
+        open={editing !== null}
+        onOpenChange={(o) => !o && setEditing(null)}
+        item={editing}
+      />
 
       {basket.length > 0 ? (
         <div className="bg-surface border-border-2 fixed inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[1100px] items-center justify-between gap-3 rounded-lg border px-5 py-3 shadow-[var(--shadow-pop)] md:left-[272px] md:right-8 md:mx-0">
@@ -271,22 +283,24 @@ function ItemRow({
   onToggle,
   onQty,
   onRemove,
+  onEdit,
 }: {
   item: Item;
   pending: boolean;
   onToggle: () => void;
   onQty: (quantity: number) => void;
   onRemove: () => void;
+  onEdit: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-start gap-3 px-4 py-3 sm:items-center">
       <button
         type="button"
         onClick={onToggle}
         disabled={pending}
         aria-label={item.bought ? "Move out of basket" : "Add to basket"}
         className={cn(
-          "flex size-[22px] shrink-0 items-center justify-center rounded-[7px] border transition-colors",
+          "mt-0.5 flex size-[22px] shrink-0 items-center justify-center rounded-[7px] border transition-colors sm:mt-0",
           item.bought
             ? "border-transparent bg-[var(--accent)] text-[var(--accent-fg)]"
             : "border-border-2 bg-surface",
@@ -294,47 +308,54 @@ function ItemRow({
       >
         {item.bought ? <Check className="size-3.5" /> : null}
       </button>
-      <span
-        className={cn(
-          "min-w-0 flex-1 truncate text-sm",
-          item.bought ? "text-fg-3 line-through" : "text-fg",
-        )}
-      >
-        {item.name}
-      </span>
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
         <button
           type="button"
-          onClick={() => onQty(item.quantity - 1)}
-          disabled={pending || item.quantity <= 1}
-          className="bg-surface-2 text-fg-2 flex size-6 items-center justify-center rounded-[8px] disabled:opacity-40"
-          aria-label="Decrease quantity"
+          onClick={onEdit}
+          aria-label={`Edit ${item.name}`}
+          className={cn(
+            "min-w-0 flex-1 break-words text-left text-sm sm:truncate",
+            item.bought ? "text-fg-3 line-through" : "text-fg",
+          )}
         >
-          <Minus className="size-3" />
+          {item.name}
         </button>
-        <span className="text-fg w-6 text-center font-mono text-sm">{item.quantity}</span>
-        <button
-          type="button"
-          onClick={() => onQty(item.quantity + 1)}
-          disabled={pending}
-          className="bg-surface-2 text-fg-2 flex size-6 items-center justify-center rounded-[8px]"
-          aria-label="Increase quantity"
-        >
-          <Plus className="size-3" />
-        </button>
+        <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => onQty(item.quantity - 1)}
+              disabled={pending || item.quantity <= 1}
+              className="bg-surface-2 text-fg-3 flex size-8 items-center justify-center rounded-[8px] disabled:opacity-40 sm:size-6"
+              aria-label="Decrease quantity"
+            >
+              <Minus className="size-3" />
+            </button>
+            <span className="text-fg-2 w-6 text-center font-mono text-sm">{item.quantity}</span>
+            <button
+              type="button"
+              onClick={() => onQty(item.quantity + 1)}
+              disabled={pending}
+              className="bg-surface-2 text-fg-3 flex size-8 items-center justify-center rounded-[8px] sm:size-6"
+              aria-label="Increase quantity"
+            >
+              <Plus className="size-3" />
+            </button>
+          </div>
+          <span className="text-fg w-24 shrink-0 text-right font-mono text-sm tabular-nums">
+            {formatZAR(centsToRand(item.price * item.quantity))}
+          </span>
+          <button
+            type="button"
+            onClick={onRemove}
+            disabled={pending}
+            aria-label="Remove item"
+            className="text-fg-4 hover:text-[var(--danger)] flex size-8 shrink-0 items-center justify-center transition-colors sm:size-auto"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
       </div>
-      <span className="text-fg w-24 shrink-0 text-right font-mono text-sm">
-        {formatZAR(centsToRand(item.price * item.quantity))}
-      </span>
-      <button
-        type="button"
-        onClick={onRemove}
-        disabled={pending}
-        aria-label="Remove item"
-        className="text-fg-4 hover:text-[var(--danger)] shrink-0 transition-colors"
-      >
-        <X className="size-4" />
-      </button>
     </div>
   );
 }
