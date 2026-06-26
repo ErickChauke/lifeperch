@@ -177,11 +177,11 @@ export function PlanDetailView({ plan, goals }: { plan: Plan; goals: Goal[] }) {
       </div>
 
       {/* Summary */}
-      <div className="bg-surface grid grid-cols-3 gap-3 rounded-lg border p-4">
+      <div className="bg-surface grid grid-cols-1 gap-2 rounded-lg border p-4 sm:grid-cols-3 sm:gap-3">
         <Figure label="Money in" value={plannedIn} />
         <Figure label="Planned out" value={plannedOut} />
         <Figure label="Left" value={left} danger={left < 0} />
-        <p className="text-fg-3 col-span-3 font-mono text-xs">
+        <p className="text-fg-3 col-span-1 font-mono text-xs sm:col-span-3">
           Actual this period · in {formatZAR(centsToRand(actualIn))} · out{" "}
           {formatZAR(centsToRand(actualOut))}
         </p>
@@ -283,12 +283,12 @@ function Figure({
   danger?: boolean;
 }) {
   return (
-    <div>
+    <div className="flex items-baseline justify-between gap-3 sm:block">
       <p className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.08em]">
         {label}
       </p>
       <p
-        className="text-fg mt-1 font-mono text-lg font-medium tabular-nums"
+        className="text-fg font-mono text-lg font-medium tabular-nums sm:mt-1"
         style={danger ? { color: "var(--danger)" } : undefined}
       >
         {formatZAR(centsToRand(value))}

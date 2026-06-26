@@ -172,9 +172,12 @@ function Summary({
     { label: "Net", cents: summary.net, sub: periodLabel, danger: summary.net < 0 },
   ];
   return (
-    <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border lg:grid-cols-4">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4">
       {cells.map((cell) => (
-        <div key={cell.label} className="bg-surface flex flex-col gap-1 p-5">
+        <div
+          key={cell.label}
+          className="bg-surface flex items-center justify-between gap-3 p-4 sm:flex-col sm:items-start sm:justify-start sm:gap-1 sm:p-5"
+        >
           <span className="text-fg-3 font-mono text-xs uppercase tracking-[0.10em]">
             {cell.label}
           </span>
@@ -186,7 +189,7 @@ function Summary({
           >
             {formatZAR(centsToRand(cell.cents))}
           </span>
-          <span className="text-fg-3 font-mono text-xs">{cell.sub}</span>
+          <span className="text-fg-3 hidden font-mono text-xs sm:block">{cell.sub}</span>
         </div>
       ))}
     </div>
@@ -228,9 +231,12 @@ function Expectations({ transactions, period }: { transactions: Transaction[]; p
         </h2>
         <span className="text-fg-3 font-mono text-xs">{basis}</span>
       </div>
-      <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-sm border lg:grid-cols-4">
+      <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-sm border sm:grid-cols-2 lg:grid-cols-4">
         {figures.map((f) => (
-          <div key={f.label} className="bg-surface flex flex-col gap-1 p-4">
+          <div
+            key={f.label}
+            className="bg-surface flex items-center justify-between gap-3 p-3 sm:flex-col sm:items-start sm:justify-start sm:gap-1 sm:p-4"
+          >
             <span className="text-fg-3 font-mono text-xs uppercase tracking-[0.10em]">
               {f.label}
             </span>
