@@ -16,7 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Segmented } from "./segmented";
 import { wishlistSchema, PRIORITIES, type WishlistInput } from "@/lib/wishlist";
-import { centsToRand } from "@/lib/money";
+import { centsToRand, stripNegative } from "@/lib/money";
+import { MAX_AMOUNT } from "@/lib/currency";
 import { createWish, updateWish, deleteWish } from "@/actions/wishlist";
 import type { Wish } from "./collection-detail";
 
@@ -53,6 +54,7 @@ export function WishModal({
   });
 
   const priority = watch("priority");
+  const priceReg = register("price", { valueAsNumber: true });
 
   useEffect(() => {
     setConfirmDelete(false);
@@ -125,8 +127,13 @@ export function WishModal({
                 type="number"
                 step="0.01"
                 min="0"
+                max={MAX_AMOUNT}
                 className="pl-7 font-mono"
-                {...register("price", { valueAsNumber: true })}
+                {...priceReg}
+                onChange={(e) => {
+                  e.target.value = stripNegative(e.target.value);
+                  priceReg.onChange(e);
+                }}
               />
             </div>
             {errors.price ? (

@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { formatZAR } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 
 // The wedge colour for slot i: cycles through the five chart vars, dimming to
@@ -68,12 +69,15 @@ export function SpendingDonut({
             </Pie>
           </PieChart>
         </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-2">
           <span className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
             Spent
           </span>
-          <span className="text-fg font-mono text-xl">
-            {formatZAR(centsToRand(spentCents))}
+          <span
+            className="text-fg max-w-[120px] truncate font-mono text-base"
+            title={formatCurrency(centsToRand(spentCents))}
+          >
+            {formatCurrencyShort(centsToRand(spentCents))}
           </span>
         </div>
       </div>

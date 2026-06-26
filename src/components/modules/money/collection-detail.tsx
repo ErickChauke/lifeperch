@@ -18,7 +18,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { cn, formatZAR } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { priorityRank, PRIORITIES, type Priority } from "@/lib/wishlist";
 import { goalPercent } from "@/lib/goals";
@@ -165,7 +166,11 @@ export function CollectionDetailView({
         {!renaming ? (
           <div className="flex shrink-0 items-center gap-3">
             <span className="text-fg-2 hidden font-mono text-sm sm:inline">
-              worth {formatZAR(centsToRand(worth))} · {collection.items.length} items
+              worth{" "}
+              <span title={formatCurrency(centsToRand(worth))}>
+                {formatCurrencyShort(centsToRand(worth))}
+              </span>{" "}
+              · {collection.items.length} items
               {bought > 0 ? ` · ${bought} bought` : ""}
             </span>
             <Button
@@ -358,8 +363,11 @@ function WishCard({
         <p className="text-fg truncate text-lg font-semibold">{wish.name}</p>
         {wish.note ? <p className="text-fg-2 line-clamp-2 text-sm">{wish.note}</p> : null}
 
-        <p className="text-fg mt-auto font-mono text-xl font-medium">
-          {formatZAR(centsToRand(wish.price))}
+        <p
+          className="text-fg mt-auto truncate font-mono text-xl font-medium"
+          title={formatCurrency(centsToRand(wish.price))}
+        >
+          {formatCurrencyShort(centsToRand(wish.price))}
         </p>
       </div>
 

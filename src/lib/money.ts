@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_AMOUNT } from "@/lib/currency";
 
 // Money is stored in cents (integer) everywhere in the database and converted
 // to rand at the form/display boundary, so there is no floating-point drift.
@@ -8,6 +9,12 @@ export function randToCents(rand: number): number {
 
 export function centsToRand(cents: number): number {
   return cents / 100;
+}
+
+// Strips a leading minus so a number input can never hold a negative value.
+// Used on the onChange of money/quantity inputs together with min="0".
+export function stripNegative(value: string): string {
+  return value.replace(/-/g, "");
 }
 
 // The "yyyy-MM-dd" <-> UTC-midnight Date helpers for the @db.Date column, so the
@@ -70,7 +77,10 @@ export function categoriesFor(type: "income" | "expense") {
 // is entered in rand and converted to cents in the action.
 export const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
-  amount: z.number().positive("Enter an amount greater than 0"),
+  amount: z
+    .number()
+    .positive("Enter an amount greater than 0")
+    .max(MAX_AMOUNT, "Amount is too large"),
   category: z.string().min(1, "Pick a category"),
   date: z.string().regex(dateRegex, "Use yyyy-MM-dd"),
   description: z.string().nullable(),

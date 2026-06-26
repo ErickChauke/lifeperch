@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { goalSchema, monthsToGoal, type GoalInput } from "@/lib/goals";
-import { randToCents, centsToRand } from "@/lib/money";
+import { randToCents, centsToRand, stripNegative } from "@/lib/money";
+import { MAX_AMOUNT } from "@/lib/currency";
 import { createGoal, updateGoal, deleteGoal } from "@/actions/goals";
 import type { Goal } from "./goals-board";
 
@@ -32,6 +33,7 @@ function MoneyField({
   register: ReturnType<typeof useForm<GoalInput>>["register"];
   error?: string;
 }) {
+  const reg = register(id as keyof GoalInput, { valueAsNumber: true });
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
@@ -44,8 +46,13 @@ function MoneyField({
           type="number"
           step="0.01"
           min="0"
+          max={MAX_AMOUNT}
           className="pl-7 font-mono"
-          {...register(id as keyof GoalInput, { valueAsNumber: true })}
+          {...reg}
+          onChange={(e) => {
+            e.target.value = stripNegative(e.target.value);
+            reg.onChange(e);
+          }}
         />
       </div>
       {error ? <p className="text-destructive text-xs">{error}</p> : null}
@@ -79,9 +86,9 @@ export function GoalModal({
   const current = watch("current");
   const monthly = watch("monthly");
   const eta = monthsToGoal(
-    randToCents(current || 0),
-    randToCents(target || 0),
-    randToCents(monthly || 0),
+    randToCents(Number(current) || 0),
+    randToCents(Number(target) || 0),
+    randToCents(Number(monthly) || 0),
   );
 
   useEffect(() => {

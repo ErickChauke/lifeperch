@@ -1,13 +1,23 @@
 import { z } from "zod";
+import { MAX_AMOUNT } from "@/lib/currency";
 
 // Shared validation for the goal form and the server actions. Amounts are
 // entered in rand and converted to cents in the action. A target of 0 means
 // "unset" and surfaces the "set a target" hint on the card.
 export const goalSchema = z.object({
   name: z.string().min(1, "Name the goal"),
-  target: z.number().min(0, "Target cannot be negative"),
-  current: z.number().min(0, "Saved amount cannot be negative"),
-  monthly: z.number().min(0, "Monthly amount cannot be negative"),
+  target: z
+    .number()
+    .min(0, "Target cannot be negative")
+    .max(MAX_AMOUNT, "Amount is too large"),
+  current: z
+    .number()
+    .min(0, "Saved amount cannot be negative")
+    .max(MAX_AMOUNT, "Amount is too large"),
+  monthly: z
+    .number()
+    .min(0, "Monthly amount cannot be negative")
+    .max(MAX_AMOUNT, "Amount is too large"),
 });
 
 export type GoalInput = z.infer<typeof goalSchema>;
