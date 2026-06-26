@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Plus, Minus, ShoppingBag, X, ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { Check, Plus, Minus, ShoppingBag, X, ChevronLeft, Pencil, Trash2, Download, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,14 +18,22 @@ import {
   logListAsExpense,
   renameShoppingList,
   deleteShoppingList,
+  importToShoppingList,
 } from "@/actions/shopping";
 import type { getShoppingList } from "@/actions/shopping";
 import { ShoppingItemModal } from "./shopping-item-modal";
+import { ImportPickerModal, type ImportSource } from "./import-picker-modal";
 
 type ShoppingListDetail = NonNullable<Awaited<ReturnType<typeof getShoppingList>>>;
 export type Item = ShoppingListDetail["items"][number];
 
-export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
+export function ShoppingListDetailView({
+  list,
+  importSources,
+}: {
+  list: ShoppingListDetail;
+  importSources: ImportSource[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState("");
@@ -34,6 +42,7 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
   const [titleDraft, setTitleDraft] = useState(list.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const toBuy = list.items.filter((i) => !i.bought);
   const basket = list.items.filter((i) => i.bought);
@@ -213,6 +222,14 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
         </div>
       </div>
 
+      {importSources.length > 0 ? (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
+            <Download /> Import from wishlist or plans
+          </Button>
+        </div>
+      ) : null}
+
       {list.items.length === 0 ? (
         <p className="text-fg-3 text-sm">Nothing on this list yet. Add the first thing you need.</p>
       ) : (
@@ -262,6 +279,19 @@ export function ShoppingListDetailView({ list }: { list: ShoppingListDetail }) {
         item={editing}
       />
 
+      <ImportPickerModal
+        open={importing}
+        onOpenChange={setImporting}
+        title="Import to this list"
+        sources={importSources}
+        onImport={(picked) =>
+          importToShoppingList(
+            list.id,
+            picked as { type: "wish" | "plan"; id: string }[],
+          )
+        }
+      />
+
       {basket.length > 0 ? (
         <div className="bg-surface border-border-2 fixed inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[1100px] items-center justify-between gap-3 rounded-lg border px-5 py-3 shadow-[var(--shadow-pop)] md:left-[272px] md:right-8 md:mx-0">
           <span className="text-fg-2 text-sm">
@@ -309,17 +339,20 @@ function ItemRow({
         {item.bought ? <Check className="size-3.5" /> : null}
       </button>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-        <button
-          type="button"
-          onClick={onEdit}
-          aria-label={`Edit ${item.name}`}
-          className={cn(
-            "min-w-0 flex-1 break-words text-left text-sm sm:truncate",
-            item.bought ? "text-fg-3 line-through" : "text-fg",
-          )}
-        >
-          {item.name}
-        </button>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label={`Edit ${item.name}`}
+            className={cn(
+              "min-w-0 break-words text-left text-sm sm:truncate",
+              item.bought ? "text-fg-3 line-through" : "text-fg",
+            )}
+          >
+            {item.name}
+          </button>
+          {item.originType ? <OriginChip originType={item.originType} /> : null}
+        </div>
         <div className="flex shrink-0 items-center justify-end gap-3">
           {item.quantity > 1 ? (
             <span className="text-fg-3 shrink-0 font-mono text-sm tabular-nums sm:hidden">
@@ -362,5 +395,21 @@ function ItemRow({
         </div>
       </div>
     </div>
+  );
+}
+
+// A quiet chip marking an item that was imported from another module.
+function OriginChip({ originType }: { originType: string }) {
+  const label =
+    originType === "wish"
+      ? "from wishlist"
+      : originType === "plan"
+        ? "from plan"
+        : "from shopping";
+  return (
+    <span className="text-fg-3 inline-flex w-fit items-center gap-1 font-mono text-[10px] uppercase tracking-[0.08em]">
+      <Link2 className="size-3" />
+      {label}
+    </span>
   );
 }
