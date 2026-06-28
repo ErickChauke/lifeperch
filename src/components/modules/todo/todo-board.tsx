@@ -92,7 +92,7 @@ export function TodoBoard({ project }: { project: Project }) {
     startTransition(async () => {
       try {
         await deleteCollection(project.id);
-        router.push("/todo");
+        router.push("/todo/projects");
       } catch {
         toast.error("Could not delete the project");
       }
@@ -103,10 +103,10 @@ export function TodoBoard({ project }: { project: Project }) {
     <PageShell>
       <PageHeader className="space-y-4">
         <Link
-          href="/todo"
+          href="/todo/projects"
           className="text-fg-3 hover:text-fg-2 inline-flex items-center gap-1 font-mono text-xs"
         >
-          <ChevronLeft className="size-4" /> To-Do
+          <ChevronLeft className="size-4" /> Projects
         </Link>
 
         {editingProject ? (
