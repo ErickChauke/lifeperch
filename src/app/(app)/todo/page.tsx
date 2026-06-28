@@ -1,8 +1,12 @@
-import { getCollections } from "@/actions/todo";
-import { TodoProjects } from "@/components/modules/todo/todo-projects";
+import { getTodos, getCollections } from "@/actions/todo";
+import { TodoHome } from "@/components/modules/todo/todo-home";
 
-// To-Do landing: projects. Each project keeps its own list and calendar.
+// To-Do home: a cross-project surface that runs the day. Per-project boards live
+// at /todo/[id]; the projects grid is at /todo/projects.
 export default async function TodoPage() {
-  const projects = await getCollections();
-  return <TodoProjects projects={projects} />;
+  const [todos, collections] = await Promise.all([
+    getTodos(),
+    getCollections(),
+  ]);
+  return <TodoHome todos={todos} collections={collections} />;
 }
