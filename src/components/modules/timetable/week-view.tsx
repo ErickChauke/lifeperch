@@ -88,7 +88,6 @@ export function WeekView({
   // stay scrollable. The horizontal nudge matters on mobile, where only a few
   // day columns fit at once.
   const scrollRef = useRef<HTMLDivElement>(null);
-  const todayColRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -105,13 +104,21 @@ export function WeekView({
       const target = Math.min(earliest, 7);
       el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
 
-      const col = todayColRef.current;
-      if (col) {
-        // Align today's column just past the sticky time gutter (w-14 = 56px).
-        const offset =
-          col.getBoundingClientRect().left - el.getBoundingClientRect().left;
-        el.scrollLeft = Math.max(0, el.scrollLeft + offset - 56);
-      }
+      // Horizontally land on the first day with something on the grid, else
+      // today, else the start of the week. Matters on mobile, where only a few
+      // day columns fit at once.
+      const cols = [...events, ...todos.filter((t) => t.startTime)]
+        .map(dayColumn)
+        .filter((c): c is number => c !== null);
+      const todayIdx = weekDays.indexOf(today);
+      const targetCol = cols.length
+        ? Math.min(...cols)
+        : todayIdx >= 0
+          ? todayIdx
+          : 0;
+      // Day columns share the width left of the 56px sticky time gutter.
+      const colWidth = (el.scrollWidth - 56) / 7;
+      el.scrollLeft = Math.max(0, targetCol * colWidth);
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,11 +214,7 @@ export function WeekView({
             const dayStr = weekDays[dayIdx];
             const isToday = dayStr === today;
             return (
-              <div
-                key={day}
-                ref={isToday ? todayColRef : undefined}
-                className="flex-1 border-l"
-              >
+              <div key={day} className="flex-1 border-l">
                 <div
                   className={cn(
                     "bg-surface sticky top-0 z-10 flex h-10 items-center justify-center gap-1 border-b font-mono text-xs font-medium uppercase tracking-[0.04em]",
