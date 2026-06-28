@@ -47,9 +47,11 @@ export function HabitsBoard({
               {dateLabel} · {doneCount} / {habits.length} done
             </p>
           </div>
-          <Button onClick={() => setCreating(true)}>
-            <Plus /> Add habit
-          </Button>
+          {habits.length > 0 ? (
+            <Button onClick={() => setCreating(true)}>
+              <Plus /> Add habit
+            </Button>
+          ) : null}
         </div>
       </PageHeader>
 
