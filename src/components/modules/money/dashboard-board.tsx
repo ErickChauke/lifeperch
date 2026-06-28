@@ -108,25 +108,29 @@ export function DashboardBoard({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Segmented options={SCALES} value={scale} onChange={setScale} />
-        <div className="flex items-center gap-1">
+        <div className="bg-surface-2 ml-auto flex items-center gap-0.5 rounded-full p-0.5">
           <button
             type="button"
             aria-label="Previous period"
+            title="Previous period"
             onClick={() => setPeriod((p) => (scale === "month" ? subMonths(p, 1) : addYears(p, -1)))}
-            className="text-fg-2 hover:bg-surface-2 flex size-8 items-center justify-center rounded-sm"
+            className="text-fg-2 hover:bg-surface hover:text-fg flex size-7 items-center justify-center rounded-full transition-colors"
           >
-            <ChevronLeft className="size-[17px]" />
+            <ChevronLeft className="size-4" />
           </button>
-          <span className="text-fg w-24 text-center font-mono text-sm">{periodLabel}</span>
+          <span className="text-fg w-20 text-center font-mono text-sm tabular-nums">
+            {periodLabel}
+          </span>
           <button
             type="button"
             aria-label="Next period"
+            title="Next period"
             onClick={() => setPeriod((p) => (scale === "month" ? addMonths(p, 1) : addYears(p, 1)))}
-            className="text-fg-2 hover:bg-surface-2 flex size-8 items-center justify-center rounded-sm"
+            className="text-fg-2 hover:bg-surface hover:text-fg flex size-7 items-center justify-center rounded-full transition-colors"
           >
-            <ChevronRight className="size-[17px]" />
+            <ChevronRight className="size-4" />
           </button>
         </div>
       </div>
