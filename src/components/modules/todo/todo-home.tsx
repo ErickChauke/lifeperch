@@ -37,6 +37,7 @@ import { TodoCalendar } from "./todo-calendar";
 import { TodoRow } from "./todo-row";
 import { TodoModal } from "./todo-modal";
 import { ProjectModal } from "./project-modal";
+import { TodoWeekTimeline } from "./todo-week-timeline";
 import type { Todo } from "./todo-board";
 import type { getCollections } from "@/actions/todo";
 
@@ -386,7 +387,8 @@ function TodayView({
   );
 }
 
-// This week: a section per day from today to the end of the week.
+// This week: a section per day from today to the end of the week, with a switch
+// to lay the same todos out on an hour-grid timeline.
 function WeekView({
   todos,
   today,
@@ -398,6 +400,7 @@ function WeekView({
   weekEnd: string;
   onEdit: (todo: Todo) => void;
 }) {
+  const [mode, setMode] = useState<"list" | "timeline">("list");
   const days = eachDayOfInterval({
     start: parseISO(today),
     end: parseISO(weekEnd),
@@ -410,26 +413,48 @@ function WeekView({
     }))
     .filter((s) => s.todos.length > 0);
 
-  if (sections.length === 0) {
-    return (
-      <p className="text-fg-3 text-sm">
-        Nothing scheduled for the rest of the week.
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {sections.map((section) => (
-        <div key={section.day} className="space-y-2">
-          <h3 className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
-            {dayLabel(section.day, today)}
-          </h3>
-          {section.todos.map((todo) => (
-            <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Segmented<"list" | "timeline">
+          options={[
+            { value: "list", label: "List" },
+            { value: "timeline", label: "Timeline" },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
+      </div>
+      {mode === "timeline" ? (
+        <TodoWeekTimeline
+          days={days}
+          todos={todos}
+          today={today}
+          onEdit={onEdit}
+        />
+      ) : sections.length === 0 ? (
+        <p className="text-fg-3 text-sm">
+          Nothing scheduled for the rest of the week.
+        </p>
+      ) : (
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <div key={section.day} className="space-y-2">
+              <h3 className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
+                {dayLabel(section.day, today)}
+              </h3>
+              {section.todos.map((todo) => (
+                <TodoRow
+                  key={todo.id}
+                  todo={todo}
+                  today={today}
+                  onEdit={onEdit}
+                />
+              ))}
+            </div>
           ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
