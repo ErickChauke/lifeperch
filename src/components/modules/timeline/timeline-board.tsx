@@ -51,9 +51,11 @@ export function TimelineBoard({
               {milestones.length === 1 ? "milestone" : "milestones"}
             </p>
           </div>
-          <Button onClick={() => setCreating(true)}>
-            <Plus /> Add milestone
-          </Button>
+          {milestones.length > 0 ? (
+            <Button onClick={() => setCreating(true)}>
+              <Plus /> Add milestone
+            </Button>
+          ) : null}
         </div>
       </PageHeader>
 
