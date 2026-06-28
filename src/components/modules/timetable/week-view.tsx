@@ -70,7 +70,7 @@ export function WeekView({
   return (
     <div
       ref={scrollRef}
-      className="bg-surface scrollbar-hide min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border"
+      className="bg-surface scrollbar-hide max-h-[70svh] min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border md:max-h-none"
     >
       <div className="flex min-w-[720px]">
         <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
