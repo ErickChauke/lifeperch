@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Segmented } from "@/components/modules/money/segmented";
 import { HabitIcon } from "./habit-icon";
@@ -21,12 +22,19 @@ import { createHabit, updateHabit, archiveHabit } from "@/actions/habits";
 import type { Habit } from "./habits-board";
 
 const KINDS = [
-  { value: "boolean", label: "Boolean" },
+  { value: "none", label: "None" },
   { value: "count", label: "Countable" },
 ] as const;
 
 function emptyValues(): HabitInput {
-  return { name: "", kind: "boolean", target: 1, unit: null, icon: null };
+  return {
+    name: "",
+    description: null,
+    kind: "none",
+    target: 1,
+    unit: null,
+    icon: null,
+  };
 }
 
 export function HabitModal({
@@ -67,7 +75,9 @@ export function HabitModal({
     if (habit) {
       reset({
         name: habit.name,
-        kind: habit.kind as HabitInput["kind"],
+        description: habit.description,
+        // Legacy "boolean" habits map to the simple check-off kind.
+        kind: habit.kind === "count" ? "count" : "none",
         target: habit.target,
         unit: habit.unit,
         icon: habit.icon,
@@ -124,6 +134,15 @@ export function HabitModal({
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="What this habit is about (optional)"
+              {...register("description", { setValueAs: (v) => v || null })}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label>Kind</Label>
             <Segmented options={KINDS} value={kind} onChange={(v) => setValue("kind", v)} />
             <p className="text-fg-4 font-mono text-xs">
@@ -156,7 +175,7 @@ export function HabitModal({
 
           <div className="space-y-1.5">
             <Label>Icon</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {HABIT_ICONS.map((name) => {
                 const selected = icon === name;
                 return (

@@ -19,6 +19,7 @@ function toRecord(data: HabitInput) {
   const count = data.kind === "count";
   return {
     name: data.name.trim(),
+    description: data.description?.trim() || null,
     kind: data.kind,
     target: count ? Math.max(1, data.target) : 1,
     unit: count ? data.unit?.trim() || null : null,
