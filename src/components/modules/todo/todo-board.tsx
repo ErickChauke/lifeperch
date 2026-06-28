@@ -28,8 +28,8 @@ import type { getTodos, getCollection } from "@/actions/todo";
 export type Todo = Awaited<ReturnType<typeof getTodos>>[number];
 type Project = NonNullable<Awaited<ReturnType<typeof getCollection>>>;
 
-// One project: its todos as a list and a calendar, plus the add/edit modal. The
-// header carries the project title, edit and delete.
+// One list: its todos as a list and a calendar, plus the add/edit modal. The
+// header carries the list title, edit and delete.
 export function TodoBoard({ project }: { project: Project }) {
   const router = useRouter();
   const todos = project.todos;
@@ -92,7 +92,7 @@ export function TodoBoard({ project }: { project: Project }) {
     startTransition(async () => {
       try {
         await deleteCollection(project.id);
-        router.push("/todo/projects");
+        router.push("/todo/lists");
       } catch {
         toast.error("Could not delete the project");
       }
@@ -103,10 +103,10 @@ export function TodoBoard({ project }: { project: Project }) {
     <PageShell>
       <PageHeader className="space-y-4">
         <Link
-          href="/todo/projects"
+          href="/todo/lists"
           className="text-fg-3 hover:text-fg-2 inline-flex items-center gap-1 font-mono text-xs"
         >
-          <ChevronLeft className="size-4" /> Projects
+          <ChevronLeft className="size-4" /> Lists
         </Link>
 
         {editingProject ? (
@@ -120,7 +120,7 @@ export function TodoBoard({ project }: { project: Project }) {
             <Textarea
               value={descDraft}
               onChange={(e) => setDescDraft(e.target.value)}
-              placeholder="What this project is about (optional)"
+              placeholder="What this list is about (optional)"
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={saveProject} disabled={pending}>
@@ -141,7 +141,7 @@ export function TodoBoard({ project }: { project: Project }) {
                 <Button
                   size="icon-sm"
                   variant="ghost"
-                  aria-label="Edit project"
+                  aria-label="Edit list"
                   onClick={() => {
                     setTitleDraft(project.title);
                     setDescDraft(project.description ?? "");
@@ -153,11 +153,11 @@ export function TodoBoard({ project }: { project: Project }) {
                 <Button
                   size="sm"
                   variant={confirmDelete ? "destructive" : "ghost"}
-                  aria-label="Delete project"
+                  aria-label="Delete list"
                   onClick={onDelete}
                   disabled={pending}
                 >
-                  {confirmDelete ? "Delete project?" : <Trash2 className="text-fg-3 size-4" />}
+                  {confirmDelete ? "Delete list?" : <Trash2 className="text-fg-3 size-4" />}
                 </Button>
               </div>
             </div>

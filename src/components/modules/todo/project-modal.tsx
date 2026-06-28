@@ -20,7 +20,7 @@ import { createCollection } from "@/actions/todo";
 
 const EMPTY: TodoCollectionInput = { title: "", description: "" };
 
-// New-project modal. On create it opens the new (empty) project.
+// New-list modal. On create it opens the new (empty) list.
 export function ProjectModal({
   open,
   onOpenChange,
@@ -47,11 +47,11 @@ export function ProjectModal({
   function onSubmit(values: TodoCollectionInput) {
     startTransition(async () => {
       try {
-        const project = await createCollection(values);
+        const list = await createCollection(values);
         onOpenChange(false);
-        router.push(`/todo/${project.id}`);
+        router.push(`/todo/${list.id}`);
       } catch {
-        toast.error("Could not create the project");
+        toast.error("Could not create the list");
       }
     });
   }
@@ -60,7 +60,7 @@ export function ProjectModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>New project</DialogTitle>
+          <DialogTitle>New list</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -81,7 +81,7 @@ export function ProjectModal({
             <Label htmlFor="project-description">Description</Label>
             <Textarea
               id="project-description"
-              placeholder="What this project is about (optional)"
+              placeholder="What this list is about (optional)"
               {...register("description")}
             />
           </div>
@@ -97,7 +97,7 @@ export function ProjectModal({
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={pending}>
-              Create project
+              Create list
             </Button>
           </div>
         </form>

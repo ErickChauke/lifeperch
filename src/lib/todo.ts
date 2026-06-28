@@ -29,9 +29,9 @@ export function priorityColor(priority: string): string {
   return PRIORITIES.find((p) => p.value === priority)?.color ?? "#5b8cff";
 }
 
-// Validation for a todo project: a title and an optional description.
+// Validation for a to-do list: a title and an optional description.
 export const todoCollectionSchema = z.object({
-  title: z.string().min(1, "Name the project"),
+  title: z.string().min(1, "Name the list"),
   description: z.string().nullable().optional(),
 });
 

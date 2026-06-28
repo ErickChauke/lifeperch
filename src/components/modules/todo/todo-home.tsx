@@ -10,7 +10,7 @@ import {
   format,
   parseISO,
 } from "date-fns";
-import { Plus, FolderKanban } from "lucide-react";
+import { Plus, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,9 +68,9 @@ function dayLabel(day: string, today: string): string {
   return format(parseISO(day), "EEEE d MMMM");
 }
 
-// The unified To-Do home: one cross-project surface with view tabs, a project
-// filter, quick capture, a side calendar and progress. Per-project boards live
-// on at /todo/[id]; the projects grid moves to /todo/projects.
+// The unified To-Do home: one cross-list surface with view tabs, a list filter,
+// quick capture, a side calendar and progress. Per-list boards live on at
+// /todo/[id]; the lists grid is at /todo/lists.
 export function TodoHome({
   todos,
   collections,
@@ -149,8 +149,8 @@ export function TodoHome({
     { value: "done", label: `Done${counts.done ? ` · ${counts.done}` : ""}` },
   ];
 
-  // The collection the + todo modal and explicit form writes land in: the
-  // filtered project, else the first project. Hidden when no project exists.
+  // The list the + todo modal and explicit form writes land in: the filtered
+  // list, else the first list. Hidden when no list exists.
   const modalCollectionId = projectId !== "all" ? projectId : collections[0]?.id;
 
   function openEdit(todo: Todo) {
@@ -203,14 +203,14 @@ export function TodoHome({
           <h2 className="text-[22px] font-semibold tracking-[-0.01em]">To-Do</h2>
           <div className="flex shrink-0 items-center gap-2">
             <Link
-              href="/todo/projects"
+              href="/todo/lists"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >
-              <FolderKanban /> Projects
+              <ListChecks /> Lists
             </Link>
             {collections.length === 0 ? (
               <Button size="sm" onClick={() => setCreatingProject(true)}>
-                <Plus /> New project
+                <Plus /> New list
               </Button>
             ) : (
               <Button
@@ -253,7 +253,7 @@ export function TodoHome({
             onChange={(e) => setProjectId(e.target.value)}
             className="w-auto min-w-[10rem]"
           >
-            <option value="all">All projects</option>
+            <option value="all">All lists</option>
             {collections.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.title}
