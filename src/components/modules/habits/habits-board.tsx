@@ -30,6 +30,7 @@ export function HabitsBoard({
   const doneCount = habits.filter((h) =>
     habitMet(h.todayValue, h.kind, h.target),
   ).length;
+  const pct = habits.length ? Math.round((doneCount / habits.length) * 100) : 0;
   const dateLabel = format(new Date(`${today}T00:00:00`), "dd MMM yyyy");
 
   function closeModal() {
@@ -53,6 +54,14 @@ export function HabitsBoard({
             </Button>
           ) : null}
         </div>
+        {habits.length > 0 ? (
+          <div className="bg-surface-2 mt-4 h-1.5 w-full overflow-hidden rounded-full">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ width: `${pct}%`, background: "var(--success)" }}
+            />
+          </div>
+        ) : null}
       </PageHeader>
 
       <PageBody className="space-y-6">

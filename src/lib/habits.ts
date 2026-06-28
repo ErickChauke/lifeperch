@@ -54,6 +54,19 @@ function prevDay(day: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+// The last n days ending at today as "yyyy-MM-dd", oldest first. Used to draw a
+// habit's recent consistency at a glance.
+export function lastNDays(today: string, n: number): string[] {
+  const out: string[] = [];
+  const base = new Date(`${today}T00:00:00.000Z`);
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() - i);
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
 // Counts consecutive met days ending at today. Today not yet met keeps the run
 // alive (counts back from yesterday) rather than zeroing it mid-day.
 export function computeStreak(metDays: Set<string>, today: string): number {
