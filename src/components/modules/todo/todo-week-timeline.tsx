@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { format, parseISO } from "date-fns";
 import {
   GRID_START_HOUR,
@@ -46,6 +47,21 @@ export function TodoWeekTimeline({
   for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) hours.push(h);
   const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX + GRID_PAD * 2;
 
+  // On launch, land on the morning (07:00) or earlier if a timed todo starts
+  // before it, while the full day stays scrollable above and below.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const starts = todos
+      .filter((t) => t.startTime)
+      .map((t) => timeToMinutes(t.startTime!));
+    const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
+    const target = Math.min(earliest, 7);
+    el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const allDay = todos
     .filter((t) => !t.startTime)
     .map((t) => ({ todo: t, day: days.find((d) => dueOn(t, d)) }))
@@ -88,7 +104,10 @@ export function TodoWeekTimeline({
         </div>
       ) : null}
 
-      <div className="bg-surface scrollbar-hide max-h-[70vh] overflow-auto overscroll-none rounded-md border border-border">
+      <div
+        ref={scrollRef}
+        className="bg-surface scrollbar-hide max-h-[70vh] overflow-auto overscroll-none rounded-md border border-border"
+      >
         <div className="flex min-w-[640px]">
           <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
             <div className="bg-surface sticky top-0 z-30 h-10 border-b border-border" />
