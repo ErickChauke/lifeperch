@@ -27,12 +27,14 @@ export function TodoCalendar({
   today,
   dueDays,
   recurringDays,
+  markedDays,
   onSelect,
 }: {
   selected: string;
   today: string;
   dueDays: Set<string>;
   recurringDays: Set<number>;
+  markedDays?: Set<string>;
   onSelect: (day: string) => void;
 }) {
   const [month, setMonth] = useState(() => startOfMonth(parseISO(selected)));
@@ -91,6 +93,7 @@ export function TodoCalendar({
           const isToday = day === today;
           const isSelected = day === selected;
           const hasDue = dueDays.has(day) || recurringDays.has(weekdayIndex(d));
+          const hasMark = markedDays?.has(day) ?? false;
           return (
             <button
               key={day}
@@ -108,8 +111,18 @@ export function TodoCalendar({
               )}
             >
               {format(d, "d")}
-              {hasDue && !isSelected ? (
-                <span className="bg-primary absolute bottom-1 size-1 rounded-full" />
+              {(hasDue || hasMark) && !isSelected ? (
+                <span className="absolute bottom-1 flex gap-0.5">
+                  {hasDue ? (
+                    <span className="bg-primary size-1 rounded-full" />
+                  ) : null}
+                  {hasMark ? (
+                    <span
+                      className="size-1 rounded-full"
+                      style={{ background: "#e2a93b" }}
+                    />
+                  ) : null}
+                </span>
               ) : null}
             </button>
           );
