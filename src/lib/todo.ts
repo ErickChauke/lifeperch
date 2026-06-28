@@ -54,8 +54,9 @@ export const LINKABLE_MODULES = [
   { value: "timetable", label: "Timetable", hrefBase: "/timetable" },
 ] as const;
 
-// Returns the link target for a linked module, or null when none is set. Appends
-// the linked id when present so the chip can deep-link.
+// Returns the link target for a linked module, or null when none is set. The id
+// is matched for reverse lookups but not appended to the href: no module has an
+// item-level route keyed by it, so the chip lands on the module page.
 export function linkHref(
   linkedModule: string | null,
   linkedId: string | null,
@@ -63,7 +64,8 @@ export function linkHref(
   if (!linkedModule) return null;
   const mod = LINKABLE_MODULES.find((m) => m.value === linkedModule);
   if (!mod) return null;
-  return linkedId ? `${mod.hrefBase}/${linkedId}` : mod.hrefBase;
+  void linkedId;
+  return mod.hrefBase;
 }
 
 const timeRegex = /^\d{2}:\d{2}$/;

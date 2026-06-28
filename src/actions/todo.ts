@@ -136,6 +136,16 @@ export async function getTodos() {
   return prisma.todo.findMany({ where: { userId }, orderBy: TODO_ORDER });
 }
 
+// Returns the todos linked to a given item in another module (jobs, money, etc),
+// so that item can show the tasks that point back at it. Spans every project.
+export async function getLinkedTodos(linkedModule: string, linkedId: string) {
+  const userId = await requireUserId();
+  return prisma.todo.findMany({
+    where: { userId, linkedModule, linkedId },
+    orderBy: TODO_ORDER,
+  });
+}
+
 // Returns the dashboard slices for a given user: todos due today and overdue
 // one-offs. Session-free so the digest cron can call it with an explicit user id.
 // Spans every project.
