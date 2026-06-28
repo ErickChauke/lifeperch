@@ -44,11 +44,17 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  title,
+  "aria-label": ariaLabel,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
+      aria-label={ariaLabel}
+      // Surface the accessible label as a hover tooltip so icon-only buttons
+      // describe themselves on hover, not just to screen readers.
+      title={title ?? ariaLabel}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

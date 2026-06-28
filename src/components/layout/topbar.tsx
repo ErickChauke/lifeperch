@@ -27,6 +27,7 @@ export function Topbar() {
       <button
         type="button"
         aria-label="Open navigation"
+        title="Open navigation"
         onClick={toggle}
         className="text-fg-2 hover:bg-surface-2 hover:text-fg -ml-1 flex size-9 shrink-0 items-center justify-center rounded-[var(--r-sm)] transition-colors md:hidden"
       >
@@ -54,6 +55,7 @@ export function Topbar() {
         <button
           type="button"
           aria-label="Notifications"
+          title="Notifications"
           className="text-fg-2 hover:bg-surface-2 hover:text-fg flex size-9 items-center justify-center rounded-[var(--r-sm)] transition-colors"
         >
           <Bell className="size-[18px]" strokeWidth={1.75} />
