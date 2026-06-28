@@ -51,9 +51,14 @@ export function WeekView({
   const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX + GRID_PAD * 2;
   const today = format(new Date(), "yyyy-MM-dd");
 
+  const todayCol = weekdayIndex(new Date());
+
   // On launch, land on the morning (07:00) or earlier if something starts
-  // before it, while the full day stays scrollable above and below.
+  // before it, and bring today's column into view, while the full day and week
+  // stay scrollable. The horizontal nudge matters on mobile, where only a few
+  // day columns fit at once.
   const scrollRef = useRef<HTMLDivElement>(null);
+  const todayColRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -64,6 +69,13 @@ export function WeekView({
     const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
     const target = Math.min(earliest, 7);
     el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
+
+    const col = todayColRef.current;
+    if (col) {
+      // Align today's column just past the sticky time gutter (w-14 = 56px).
+      const offset = col.getBoundingClientRect().left - el.getBoundingClientRect().left;
+      el.scrollLeft = Math.max(0, el.scrollLeft + offset - 56);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -94,7 +106,11 @@ export function WeekView({
             (t) => t.startTime && dayColumn(t) === dayIdx,
           );
           return (
-            <div key={day} className="flex-1 border-l">
+            <div
+              key={day}
+              ref={dayIdx === todayCol ? todayColRef : undefined}
+              className="flex-1 border-l"
+            >
               <div className="bg-surface text-fg-3 sticky top-0 z-10 flex h-10 items-center justify-center border-b font-mono text-xs font-medium uppercase tracking-[0.04em]">
                 {day.slice(0, 3)}
               </div>
