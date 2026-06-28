@@ -92,20 +92,28 @@ export function WeekView({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const starts = [
-      ...events.map((e) => timeToMinutes(e.startTime)),
-      ...todos.filter((t) => t.startTime).map((t) => timeToMinutes(t.startTime!)),
-    ];
-    const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
-    const target = Math.min(earliest, 7);
-    el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
+    // Defer to the next frame so the grid is laid out before we scroll it; on
+    // mobile the height is not settled when the effect first runs.
+    const raf = requestAnimationFrame(() => {
+      const starts = [
+        ...events.map((e) => timeToMinutes(e.startTime)),
+        ...todos
+          .filter((t) => t.startTime)
+          .map((t) => timeToMinutes(t.startTime!)),
+      ];
+      const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
+      const target = Math.min(earliest, 7);
+      el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
 
-    const col = todayColRef.current;
-    if (col) {
-      // Align today's column just past the sticky time gutter (w-14 = 56px).
-      const offset = col.getBoundingClientRect().left - el.getBoundingClientRect().left;
-      el.scrollLeft = Math.max(0, el.scrollLeft + offset - 56);
-    }
+      const col = todayColRef.current;
+      if (col) {
+        // Align today's column just past the sticky time gutter (w-14 = 56px).
+        const offset =
+          col.getBoundingClientRect().left - el.getBoundingClientRect().left;
+        el.scrollLeft = Math.max(0, el.scrollLeft + offset - 56);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

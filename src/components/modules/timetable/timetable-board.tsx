@@ -109,9 +109,15 @@ export function TimetableBoard({
     setOpen(true);
   }
 
+  const sameMonth =
+    format(weekStartDate, "MMM") === format(weekEndDate, "MMM");
+  const rangeLabel = sameMonth
+    ? `${format(weekStartDate, "d")} – ${format(weekEndDate, "d MMM")}`
+    : `${format(weekStartDate, "d MMM")} – ${format(weekEndDate, "d MMM")}`;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-8 md:px-8 md:pb-10">
-      <div className="flex shrink-0 items-center justify-between gap-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
         <div className="flex items-center gap-1">
           <Button
             size="icon-sm"
@@ -136,11 +142,11 @@ export function TimetableBoard({
           >
             <ChevronRight className="size-4" />
           </Button>
-          <span className="text-fg-2 ml-2 text-sm font-medium">
-            {format(weekStartDate, "d MMM")} – {format(weekEndDate, "d MMM")}
-          </span>
         </div>
-        <Button size="sm" onClick={openAdd}>
+        <span className="text-fg-2 shrink-0 text-sm font-medium whitespace-nowrap">
+          {rangeLabel}
+        </span>
+        <Button size="sm" onClick={openAdd} className="ml-auto shrink-0">
           <Plus />
           Add event
         </Button>

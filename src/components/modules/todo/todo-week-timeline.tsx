@@ -53,12 +53,15 @@ export function TodoWeekTimeline({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const starts = todos
-      .filter((t) => t.startTime)
-      .map((t) => timeToMinutes(t.startTime!));
-    const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
-    const target = Math.min(earliest, 7);
-    el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
+    const raf = requestAnimationFrame(() => {
+      const starts = todos
+        .filter((t) => t.startTime)
+        .map((t) => timeToMinutes(t.startTime!));
+      const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
+      const target = Math.min(earliest, 7);
+      el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
+    });
+    return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
