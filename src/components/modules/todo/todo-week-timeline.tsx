@@ -88,7 +88,7 @@ export function TodoWeekTimeline({
         </div>
       ) : null}
 
-      <div className="bg-surface scrollbar-hide overflow-auto overscroll-none rounded-md border border-border">
+      <div className="bg-surface scrollbar-hide max-h-[70vh] overflow-auto overscroll-none rounded-md border border-border">
         <div className="flex min-w-[640px]">
           <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
             <div className="bg-surface sticky top-0 z-30 h-10 border-b border-border" />
