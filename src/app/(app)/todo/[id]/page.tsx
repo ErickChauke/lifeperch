@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { getCollection } from "@/actions/todo";
 import { TodoBoard } from "@/components/modules/todo/todo-board";
 
-// One project: its list and calendar of todos, scoped.
-export default async function TodoProjectPage({
+// One list: its todos and calendar, scoped.
+export default async function TodoListPage({
   params,
 }: {
   params: Promise<{ id: string }>;
