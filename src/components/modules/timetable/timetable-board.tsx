@@ -10,6 +10,7 @@ import {
 } from "date-fns";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-shell";
 import { dateToDay } from "@/lib/money";
 import { WeekView, type WeekMark } from "./week-view";
 import { EventModal } from "./event-modal";
@@ -116,42 +117,66 @@ export function TimetableBoard({
     : `${format(weekStartDate, "d MMM")} – ${format(weekEndDate, "d MMM")}`;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-8 md:px-8 md:pb-10">
-      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            aria-label="Previous week"
-            onClick={() => setWeekOffset((w) => w - 1)}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={weekOffset === 0 ? "secondary" : "ghost"}
-            onClick={() => setWeekOffset(0)}
-          >
-            Today
-          </Button>
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            aria-label="Next week"
-            onClick={() => setWeekOffset((w) => w + 1)}
-          >
-            <ChevronRight className="size-4" />
+    <>
+      <PageHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[22px] font-semibold tracking-[-0.01em]">
+              Timetable
+            </h2>
+            <p className="text-fg-2 mt-1 text-sm">
+              Your weekly lectures and shifts.
+            </p>
+          </div>
+          {/* On mobile the action sits in the title row to use the space; on
+              desktop it lives in the week-nav row below. */}
+          <Button size="sm" onClick={openAdd} className="shrink-0 sm:hidden">
+            <Plus />
+            Add event
           </Button>
         </div>
-        <span className="text-fg-2 shrink-0 text-sm font-medium whitespace-nowrap">
-          {rangeLabel}
-        </span>
-        <Button size="sm" onClick={openAdd} className="ml-auto shrink-0">
-          <Plus />
-          Add event
-        </Button>
-      </div>
-      <WeekView
+      </PageHeader>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-8 md:px-8 md:pb-10">
+        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Previous week"
+              onClick={() => setWeekOffset((w) => w - 1)}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={weekOffset === 0 ? "secondary" : "ghost"}
+              onClick={() => setWeekOffset(0)}
+            >
+              Today
+            </Button>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Next week"
+              onClick={() => setWeekOffset((w) => w + 1)}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+          <span className="text-fg-2 shrink-0 text-sm font-medium whitespace-nowrap">
+            {rangeLabel}
+          </span>
+          <Button
+            size="sm"
+            onClick={openAdd}
+            className="ml-auto hidden shrink-0 sm:inline-flex"
+          >
+            <Plus />
+            Add event
+          </Button>
+        </div>
+        <WeekView
         events={weekEvents}
         onEventClick={openEdit}
         todos={weekTimedTodos}
@@ -160,7 +185,8 @@ export function TimetableBoard({
         weekDays={weekDays}
         today={today}
       />
-      <EventModal open={open} onOpenChange={setOpen} event={selected} />
-    </div>
+        <EventModal open={open} onOpenChange={setOpen} event={selected} />
+      </div>
+    </>
   );
 }
