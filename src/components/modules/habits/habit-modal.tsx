@@ -143,7 +143,7 @@ export function HabitModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Kind</Label>
+            <Label>Type</Label>
             <Segmented options={KINDS} value={kind} onChange={(v) => setValue("kind", v)} />
             <p className="text-fg-4 font-mono text-xs">
               {kind === "count" ? "Count toward a daily target" : "A simple done / not-done"}
