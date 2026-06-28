@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, ListChecks } from "lucide-react";
+import { Plus, ListChecks, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   PageShell,
@@ -22,6 +22,14 @@ export function TodoProjects({ projects }: { projects: Project[] }) {
   if (projects.length === 0) {
     return (
       <PageShell>
+        <PageHeader>
+          <Link
+            href="/todo"
+            className="text-fg-3 hover:text-fg-2 inline-flex items-center gap-1 font-mono text-xs"
+          >
+            <ChevronLeft className="size-4" /> To-Do
+          </Link>
+        </PageHeader>
         <PageBody>
           <div className="mx-auto max-w-[560px] py-12 text-center">
             <p className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
@@ -45,10 +53,18 @@ export function TodoProjects({ projects }: { projects: Project[] }) {
 
   return (
     <PageShell>
-      <PageHeader>
+      <PageHeader className="space-y-4">
+        <Link
+          href="/todo"
+          className="text-fg-3 hover:text-fg-2 inline-flex items-center gap-1 font-mono text-xs"
+        >
+          <ChevronLeft className="size-4" /> To-Do
+        </Link>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[22px] font-semibold tracking-[-0.01em]">To-Do</h2>
+            <h2 className="text-[22px] font-semibold tracking-[-0.01em]">
+              Projects
+            </h2>
             <p className="text-fg-3 mt-1 font-mono text-xs">
               {projects.length} {projects.length === 1 ? "project" : "projects"}
             </p>
