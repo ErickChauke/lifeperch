@@ -334,14 +334,15 @@ model Literature {
 // target). target/unit only matter for countable habits. icon is a lucide name
 // used as a label aid on the card. Archived habits leave the grid but keep history.
 model Habit {
-  id        String     @id @default(cuid())
-  userId    String
-  name      String
-  kind      String     @default("boolean")
-  target    Int        @default(1)
-  unit      String?
-  icon      String?
-  archived  Boolean    @default(false)
+  id          String     @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  kind        String     @default("none")
+  target      Int        @default(1)
+  unit        String?
+  icon        String?
+  archived    Boolean    @default(false)
   logs      HabitLog[]
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime   @default(now())

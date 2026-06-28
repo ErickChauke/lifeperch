@@ -56,6 +56,9 @@ export function HabitCard({
 
         <div className="space-y-1">
           <p className="text-fg line-clamp-2 text-lg font-semibold tracking-tight">{habit.name}</p>
+          {habit.description ? (
+            <p className="text-fg-2 line-clamp-2 text-sm">{habit.description}</p>
+          ) : null}
           <p className="text-fg-3 font-mono text-xs">
             {count ? `Target ${habit.target}${habit.unit ? ` ${habit.unit}` : ""}` : "Daily"}
           </p>

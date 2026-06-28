@@ -1,13 +1,15 @@
 import { z } from "zod";
 
-// Shared validation for the habit form and the server actions. A habit is either
-// "boolean" (done / not done) or "count" (toward a daily target). target and unit
-// only carry meaning for countable habits.
-export const HABIT_KINDS = ["boolean", "count"] as const;
+// Shared validation for the habit form and the server actions. A habit is a
+// simple check-off ("none", the default) or "count" (toward a daily target);
+// target and unit only carry meaning for countable habits. Legacy "boolean"
+// habits read as a check-off too. Description is an optional note.
+export const HABIT_KINDS = ["none", "count"] as const;
 export type HabitKind = (typeof HABIT_KINDS)[number];
 
 export const habitSchema = z.object({
   name: z.string().min(1, "Name a habit to keep"),
+  description: z.string().nullable(),
   kind: z.enum(HABIT_KINDS),
   target: z.number().int().min(1),
   unit: z.string().nullable(),
@@ -17,16 +19,30 @@ export const habitSchema = z.object({
 export type HabitInput = z.infer<typeof habitSchema>;
 
 // The lucide icons offered in the habit modal as a label aid (never a status).
+// Names map to components in habit-icon.tsx.
 export const HABIT_ICONS = [
   "check-circle",
   "droplet",
   "book-open",
   "dumbbell",
   "pen-line",
+  "heart",
+  "moon",
+  "sun",
+  "coffee",
+  "apple",
+  "footprints",
+  "brain",
+  "music",
+  "leaf",
+  "bike",
+  "code",
+  "sparkles",
+  "alarm-clock",
 ] as const;
 
-// True when a day's logged value counts the habit as done: any tick for a boolean,
-// reaching the target for a countable.
+// True when a day's logged value counts the habit as done: any tick for a simple
+// check-off, reaching the target for a countable.
 export function habitMet(value: number, kind: string, target: number): boolean {
   return kind === "count" ? value >= Math.max(1, target) : value >= 1;
 }
