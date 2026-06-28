@@ -11,21 +11,29 @@ import {
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dateToDay } from "@/lib/money";
-import { WeekView } from "./week-view";
+import { WeekView, type WeekMark } from "./week-view";
 import { EventModal } from "./event-modal";
 import type { getEvents } from "@/actions/timetable";
+import type { getJobs } from "@/actions/jobs";
+import type { getMilestones } from "@/actions/timeline";
 import type { Todo } from "@/components/modules/todo/todo-board";
 
 export type TimetableEvent = Awaited<ReturnType<typeof getEvents>>[number];
+type Job = Awaited<ReturnType<typeof getJobs>>[number];
+type Milestone = Awaited<ReturnType<typeof getMilestones>>[number];
 
 // Client container for the timetable. Owns the add/edit modal and which week is
-// shown, scoping events and todos to that week before handing them to the grid.
+// shown, scoping events, todos and cross-module dates to that week.
 export function TimetableBoard({
   events,
   todos,
+  jobs,
+  milestones,
 }: {
   events: TimetableEvent[];
   todos: Todo[];
+  jobs: Job[];
+  milestones: Milestone[];
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TimetableEvent | null>(null);
@@ -69,6 +77,27 @@ export function TimetableBoard({
         ? t.dayOfWeek !== null
         : inWeek(t.specificDate),
   );
+
+  const marks: WeekMark[] = [
+    ...jobs
+      .filter((j) => j.deadline && j.status !== "outcome" && inWeek(j.deadline))
+      .map((j) => ({
+        id: `j-${j.id}`,
+        day: dateToDay(j.deadline!),
+        label: `${j.position} · ${j.organisation}`,
+        href: "/jobs",
+        tone: "deadline" as const,
+      })),
+    ...milestones
+      .filter((m) => m.status !== "done" && inWeek(m.targetDate))
+      .map((m) => ({
+        id: `m-${m.id}`,
+        day: dateToDay(m.targetDate),
+        label: m.title,
+        href: "/timeline",
+        tone: "milestone" as const,
+      })),
+  ];
 
   function openAdd() {
     setSelected(null);
@@ -121,6 +150,7 @@ export function TimetableBoard({
         onEventClick={openEdit}
         todos={weekTimedTodos}
         allDayTodos={allDayTodos}
+        marks={marks}
         weekDays={weekDays}
         today={today}
       />

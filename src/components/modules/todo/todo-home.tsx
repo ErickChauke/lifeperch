@@ -10,7 +10,7 @@ import {
   format,
   parseISO,
 } from "date-fns";
-import { Plus, ListChecks } from "lucide-react";
+import { Plus, ListChecks, Flag, Milestone } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,15 @@ import type { getCollections } from "@/actions/todo";
 type Project = Awaited<ReturnType<typeof getCollections>>[number];
 type Tab = "today" | "week" | "upcoming" | "done";
 
+// A dated commitment from another module, marked on the calendar.
+export type TodoMark = {
+  id: string;
+  day: string;
+  label: string;
+  href: string;
+  tone: "deadline" | "milestone";
+};
+
 const TAB_LABELS: Record<Tab, string> = {
   today: "Today",
   week: "This week",
@@ -74,12 +83,15 @@ function dayLabel(day: string, today: string): string {
 export function TodoHome({
   todos,
   collections,
+  marks = [],
 }: {
   todos: Todo[];
   collections: Project[];
+  marks?: TodoMark[];
 }) {
   const router = useRouter();
   const today = format(new Date(), "yyyy-MM-dd");
+  const markedDays = useMemo(() => new Set(marks.map((m) => m.day)), [marks]);
 
   const [tab, setTab] = useState<Tab>("today");
   const [projectId, setProjectId] = useState<string>("all");
@@ -196,6 +208,11 @@ export function TodoHome({
       .sort(todoComparator(today));
   }, [filtered, selectedDay, today]);
 
+  const dayMarks = useMemo(
+    () => (selectedDay ? marks.filter((m) => m.day === selectedDay) : []),
+    [marks, selectedDay],
+  );
+
   return (
     <PageShell>
       <PageHeader className="space-y-4">
@@ -271,6 +288,7 @@ export function TodoHome({
               today={today}
               dueDays={dueDays}
               recurringDays={recurringDays}
+              markedDays={markedDays}
               onSelect={(day) => setSelectedDay(day === today ? null : day)}
             />
           </div>
@@ -289,7 +307,7 @@ export function TodoHome({
                     Back to {TAB_LABELS[tab]}
                   </button>
                 </div>
-                {sortedDay.length === 0 ? (
+                {sortedDay.length === 0 && dayMarks.length === 0 ? (
                   <p className="text-fg-3 text-sm">Nothing due on this day.</p>
                 ) : (
                   <div className="space-y-2">
@@ -300,6 +318,25 @@ export function TodoHome({
                         today={today}
                         onEdit={openEdit}
                       />
+                    ))}
+                    {dayMarks.map((mark) => (
+                      <Link
+                        key={mark.id}
+                        href={mark.href}
+                        className="bg-surface hover:bg-surface-2 flex items-center gap-3 rounded-md border border-border px-3 py-2.5 transition-colors"
+                      >
+                        {mark.tone === "deadline" ? (
+                          <Flag className="text-destructive size-4 shrink-0" />
+                        ) : (
+                          <Milestone className="text-accent size-4 shrink-0" />
+                        )}
+                        <span className="text-fg min-w-0 flex-1 truncate text-sm">
+                          {mark.label}
+                        </span>
+                        <span className="text-fg-3 shrink-0 text-[11px] capitalize">
+                          {mark.tone}
+                        </span>
+                      </Link>
                     ))}
                   </div>
                 )}

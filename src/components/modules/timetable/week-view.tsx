@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { Flag, Milestone } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import {
   WEEKDAYS,
@@ -48,14 +49,25 @@ function dueOn(todo: Todo, day: string): boolean {
   return false;
 }
 
+// A dated commitment from another module (job deadline, milestone) shown in the
+// all-day strip.
+export type WeekMark = {
+  id: string;
+  day: string;
+  label: string;
+  href: string;
+  tone: "deadline" | "milestone";
+};
+
 // Weekly time grid: a time gutter plus seven day columns. Events are positioned
 // by their start and end time. Time-blocked todos overlay as distinct blocks.
-// Untimed todos due in the week sit in an all-day strip above the grid.
+// Untimed todos and cross-module marks due in the week sit in an all-day strip.
 export function WeekView({
   events,
   onEventClick,
   todos = [],
   allDayTodos = [],
+  marks = [],
   weekDays,
   today,
 }: {
@@ -63,6 +75,7 @@ export function WeekView({
   onEventClick: (event: TimetableEvent) => void;
   todos?: Todo[];
   allDayTodos?: Todo[];
+  marks?: WeekMark[];
   weekDays: string[];
   today: string;
 }) {
@@ -100,10 +113,13 @@ export function WeekView({
     .map((t) => ({ todo: t, day: weekDays.find((d) => dueOn(t, d)) }))
     .filter((x): x is { todo: Todo; day: string } => Boolean(x.day))
     .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+  const sortedMarks = [...marks].sort((a, b) =>
+    a.day < b.day ? -1 : a.day > b.day ? 1 : 0,
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      {allDay.length > 0 ? (
+      {allDay.length > 0 || sortedMarks.length > 0 ? (
         <div className="bg-surface shrink-0 rounded-[var(--r-lg)] border p-3">
           <p className="text-fg-3 mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
             All day
@@ -129,6 +145,25 @@ export function WeekView({
                 </span>
                 <span className="text-fg-3 shrink-0 font-mono text-[10.5px]">
                   {format(parseISO(day), "EEE")}
+                </span>
+              </Link>
+            ))}
+            {sortedMarks.map((mark) => (
+              <Link
+                key={mark.id}
+                href={mark.href}
+                className="bg-surface-2 hover:bg-surface-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors"
+              >
+                {mark.tone === "deadline" ? (
+                  <Flag className="text-destructive size-3 shrink-0" />
+                ) : (
+                  <Milestone className="text-accent size-3 shrink-0" />
+                )}
+                <span className="text-fg max-w-[14rem] truncate">
+                  {mark.label}
+                </span>
+                <span className="text-fg-3 shrink-0 font-mono text-[10.5px]">
+                  {format(parseISO(mark.day), "EEE")}
                 </span>
               </Link>
             ))}
