@@ -77,6 +77,16 @@ function dayLabel(day: string, today: string): string {
   return format(parseISO(day), "EEEE d MMMM");
 }
 
+// A tab label whose count only appears from sm up, keeping mobile uncluttered.
+function TabLabel({ text, count }: { text: string; count: number }) {
+  return (
+    <>
+      {text}
+      {count > 0 ? <span className="hidden sm:inline"> {count}</span> : null}
+    </>
+  );
+}
+
 // The unified To-Do home: one cross-list surface with view tabs, a list filter,
 // quick capture, a side calendar and progress. Per-list boards live on at
 // /todo/[id]; the lists grid is at /todo/lists.
@@ -151,14 +161,15 @@ export function TodoHome({
     return set;
   }, [filtered]);
 
-  const tabOptions: { value: Tab; label: string }[] = [
-    { value: "today", label: `Today${counts.today ? ` ${counts.today}` : ""}` },
-    { value: "week", label: `Week${counts.week ? ` ${counts.week}` : ""}` },
+  // Counts ride a span that only shows from sm up, so mobile stays clean.
+  const tabOptions: { value: Tab; label: React.ReactNode }[] = [
+    { value: "today", label: <TabLabel text="Today" count={counts.today} /> },
+    { value: "week", label: <TabLabel text="Week" count={counts.week} /> },
     {
       value: "upcoming",
-      label: `Upcoming${counts.upcoming ? ` ${counts.upcoming}` : ""}`,
+      label: <TabLabel text="Upcoming" count={counts.upcoming} />,
     },
-    { value: "done", label: `Done${counts.done ? ` ${counts.done}` : ""}` },
+    { value: "done", label: <TabLabel text="Done" count={counts.done} /> },
   ];
 
   // The list the + todo modal and explicit form writes land in: the filtered

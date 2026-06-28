@@ -1,17 +1,18 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 // Small segmented toggle: a pill track with the selected segment lifted onto the
 // surface. Used for the dashboard scale, the transaction type, the type filter
-// and the wish priority.
+// and the wish priority. Labels accept nodes so parts can be hidden responsively.
 export function Segmented<T extends string>({
   options,
   value,
   onChange,
   className,
 }: {
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: ReactNode }[];
   value: T;
   onChange: (value: T) => void;
   className?: string;
