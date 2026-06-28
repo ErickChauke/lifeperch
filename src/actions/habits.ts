@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { habitSchema, habitMet, computeStreak, type HabitInput } from "@/lib/habits";
+import {
+  habitSchema,
+  habitMet,
+  computeStreak,
+  lastNDays,
+  type HabitInput,
+} from "@/lib/habits";
 import { dayToDate, dateToDay } from "@/lib/money";
 
 // Returns the current user id or throws when there is no session.
@@ -37,12 +43,18 @@ export async function getHabits() {
     include: { logs: true },
   });
   const today = dateToDay(new Date());
+  const week = lastNDays(today, 7);
   return habits.map(({ logs, ...habit }) => {
     const todayValue = logs.find((l) => dateToDay(l.date) === today)?.value ?? 0;
     const metDays = new Set(
       logs.filter((l) => habitMet(l.value, habit.kind, habit.target)).map((l) => dateToDay(l.date)),
     );
-    return { ...habit, todayValue, streak: computeStreak(metDays, today) };
+    return {
+      ...habit,
+      todayValue,
+      streak: computeStreak(metDays, today),
+      last7: week.map((day) => ({ day, met: metDays.has(day) })),
+    };
   });
 }
 

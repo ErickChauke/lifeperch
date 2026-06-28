@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Flame, Check, Minus, Plus, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { HabitIcon } from "./habit-icon";
 import { setHabitLog } from "@/actions/habits";
@@ -21,12 +22,21 @@ export function HabitCard({
 }) {
   const [pending, startTransition] = useTransition();
   const count = habit.kind === "count";
-  const done = habit.todayValue;
+  // Optimistic today value: update on tap, reconcile when the server refreshes.
+  const [done, setDone] = useState(habit.todayValue);
+  useEffect(() => setDone(habit.todayValue), [habit.todayValue]);
   const complete = count ? done >= Math.max(1, habit.target) : done >= 1;
 
   function set(value: number) {
+    const next = Math.max(0, value);
+    setDone(next);
     startTransition(async () => {
-      await setHabitLog(habit.id, today, Math.max(0, value));
+      try {
+        await setHabitLog(habit.id, today, next);
+      } catch {
+        setDone(habit.todayValue);
+        toast.error("Could not update habit");
+      }
     });
   }
 
@@ -63,6 +73,22 @@ export function HabitCard({
             {count ? `Target ${habit.target}${habit.unit ? ` ${habit.unit}` : ""}` : "Daily"}
           </p>
         </div>
+      </div>
+
+      {/* Last seven days, oldest to today, as a consistency strip. */}
+      <div className="flex items-center justify-between gap-1">
+        {habit.last7.map((d) => (
+          <span
+            key={d.day}
+            title={d.day}
+            className={cn(
+              "h-2 flex-1 rounded-full",
+              d.met ? "" : "bg-surface-3",
+              d.day === today && !d.met ? "ring-border-2 ring-1" : "",
+            )}
+            style={d.met ? { background: "var(--success)" } : undefined}
+          />
+        ))}
       </div>
 
       {/* Check-in foot - its own click target, never opens the editor. */}
