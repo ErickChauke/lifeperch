@@ -6,14 +6,24 @@ import {
   Wallet,
   Repeat,
   ArrowRight,
+  PenLine,
+  Check,
   type LucideIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getTodayTodos } from "@/actions/todo";
+import { getEvents } from "@/actions/timetable";
+import { getHabits } from "@/actions/habits";
+import { getJobs } from "@/actions/jobs";
+import { getMilestones } from "@/actions/timeline";
+import { getEntryByDate } from "@/actions/journal";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { DashboardGreeting } from "@/components/modules/dashboard/dashboard-greeting";
 import { TodaysTodos } from "@/components/modules/dashboard/todays-todos";
 import { QuickAddTodo } from "@/components/modules/dashboard/quick-add-todo";
+import { TodayAgenda } from "@/components/modules/dashboard/today-agenda";
+import { TodayHabits } from "@/components/modules/dashboard/today-habits";
+import { DueSoon } from "@/components/modules/dashboard/due-soon";
 
 type QuickStart = {
   title: string;
@@ -54,8 +64,24 @@ export default async function DashboardPage() {
   const name = session?.user?.name?.split(" ")[0] ?? "there";
   const now = new Date();
   const todayStr = format(now, "yyyy-MM-dd");
-  const { today: dueToday, overdue } = await getTodayTodos();
+  const [
+    { today: dueToday, overdue },
+    events,
+    habits,
+    jobs,
+    milestones,
+    journalEntry,
+  ] = await Promise.all([
+    getTodayTodos(),
+    getEvents(),
+    getHabits(),
+    getJobs(),
+    getMilestones(),
+    getEntryByDate(todayStr),
+  ]);
   const hasTodos = dueToday.length > 0 || overdue.length > 0;
+  const activeHabits = habits.filter((h) => !h.archived);
+  const journaledToday = !!journalEntry && journalEntry.body.trim().length > 0;
 
   return (
     <PageShell>
@@ -89,6 +115,35 @@ export default async function DashboardPage() {
           <div className="mt-6">
             <QuickAddTodo today={todayStr} />
           </div>
+
+          <TodayAgenda events={events} todos={dueToday} today={todayStr} />
+
+          <TodayHabits habits={activeHabits} today={todayStr} />
+
+          <DueSoon jobs={jobs} milestones={milestones} today={todayStr} />
+
+          <Link
+            href="/journal"
+            className="bg-surface hover:bg-surface-2 mt-8 flex items-center gap-3 rounded-md border border-border px-3 py-2.5 transition-colors"
+          >
+            <span
+              className={
+                journaledToday
+                  ? "bg-primary flex size-5 shrink-0 items-center justify-center rounded-full text-[var(--accent-fg)]"
+                  : "border-border-2 text-fg-3 flex size-5 shrink-0 items-center justify-center rounded-full border"
+              }
+            >
+              {journaledToday ? (
+                <Check className="size-3" strokeWidth={3} />
+              ) : (
+                <PenLine className="size-3" />
+              )}
+            </span>
+            <span className="text-fg flex-1 text-sm">
+              {journaledToday ? "Journaled today" : "Write today's entry"}
+            </span>
+            <ArrowRight className="text-fg-4 size-4" strokeWidth={1.75} />
+          </Link>
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {QUICK_STARTS.map(({ title, desc, href, icon: Icon }) => (
