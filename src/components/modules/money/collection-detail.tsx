@@ -58,9 +58,6 @@ export function CollectionDetailView({
     "priority",
   );
 
-  const worth = collection.items.reduce((sum, w) => sum + w.price, 0);
-  const bought = collection.items.filter((w) => w.completed).length;
-
   // Apply the filters, then sort. The default sort sinks bought wishes to the
   // bottom and orders the rest by priority then price.
   const wishes = useMemo(() => {
@@ -82,6 +79,10 @@ export function CollectionDetailView({
       );
     });
   }, [collection.items, priorityFilter, statusFilter, sortBy]);
+
+  // Worth and counts follow the active filters, so they total just the shown wishes.
+  const worth = wishes.reduce((sum, w) => sum + w.price, 0);
+  const bought = wishes.filter((w) => w.completed).length;
 
   const filtersOn = priorityFilter !== "all" || statusFilter !== "all";
 
@@ -170,7 +171,7 @@ export function CollectionDetailView({
               <span title={formatCurrency(centsToRand(worth))}>
                 {formatCurrencyShort(centsToRand(worth))}
               </span>{" "}
-              · {collection.items.length} items
+              · {wishes.length} items
               {bought > 0 ? ` · ${bought} bought` : ""}
             </span>
             <Button

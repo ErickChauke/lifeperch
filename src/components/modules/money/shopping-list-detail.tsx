@@ -23,9 +23,17 @@ import {
 import type { getShoppingList } from "@/actions/shopping";
 import { ShoppingItemModal } from "./shopping-item-modal";
 import { ImportPickerModal, type ImportSource } from "./import-picker-modal";
+import { Segmented } from "./segmented";
 
 type ShoppingListDetail = NonNullable<Awaited<ReturnType<typeof getShoppingList>>>;
 export type Item = ShoppingListDetail["items"][number];
+
+type StatusFilter = "all" | "pending" | "done";
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "To buy" },
+  { value: "done", label: "Bought" },
+] as const;
 
 export function ShoppingListDetailView({
   list,
@@ -43,11 +51,18 @@ export function ShoppingListDetailView({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
   const [importing, setImporting] = useState(false);
+  const [status, setStatus] = useState<StatusFilter>("all");
 
   const toBuy = list.items.filter((i) => !i.bought);
   const basket = list.items.filter((i) => i.bought);
   const estimate = toBuy.reduce((s, i) => s + i.price * i.quantity, 0);
   const basketTotal = basket.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  // "all" shows both sections, "pending" only the to-buy list, "done" only the
+  // basket. The summary figure follows the selection.
+  const showToBuy = status !== "done";
+  const showBasket = status !== "pending";
+  const done = status === "done";
 
   function add() {
     const parsed = shoppingItemSchema.safeParse({
@@ -184,11 +199,15 @@ export function ShoppingListDetailView({
 
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
-          Estimated
+          {done ? "Bought" : "Estimated"}
         </span>
-        <span className="text-fg font-mono text-2xl">{formatZAR(centsToRand(estimate))}</span>
+        <span className="text-fg font-mono text-2xl">
+          {formatZAR(centsToRand(done ? basketTotal : estimate))}
+        </span>
         <span className="text-fg-3 text-sm whitespace-nowrap">
-          {toBuy.length} {toBuy.length === 1 ? "item" : "items"} to buy
+          {done
+            ? `${basket.length} ${basket.length === 1 ? "item" : "items"} bought`
+            : `${toBuy.length} ${toBuy.length === 1 ? "item" : "items"} to buy`}
         </span>
       </div>
 
@@ -230,11 +249,17 @@ export function ShoppingListDetailView({
         </div>
       ) : null}
 
+      {list.items.length > 0 ? (
+        <div className="flex justify-end">
+          <Segmented options={STATUS_FILTERS} value={status} onChange={setStatus} />
+        </div>
+      ) : null}
+
       {list.items.length === 0 ? (
         <p className="text-fg-3 text-sm">Nothing on this list yet. Add the first thing you need.</p>
       ) : (
         <div className="space-y-5">
-          {toBuy.length > 0 ? (
+          {showToBuy && toBuy.length > 0 ? (
             <div className="bg-surface divide-border overflow-hidden rounded-lg border [&>*]:border-t [&>*:first-child]:border-t-0">
               {toBuy.map((item) => (
                 <ItemRow
@@ -250,7 +275,7 @@ export function ShoppingListDetailView({
             </div>
           ) : null}
 
-          {basket.length > 0 ? (
+          {showBasket && basket.length > 0 ? (
             <div className="space-y-2">
               <p className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
                 In the basket

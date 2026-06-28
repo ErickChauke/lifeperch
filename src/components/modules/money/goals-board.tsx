@@ -10,15 +10,33 @@ import { centsToRand } from "@/lib/money";
 import { goalPercent, monthsToGoal } from "@/lib/goals";
 import { MoneyEmpty } from "./money-empty";
 import { GoalModal } from "./goal-modal";
+import { Segmented } from "./segmented";
 import type { getGoals } from "@/actions/goals";
 
 export type Goal = Awaited<ReturnType<typeof getGoals>>[number];
 
+type StatusFilter = "all" | "pending" | "done";
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "In progress" },
+  { value: "done", label: "Reached" },
+] as const;
+
 export function GoalsBoard({ goals }: { goals: Goal[] }) {
   const [editing, setEditing] = useState<Goal | null>(null);
   const [creating, setCreating] = useState(false);
+  const [status, setStatus] = useState<StatusFilter>("all");
 
-  const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0);
+  // A goal is "reached" once it hits 100 percent. The filter and the Saved total
+  // follow the selection.
+  const isReached = (g: Goal) => {
+    const pct = goalPercent(g.currentAmount, g.targetAmount);
+    return pct !== null && pct >= 100;
+  };
+  const visible = goals.filter((g) =>
+    status === "all" ? true : status === "done" ? isReached(g) : !isReached(g),
+  );
+  const totalSaved = visible.reduce((sum, g) => sum + g.currentAmount, 0);
 
   function closeModal() {
     setCreating(false);
@@ -54,18 +72,26 @@ export function GoalsBoard({ goals }: { goals: Goal[] }) {
           <span className="text-fg font-mono" title={formatCurrency(centsToRand(totalSaved))}>
             {formatCurrencyShort(centsToRand(totalSaved))}
           </span>{" "}
-          across {goals.length} {goals.length === 1 ? "goal" : "goals"}
+          across {visible.length} {visible.length === 1 ? "goal" : "goals"}
         </p>
         <Button onClick={() => setCreating(true)}>
           <Plus /> New goal
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {goals.map((goal) => (
-          <GoalCard key={goal.id} goal={goal} onClick={() => setEditing(goal)} />
-        ))}
+      <div className="flex justify-end">
+        <Segmented options={STATUS_FILTERS} value={status} onChange={setStatus} />
       </div>
+
+      {visible.length === 0 ? (
+        <p className="text-fg-3 text-sm">No goals here yet.</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visible.map((goal) => (
+            <GoalCard key={goal.id} goal={goal} onClick={() => setEditing(goal)} />
+          ))}
+        </div>
+      )}
 
       <GoalModal
         open={creating || editing !== null}

@@ -25,6 +25,14 @@ import { deletePlan, duplicatePlan, toggleItemComplete, importToPlan } from "@/a
 import { PlanModal } from "./plan-modal";
 import { PlanItemModal } from "./plan-item-modal";
 import { ImportPickerModal, type ImportSource } from "./import-picker-modal";
+import { Segmented } from "./segmented";
+
+type StatusFilter = "all" | "pending" | "done";
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "done", label: "Done" },
+] as const;
 import type { getPlan, getPlans } from "@/actions/budget";
 import type { getGoals } from "@/actions/goals";
 
@@ -71,6 +79,7 @@ export function PlanDetailView({
   const [editingPlan, setEditingPlan] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [status, setStatus] = useState<StatusFilter>("all");
   const goalsById = new Map(goals.map((g) => [g.id, g]));
   const [itemModal, setItemModal] = useState<{
     open: boolean;
@@ -78,8 +87,12 @@ export function PlanDetailView({
     kind: "income" | "expense";
   }>({ open: false, item: null, kind: "expense" });
 
-  const income = plan.items.filter((i) => i.kind === "income");
-  const expense = plan.items.filter((i) => i.kind === "expense");
+  // The status filter narrows both lists (and so the summary figures) to done or
+  // not-yet-done lines. "all" leaves everything as before.
+  const matchStatus = (i: Item) =>
+    status === "all" ? true : status === "done" ? i.completed : !i.completed;
+  const income = plan.items.filter((i) => i.kind === "income" && matchStatus(i));
+  const expense = plan.items.filter((i) => i.kind === "expense" && matchStatus(i));
   const plannedIn = sum(income);
   const plannedOut = sum(expense);
   const left = plannedIn - plannedOut;
@@ -211,6 +224,10 @@ export function PlanDetailView({
             <span className="hidden sm:inline"> · </span>out {formatZAR(centsToRand(actualOut))}
           </span>
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Segmented options={STATUS_FILTERS} value={status} onChange={setStatus} />
       </div>
 
       {/* Money in */}
