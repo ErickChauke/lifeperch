@@ -152,13 +152,13 @@ export function TodoHome({
   }, [filtered]);
 
   const tabOptions: { value: Tab; label: string }[] = [
-    { value: "today", label: `Today${counts.today ? ` · ${counts.today}` : ""}` },
-    { value: "week", label: `This week${counts.week ? ` · ${counts.week}` : ""}` },
+    { value: "today", label: `Today${counts.today ? ` ${counts.today}` : ""}` },
+    { value: "week", label: `Week${counts.week ? ` ${counts.week}` : ""}` },
     {
       value: "upcoming",
-      label: `Upcoming${counts.upcoming ? ` · ${counts.upcoming}` : ""}`,
+      label: `Upcoming${counts.upcoming ? ` ${counts.upcoming}` : ""}`,
     },
-    { value: "done", label: `Done${counts.done ? ` · ${counts.done}` : ""}` },
+    { value: "done", label: `Done${counts.done ? ` ${counts.done}` : ""}` },
   ];
 
   // The list the + todo modal and explicit form writes land in: the filtered

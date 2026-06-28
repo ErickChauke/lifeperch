@@ -26,7 +26,7 @@ export function Segmented<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-full px-3 py-1 text-xs font-medium transition-colors",
+              "shrink-0 rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors",
               active
                 ? "bg-surface text-fg shadow-[var(--shadow-card)]"
                 : "text-fg-3 hover:text-fg-2",
