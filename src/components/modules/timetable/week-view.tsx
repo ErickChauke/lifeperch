@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { format } from "date-fns";
 import {
   WEEKDAYS,
@@ -50,8 +51,27 @@ export function WeekView({
   const bodyHeight = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX + GRID_PAD * 2;
   const today = format(new Date(), "yyyy-MM-dd");
 
+  // On launch, land on the morning (07:00) or earlier if something starts
+  // before it, while the full day stays scrollable above and below.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const starts = [
+      ...events.map((e) => timeToMinutes(e.startTime)),
+      ...todos.filter((t) => t.startTime).map((t) => timeToMinutes(t.startTime!)),
+    ];
+    const earliest = starts.length ? Math.floor(Math.min(...starts) / 60) : 7;
+    const target = Math.min(earliest, 7);
+    el.scrollTop = Math.max(0, (target - GRID_START_HOUR) * HOUR_PX + GRID_PAD);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="bg-surface scrollbar-hide min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border">
+    <div
+      ref={scrollRef}
+      className="bg-surface scrollbar-hide min-h-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border"
+    >
       <div className="flex min-w-[720px]">
         <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
           <div className="bg-surface sticky top-0 z-30 h-10 border-b" />
