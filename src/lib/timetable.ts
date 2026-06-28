@@ -40,9 +40,9 @@ export function weekdayIndex(date: Date): number {
   return (getDay(date) + 6) % 7;
 }
 
-// Hour range shown in the week grid.
-export const GRID_START_HOUR = 6;
-export const GRID_END_HOUR = 22;
+// Hour range shown in the week grid: the full day, midnight to midnight.
+export const GRID_START_HOUR = 0;
+export const GRID_END_HOUR = 24;
 
 // Converts an "HH:MM" string to minutes since midnight.
 export function timeToMinutes(time: string): number {
