@@ -10,6 +10,7 @@ import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { APP_STAGES, APP_OUTCOMES, STAGE_META, OUTCOME_META } from "@/lib/jobs";
 import { STAGE_TONE, OUTCOME_TONE, tint } from "./tones";
+import { ItemTasks } from "@/components/modules/todo/item-tasks";
 import {
   moveJob,
   setOutcome,
@@ -59,6 +60,7 @@ function DrawerBody({
   const [confirmApp, setConfirmApp] = useState(false);
 
   const tone = STAGE_TONE[application.status] ?? "var(--text-3)";
+  const today = format(new Date(), "yyyy-MM-dd");
 
   function run(fn: () => Promise<void>) {
     startTransition(async () => {
@@ -273,6 +275,16 @@ function DrawerBody({
               <Plus /> {editingId ? "Update" : "Save"}
             </Button>
           </div>
+        </div>
+
+        {/* Tasks linked to this application */}
+        <div className="mt-6">
+          <ItemTasks
+            module="jobs"
+            id={application.id}
+            label={`${application.position} · ${application.organisation}`}
+            today={today}
+          />
         </div>
       </div>
 
