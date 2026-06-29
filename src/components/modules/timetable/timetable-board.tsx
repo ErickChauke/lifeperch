@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-shell";
 import { dateToDay } from "@/lib/money";
 import { isHabitExpected } from "@/lib/habits";
+import { isDone } from "@/lib/todo";
+import { weekdayIndex, timeToMinutes } from "@/lib/timetable";
 import { WeekView, type WeekMark, type HabitBlock } from "./week-view";
 import { EventModal } from "./event-modal";
 import type { getEvents } from "@/actions/timetable";
@@ -82,6 +84,39 @@ export function TimetableBoard({
       : t.isRecurring
         ? t.dayOfWeek !== null
         : inWeek(t.specificDate),
+  );
+
+  // A todo linked to the timetable overrides the events it overlaps while still
+  // pending; once done the event returns and the done todo drops off the grid,
+  // so the week reads as normal again.
+  const colOf = (item: {
+    isRecurring: boolean;
+    dayOfWeek: number | null;
+    specificDate: Date | null;
+  }): number | null =>
+    item.isRecurring
+      ? item.dayOfWeek
+      : item.specificDate
+        ? weekdayIndex(new Date(item.specificDate))
+        : null;
+  const overlaps = (aS: number, aE: number, bS: number, bE: number) =>
+    aS < bE && bS < aE;
+  const overriders = weekTimedTodos.filter(
+    (t) => t.linkedModule === "timetable" && !isDone(t, today),
+  );
+  const visibleEvents = weekEvents.filter((e) => {
+    const eStart = timeToMinutes(e.startTime);
+    const eEnd = timeToMinutes(e.endTime);
+    const eCol = colOf(e);
+    return !overriders.some((t) => {
+      if (colOf(t) !== eCol) return false;
+      const tStart = timeToMinutes(t.startTime!);
+      const tEnd = t.endTime ? timeToMinutes(t.endTime) : tStart + 60;
+      return overlaps(tStart, tEnd, eStart, eEnd);
+    });
+  });
+  const visibleTodos = weekTimedTodos.filter(
+    (t) => !(t.linkedModule === "timetable" && isDone(t, today)),
   );
 
   const marks: WeekMark[] = [
@@ -202,9 +237,9 @@ export function TimetableBoard({
           </Button>
         </div>
         <WeekView
-        events={weekEvents}
+        events={visibleEvents}
         onEventClick={openEdit}
-        todos={weekTimedTodos}
+        todos={visibleTodos}
         allDayTodos={allDayTodos}
         marks={marks}
         habits={habitBlocks}
