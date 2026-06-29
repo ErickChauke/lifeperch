@@ -16,8 +16,21 @@ import { dateToDay } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./event-card";
 import { TodoBlockCard } from "./todo-block-card";
+import { HabitIcon } from "@/components/modules/habits/habit-icon";
 import type { TimetableEvent } from "./timetable-board";
 import type { Todo } from "@/components/modules/todo/todo-board";
+
+// A timed habit occurrence on the grid for one day of the visible week.
+export type HabitBlock = {
+  id: string;
+  dayIdx: number;
+  startTime: string;
+  endTime: string | null;
+  name: string;
+  icon: string | null;
+};
+
+const HABIT_TONE = "var(--info)";
 
 const HOUR_PX = 48;
 // Breathing room at the top and bottom so the first and last hour labels,
@@ -68,6 +81,7 @@ export function WeekView({
   todos = [],
   allDayTodos = [],
   marks = [],
+  habits = [],
   weekDays,
   today,
 }: {
@@ -76,6 +90,7 @@ export function WeekView({
   todos?: Todo[];
   allDayTodos?: Todo[];
   marks?: WeekMark[];
+  habits?: HabitBlock[];
   weekDays: string[];
   today: string;
 }) {
@@ -272,6 +287,46 @@ export function WeekView({
                       </div>
                     );
                   })}
+                  {habits
+                    .filter((h) => h.dayIdx === dayIdx)
+                    .map((h) => {
+                      const startMin = timeToMinutes(h.startTime);
+                      const endMin = h.endTime
+                        ? timeToMinutes(h.endTime)
+                        : startMin + DEFAULT_TODO_MINUTES;
+                      const start = startMin - GRID_START_HOUR * 60;
+                      const end = endMin - GRID_START_HOUR * 60;
+                      const top = Math.max(0, (start / 60) * HOUR_PX) + GRID_PAD;
+                      const height = Math.max(
+                        18,
+                        ((end - start) / 60) * HOUR_PX - 2,
+                      );
+                      return (
+                        <Link
+                          key={h.id}
+                          href="/habits"
+                          className="absolute inset-x-1 z-20 block overflow-hidden rounded-[var(--r-sm)] border px-1.5 py-1 transition-opacity hover:opacity-80"
+                          style={{
+                            top,
+                            height,
+                            background: `color-mix(in oklch, ${HABIT_TONE} 14%, transparent)`,
+                            borderColor: HABIT_TONE,
+                          }}
+                        >
+                          <p
+                            className="flex items-center gap-1 truncate text-xs font-medium"
+                            style={{ color: HABIT_TONE }}
+                          >
+                            <HabitIcon name={h.icon} className="size-3 shrink-0" />
+                            {h.name}
+                          </p>
+                          <p className="text-fg-3 truncate font-mono text-[11px]">
+                            {h.startTime}
+                            {h.endTime ? `–${h.endTime}` : ""}
+                          </p>
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
             );
