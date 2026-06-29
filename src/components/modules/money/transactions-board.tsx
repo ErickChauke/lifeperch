@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Search, ArrowDown, ArrowUp } from "lucide-react";
+import { Plus, ArrowDown, ArrowUp } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { CategoryIcon } from "./category-icon";
@@ -101,15 +102,11 @@ export function TransactionsBoard({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search transactions…"
-            className="bg-surface-2 placeholder:text-fg-3 focus-visible:border-accent-line h-9 w-full rounded-sm border pl-8 pr-3 text-sm outline-none"
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search transactions…"
+        />
         <Segmented options={TYPE_FILTERS} value={typeFilter} onChange={setTypeFilter} />
         {category ? (
           <button
