@@ -12,16 +12,19 @@ import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-shell";
 import { dateToDay } from "@/lib/money";
-import { WeekView, type WeekMark } from "./week-view";
+import { isHabitExpected } from "@/lib/habits";
+import { WeekView, type WeekMark, type HabitBlock } from "./week-view";
 import { EventModal } from "./event-modal";
 import type { getEvents } from "@/actions/timetable";
 import type { getJobs } from "@/actions/jobs";
 import type { getMilestones } from "@/actions/timeline";
+import type { getHabits } from "@/actions/habits";
 import type { Todo } from "@/components/modules/todo/todo-board";
 
 export type TimetableEvent = Awaited<ReturnType<typeof getEvents>>[number];
 type Job = Awaited<ReturnType<typeof getJobs>>[number];
 type Milestone = Awaited<ReturnType<typeof getMilestones>>[number];
+type Habit = Awaited<ReturnType<typeof getHabits>>[number];
 
 // Client container for the timetable. Owns the add/edit modal and which week is
 // shown, scoping events, todos and cross-module dates to that week.
@@ -30,11 +33,13 @@ export function TimetableBoard({
   todos,
   jobs,
   milestones,
+  habits,
 }: {
   events: TimetableEvent[];
   todos: Todo[];
   jobs: Job[];
   milestones: Milestone[];
+  habits: Habit[];
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TimetableEvent | null>(null);
@@ -99,6 +104,26 @@ export function TimetableBoard({
         tone: "milestone" as const,
       })),
   ];
+
+  // Timed habits with a fixed cadence (daily or specific weekdays) drop onto the
+  // grid on each day of the week they are expected. Flexible (weekly) habits have
+  // no fixed slot, so they stay off the grid.
+  const habitBlocks: HabitBlock[] = [];
+  for (const h of habits) {
+    if (!h.startTime || h.weeklyTarget != null) continue;
+    weekDays.forEach((day, i) => {
+      if (isHabitExpected(h, day)) {
+        habitBlocks.push({
+          id: `${h.id}-${i}`,
+          dayIdx: i,
+          startTime: h.startTime!,
+          endTime: h.endTime,
+          name: h.name,
+          icon: h.icon,
+        });
+      }
+    });
+  }
 
   function openAdd() {
     setSelected(null);
@@ -182,6 +207,7 @@ export function TimetableBoard({
         todos={weekTimedTodos}
         allDayTodos={allDayTodos}
         marks={marks}
+        habits={habitBlocks}
         weekDays={weekDays}
         today={today}
       />
