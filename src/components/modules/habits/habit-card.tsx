@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Flame, Check, Minus, Plus, Pencil } from "lucide-react";
+import Link from "next/link";
+import { Flame, Check, Minus, Plus, Pencil, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { frequencyLabel } from "@/lib/habits";
@@ -88,6 +89,16 @@ export function HabitCard({
               .filter(Boolean)
               .join(" · ")}
           </p>
+          {habit.linkedId ? (
+            <Link
+              href="/todo"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface-2 text-fg-2 hover:text-fg hover:bg-surface-3 mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors"
+            >
+              {habit.linkedLabel || "Todo"}
+              <ArrowUpRight className="size-3" />
+            </Link>
+          ) : null}
         </div>
       </div>
 

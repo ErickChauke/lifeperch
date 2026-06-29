@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Segmented } from "@/components/modules/money/segmented";
@@ -58,14 +59,18 @@ function emptyValues(): HabitInput {
   };
 }
 
+export type TodoOption = { id: string; title: string };
+
 export function HabitModal({
   open,
   onOpenChange,
   habit,
+  todos,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   habit: Habit | null;
+  todos: TodoOption[];
 }) {
   const [pending, startTransition] = useTransition();
   const [confirmArchive, setConfirmArchive] = useState(false);
@@ -86,6 +91,20 @@ export function HabitModal({
   const icon = watch("icon");
   const days = watch("daysOfWeek");
   const startTime = watch("startTime");
+  const linkedId = watch("linkedId");
+
+  // Points the habit at a todo (or clears it), storing the title for the chip.
+  function setLinkedTodo(id: string) {
+    if (!id) {
+      setValue("linkedModule", null);
+      setValue("linkedId", null);
+      setValue("linkedLabel", null);
+      return;
+    }
+    setValue("linkedModule", "todo");
+    setValue("linkedId", id);
+    setValue("linkedLabel", todos.find((t) => t.id === id)?.title ?? null);
+  }
 
   function close() {
     setConfirmArchive(false);
@@ -325,6 +344,24 @@ export function HabitModal({
               Leave blank to track from the first check-in.
             </p>
           </div>
+
+          {todos.length > 0 ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="linkedTodo">Link to a todo</Label>
+              <Select
+                id="linkedTodo"
+                value={linkedId ?? ""}
+                onChange={(e) => setLinkedTodo(e.target.value)}
+              >
+                <option value="">None</option>
+                {todos.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : null}
 
           <div className="space-y-1.5">
             <Label>Icon</Label>
