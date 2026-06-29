@@ -12,16 +12,18 @@ import {
 import { MoneyEmpty } from "@/components/modules/money/money-empty";
 import { habitMet } from "@/lib/habits";
 import { HabitCard } from "./habit-card";
-import { HabitModal } from "./habit-modal";
+import { HabitModal, type TodoOption } from "./habit-modal";
 import type { getHabits } from "@/actions/habits";
 
 export type Habit = Awaited<ReturnType<typeof getHabits>>[number];
 
 export function HabitsBoard({
   habits,
+  todos,
   today,
 }: {
   habits: Habit[];
+  todos: TodoOption[];
   today: string;
 }) {
   const [editing, setEditing] = useState<Habit | null>(null);
@@ -92,6 +94,7 @@ export function HabitsBoard({
           open={creating || editing !== null}
           onOpenChange={(o) => !o && closeModal()}
           habit={editing}
+          todos={todos}
         />
       </PageBody>
     </PageShell>
