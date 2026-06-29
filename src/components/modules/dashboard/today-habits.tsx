@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { setHabitLog } from "@/actions/habits";
+import { isHabitExpected } from "@/lib/habits";
 import { cn } from "@/lib/utils";
 import type { getHabits } from "@/actions/habits";
 
@@ -20,7 +21,9 @@ export function TodayHabits({
   habits: Habit[];
   today: string;
 }) {
-  if (habits.length === 0) return null;
+  // Only the habits actually expected today belong on the day's list.
+  const visible = habits.filter((h) => isHabitExpected(h, today));
+  if (visible.length === 0) return null;
 
   return (
     <div className="mt-8 space-y-2">
@@ -28,7 +31,7 @@ export function TodayHabits({
         Habits
       </h3>
       <div className="space-y-1.5">
-        {habits.map((habit) => (
+        {visible.map((habit) => (
           <HabitRow key={habit.id} habit={habit} today={today} />
         ))}
       </div>
