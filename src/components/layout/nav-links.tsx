@@ -2,39 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Calendar,
-  Repeat,
-  BookText,
-  ListTodo,
-  FileText,
-  Wallet,
-  Activity,
-  BookOpen,
-  Briefcase,
-  Lock,
-  GitBranch,
-  type LucideIcon,
-} from "lucide-react";
 import { modules, GROUP_ORDER, type ModuleGroup } from "@config/modules.config";
+import { iconFor } from "@/components/layout/module-icons";
 import { cn } from "@/lib/utils";
-
-// Maps the icon name stored in modules.config to a lucide component.
-const ICONS: Record<string, LucideIcon> = {
-  dashboard: LayoutDashboard,
-  calendar: Calendar,
-  habits: Repeat,
-  journal: BookText,
-  todo: ListTodo,
-  notes: FileText,
-  money: Wallet,
-  health: Activity,
-  literature: BookOpen,
-  jobs: Briefcase,
-  vault: Lock,
-  timeline: GitBranch,
-};
 
 // Renders the sidebar nav grouped by section, with active highlighting.
 export function NavLinks() {
@@ -69,7 +39,7 @@ function NavGroup({
         {label}
       </span>
       {items.map((m) => {
-        const Icon = ICONS[m.icon] ?? Calendar;
+        const Icon = iconFor(m.icon);
         const active =
           pathname === m.href || pathname.startsWith(`${m.href}/`);
         return (
