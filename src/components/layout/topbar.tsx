@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Search, Bell, Menu } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import { modules } from "@config/modules.config";
 import { useSidebar } from "@/components/layout/sidebar-context";
+import { CommandPalette } from "@/components/layout/command-palette";
 
 // Derives the current page name from the path: prefers a module label, else
 // title-cases the first segment. Defaults to Dashboard at the app root.
@@ -41,16 +42,7 @@ export function Topbar() {
       </p>
 
       <div className="ml-auto flex items-center gap-2">
-        <button
-          type="button"
-          className="bg-surface-2 text-fg-3 hover:border-border-2 hidden h-9 w-60 items-center gap-2 rounded-[var(--r)] border px-3 text-left transition-colors md:flex"
-        >
-          <Search className="size-4 shrink-0" strokeWidth={1.75} />
-          <span className="flex-1 truncate text-[13px]">Search everything…</span>
-          <kbd className="bg-surface text-fg-3 rounded-[8px] border px-1.5 py-0.5 font-mono text-[11px]">
-            ⌘K
-          </kbd>
-        </button>
+        <CommandPalette />
 
         <button
           type="button"
