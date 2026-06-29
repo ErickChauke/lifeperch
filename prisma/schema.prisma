@@ -334,19 +334,27 @@ model Literature {
 // target). target/unit only matter for countable habits. icon is a lucide name
 // used as a label aid on the card. Archived habits leave the grid but keep history.
 model Habit {
-  id          String     @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  kind        String     @default("none")
-  target      Int        @default(1)
-  unit        String?
-  icon        String?
-  archived    Boolean    @default(false)
-  logs      HabitLog[]
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  userId       String
+  name         String
+  description  String?
+  kind         String     @default("none")
+  target       Int        @default(1)
+  unit         String?
+  icon         String?
+  daysOfWeek   Int[]      @default([]) // 0=Monday...6=Sunday; empty = every day
+  weeklyTarget Int? // when set, a times-per-week habit (flexible days)
+  startTime    String? // "HH:MM"
+  endTime      String? // "HH:MM"
+  startDate    DateTime?  @db.Date
+  linkedModule String?
+  linkedId     String?
+  linkedLabel  String?
+  archived     Boolean    @default(false)
+  logs         HabitLog[]
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 // One day's check-in for a habit. value is 0/1 for boolean habits, or the count

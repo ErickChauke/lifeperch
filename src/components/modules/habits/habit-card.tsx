@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Flame, Check, Minus, Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { frequencyLabel } from "@/lib/habits";
 import { HabitIcon } from "./habit-icon";
 import { setHabitLog } from "@/actions/habits";
 import type { Habit } from "./habits-board";
@@ -75,7 +76,17 @@ export function HabitCard({
             ) : null}
           </p>
           <p className="text-fg-3 font-mono text-xs">
-            {count ? `Target ${habit.target}${habit.unit ? ` ${habit.unit}` : ""}` : "Daily"}
+            {[
+              habit.weeklyTarget != null
+                ? `${habit.weekDone} / ${habit.weeklyTarget} this week`
+                : frequencyLabel(habit),
+              habit.startTime,
+              count
+                ? `Target ${habit.target}${habit.unit ? ` ${habit.unit}` : ""}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
         </div>
       </div>
@@ -88,7 +99,7 @@ export function HabitCard({
             title={d.day}
             className={cn(
               "h-2 flex-1 rounded-full",
-              d.met ? "" : "bg-surface-3",
+              d.met ? "" : d.expected ? "bg-surface-3" : "bg-surface-2 opacity-50",
               d.day === today && !d.met ? "ring-border-2 ring-1" : "",
             )}
             style={d.met ? { background: "var(--success)" } : undefined}

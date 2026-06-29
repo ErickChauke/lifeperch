@@ -8,6 +8,8 @@ import {
   habitMet,
   computeStreak,
   lastNDays,
+  currentWeekDays,
+  isHabitExpected,
   type HabitInput,
 } from "@/lib/habits";
 import { dayToDate, dateToDay } from "@/lib/money";
@@ -23,6 +25,7 @@ async function requireUserId(): Promise<string> {
 // a target of 1 and drop any unit so the stored shape matches the kind.
 function toRecord(data: HabitInput) {
   const count = data.kind === "count";
+  const weekly = data.weeklyTarget != null;
   return {
     name: data.name.trim(),
     description: data.description?.trim() || null,
@@ -30,6 +33,15 @@ function toRecord(data: HabitInput) {
     target: count ? Math.max(1, data.target) : 1,
     unit: count ? data.unit?.trim() || null : null,
     icon: data.icon?.trim() || null,
+    // A weekly habit has flexible days; a weekday habit has no weekly target.
+    daysOfWeek: weekly ? [] : data.daysOfWeek,
+    weeklyTarget: weekly ? data.weeklyTarget : null,
+    startTime: data.startTime || null,
+    endTime: data.startTime ? data.endTime || null : null,
+    startDate: data.startDate ? dayToDate(data.startDate) : null,
+    linkedModule: data.linkedModule || null,
+    linkedId: data.linkedId || null,
+    linkedLabel: data.linkedLabel?.trim() || null,
   };
 }
 
@@ -44,16 +56,23 @@ export async function getHabits() {
   });
   const today = dateToDay(new Date());
   const week = lastNDays(today, 7);
+  const thisWeek = currentWeekDays(today);
   return habits.map(({ logs, ...habit }) => {
     const todayValue = logs.find((l) => dateToDay(l.date) === today)?.value ?? 0;
     const metDays = new Set(
       logs.filter((l) => habitMet(l.value, habit.kind, habit.target)).map((l) => dateToDay(l.date)),
     );
+    const expected = (day: string) => isHabitExpected(habit, day);
     return {
       ...habit,
       todayValue,
-      streak: computeStreak(metDays, today),
-      last7: week.map((day) => ({ day, met: metDays.has(day) })),
+      streak: computeStreak(metDays, today, expected),
+      weekDone: thisWeek.filter((d) => metDays.has(d)).length,
+      last7: week.map((day) => ({
+        day,
+        met: metDays.has(day),
+        expected: expected(day),
+      })),
     };
   });
 }
