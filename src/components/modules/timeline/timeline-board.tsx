@@ -1,9 +1,10 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Plus, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import {
   PageShell,
@@ -34,6 +35,17 @@ export function TimelineBoard({
 }) {
   const [editing, setEditing] = useState<Milestone | null>(null);
   const [creating, setCreating] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return milestones;
+    return milestones.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        (m.description ?? "").toLowerCase().includes(q),
+    );
+  }, [milestones, search]);
 
   function closeModal() {
     setCreating(false);
@@ -57,6 +69,15 @@ export function TimelineBoard({
             </Button>
           ) : null}
         </div>
+        {milestones.length > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search milestones…"
+            />
+          </div>
+        ) : null}
       </PageHeader>
 
       <PageBody className="space-y-6">
@@ -70,6 +91,13 @@ export function TimelineBoard({
               </Button>
             }
           />
+        ) : filtered.length === 0 ? (
+          <div className="text-fg-3 flex flex-col items-start gap-3 py-10 text-sm">
+            <p>No milestones match.</p>
+            <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+              Clear
+            </Button>
+          </div>
         ) : (
           <div className="relative">
             <div
@@ -77,12 +105,12 @@ export function TimelineBoard({
               aria-hidden
             />
             <div className="space-y-5">
-              {milestones.map((m, i) => {
+              {filtered.map((m, i) => {
                 const day = dateToDay(m.targetDate);
                 const month = day.slice(0, 7);
                 const prevMonth =
                   i > 0
-                    ? dateToDay(milestones[i - 1].targetDate).slice(0, 7)
+                    ? dateToDay(filtered[i - 1].targetDate).slice(0, 7)
                     : null;
                 const showMonth = month !== prevMonth;
                 const overdue = isOverdue(m.status, day, today);

@@ -7,6 +7,7 @@ import { Check, Plus, Minus, ShoppingBag, X, ChevronLeft, Pencil, Trash2, Downlo
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { shoppingItemSchema } from "@/lib/shopping";
@@ -52,11 +53,23 @@ export function ShoppingListDetailView({
   const [editing, setEditing] = useState<Item | null>(null);
   const [importing, setImporting] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
 
   const toBuy = list.items.filter((i) => !i.bought);
   const basket = list.items.filter((i) => i.bought);
   const estimate = toBuy.reduce((s, i) => s + i.price * i.quantity, 0);
   const basketTotal = basket.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  // Search filters the displayed rows by name; the summary totals stay on the
+  // full list so the estimate reads the whole basket, not just a match.
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (i: Item) => !q || i.name.toLowerCase().includes(q);
+  const visibleToBuy = toBuy.filter(matchesSearch);
+  const visibleBasket = basket.filter(matchesSearch);
+  const noMatches =
+    list.items.length > 0 &&
+    visibleToBuy.length === 0 &&
+    visibleBasket.length === 0;
 
   // "all" shows both sections, "pending" only the to-buy list, "done" only the
   // basket. The summary figure follows the selection.
@@ -250,18 +263,30 @@ export function ShoppingListDetailView({
       ) : null}
 
       {list.items.length > 0 ? (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search items…"
+          />
           <Segmented options={STATUS_FILTERS} value={status} onChange={setStatus} />
         </div>
       ) : null}
 
       {list.items.length === 0 ? (
         <p className="text-fg-3 text-sm">Nothing on this list yet. Add the first thing you need.</p>
+      ) : noMatches ? (
+        <div className="text-fg-3 flex flex-col items-start gap-3 py-10 text-sm">
+          <p>No items match.</p>
+          <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+            Clear
+          </Button>
+        </div>
       ) : (
         <div className="space-y-5">
-          {showToBuy && toBuy.length > 0 ? (
+          {showToBuy && visibleToBuy.length > 0 ? (
             <div className="bg-surface divide-border overflow-hidden rounded-lg border [&>*]:border-t [&>*:first-child]:border-t-0">
-              {toBuy.map((item) => (
+              {visibleToBuy.map((item) => (
                 <ItemRow
                   key={item.id}
                   item={item}
@@ -275,13 +300,13 @@ export function ShoppingListDetailView({
             </div>
           ) : null}
 
-          {showBasket && basket.length > 0 ? (
+          {showBasket && visibleBasket.length > 0 ? (
             <div className="space-y-2">
               <p className="text-fg-3 font-mono text-[10.5px] uppercase tracking-[0.10em]">
                 In the basket
               </p>
               <div className="bg-surface-2 divide-border overflow-hidden rounded-lg border [&>*]:border-t [&>*:first-child]:border-t-0">
-                {basket.map((item) => (
+                {visibleBasket.map((item) => (
                   <ItemRow
                     key={item.id}
                     item={item}
