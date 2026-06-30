@@ -164,6 +164,16 @@ export function bucketOf(todo: TodoLike, today: string): Bucket {
   return "later";
 }
 
+// Whether a todo belongs in the Today view. A todo due exactly today shows
+// regardless of done state (so it can be ticked off in place); an overdue
+// one-off shows only while still pending. A past todo that is already done
+// belongs to its Done day, not Today.
+export function belongsToToday(todo: TodoLike, today: string): boolean {
+  if (bucketOf(todo, today) !== "today") return false;
+  if (dueDay(todo, today) === today) return true;
+  return !isDone(todo, today);
+}
+
 // True when a todo counts as done today. A one-off stays done; a recurring todo
 // is done only on its completedAt day and reverts to pending the next day.
 export function isDoneToday(todo: TodoLike, today: string): boolean {

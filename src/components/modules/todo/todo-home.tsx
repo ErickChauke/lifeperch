@@ -25,6 +25,7 @@ import { Segmented } from "@/components/modules/money/segmented";
 import { dateToDay } from "@/lib/money";
 import { weekdayIndex } from "@/lib/timetable";
 import {
+  belongsToToday,
   bucketOf,
   dueDay,
   groupByBucket,
@@ -394,7 +395,7 @@ function TodayView({
   onEdit: (todo: Todo) => void;
 }) {
   const list = todos
-    .filter((t) => bucketOf(t, today) === "today")
+    .filter((t) => belongsToToday(t, today))
     .sort(todoComparator(today));
   const total = list.length;
   const done = list.filter((t) => isDone(t, today)).length;
