@@ -120,6 +120,20 @@ export const workoutSessionSchema = z.object({
 
 export type WorkoutSessionInput = z.infer<typeof workoutSessionSchema>;
 
+// Medicines and supplements. dose and schedule are free text (e.g. "1000 IU",
+// "morning, with food"). A taken-today check stores one log row per day.
+export const medicineSchema = z.object({
+  name: z.string().min(1, "Name it"),
+  dose: z.string().nullable(),
+  schedule: z.string().nullable(),
+  active: z.boolean(),
+  linkedModule: z.string().nullable(),
+  linkedId: z.string().nullable(),
+  linkedLabel: z.string().nullable(),
+});
+
+export type MedicineInput = z.infer<typeof medicineSchema>;
+
 // Renders a routine's set/rep/weight line, e.g. "4 x 8 · 60kg", skipping the
 // parts that are not set.
 export function exerciseDetail(ex: {
