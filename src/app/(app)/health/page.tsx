@@ -1,9 +1,17 @@
 import { getMeals } from "@/actions/health";
+import { getMealPlans } from "@/actions/meal-plans";
 import { dateToDay } from "@/lib/money";
-import { HealthBoard } from "@/components/modules/health/health-board";
+import { HealthHub } from "@/components/modules/health/health-hub";
 
-// Daily meal log with a weekly calorie summary.
+// The Health hub: the dated meal log plus reusable meal plans. today is computed
+// once on the server so writes and reads agree on the same day.
 export default async function HealthPage() {
-  const meals = await getMeals();
-  return <HealthBoard meals={meals} today={dateToDay(new Date())} />;
+  const [meals, mealPlans] = await Promise.all([getMeals(), getMealPlans()]);
+  return (
+    <HealthHub
+      meals={meals}
+      mealPlans={mealPlans}
+      today={dateToDay(new Date())}
+    />
+  );
 }

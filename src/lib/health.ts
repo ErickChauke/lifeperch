@@ -53,3 +53,32 @@ export function calorieTotal(meals: { calories: number | null }[]): number | nul
   if (withCals.length === 0) return null;
   return withCals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
 }
+
+// Meal plans are reusable templates: a plan holds ordered slots (Breakfast,
+// Lunch...), each with several swappable options. They live alongside the dated
+// meal log above, not replacing it.
+export const mealPlanOptionSchema = z.object({
+  name: z.string().min(1, "Name the option"),
+  calories: z.number().int().min(0).nullable(),
+  notes: z.string().nullable(),
+});
+
+export const mealPlanSlotSchema = z.object({
+  label: z.string().min(1, "Name the slot"),
+  options: z.array(mealPlanOptionSchema),
+});
+
+export const mealPlanSchema = z.object({
+  name: z.string().min(1, "Name the plan"),
+  notes: z.string().nullable(),
+  active: z.boolean(),
+  linkedModule: z.string().nullable(),
+  linkedId: z.string().nullable(),
+  linkedLabel: z.string().nullable(),
+  slots: z.array(mealPlanSlotSchema),
+});
+
+export type MealPlanInput = z.infer<typeof mealPlanSchema>;
+
+// The slot labels a fresh plan starts with, matching the meal-log groups.
+export const DEFAULT_PLAN_SLOTS = ["Breakfast", "Lunch", "Dinner", "Snack"];
