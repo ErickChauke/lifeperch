@@ -8,7 +8,7 @@ import {
   todoSchema,
   todoCollectionSchema,
   isOverdue,
-  bucketOf,
+  dueDay,
   isDone,
   type TodoInput,
   type TodoCollectionInput,
@@ -156,9 +156,7 @@ export async function getTodayTodosForUser(userId: string) {
   });
   const today = dateToDay(new Date());
   const overdue = todos.filter((t) => isOverdue(t, today));
-  const due = todos.filter(
-    (t) => !isOverdue(t, today) && bucketOf(t, today) === "today",
-  );
+  const due = todos.filter((t) => dueDay(t, today) === today);
   return { today: due, overdue };
 }
 
