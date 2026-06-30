@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus, CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
@@ -65,11 +66,15 @@ function PlanCard({ plan }: { plan: Plan }) {
     .filter((i) => i.kind === "expense")
     .reduce((s, i) => s + i.amount, 0);
   const left = income - planned;
+  const allDone = plan.items.length > 0 && plan.items.every((i) => i.completed);
 
   return (
     <Link
       href={`/money/plan/${plan.id}`}
-      className="bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px"
+      className={cn(
+        "bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px",
+        allDone && "opacity-50",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-fg truncate font-semibold">{plan.title}</span>

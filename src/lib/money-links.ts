@@ -67,8 +67,8 @@ async function collectGroup(userId: string, startType: LinkType, startId: string
 // Mirrors a done/bought toggle across the linked group. The toggled item keeps
 // whatever its own action did (including its transaction); neighbours only have
 // their flag set, and any neighbour-owned transaction is cleared so the group
-// holds exactly one transaction (the toggled item's, or none for a shopping
-// toggle). Revalidates every touched detail and overview path.
+// holds exactly one transaction (the toggled item's). Revalidates every touched
+// detail and overview path.
 export async function syncLinkedStatus(
   userId: string,
   type: LinkType,
@@ -115,11 +115,15 @@ export async function syncLinkedStatus(
   if (shopIds.length) {
     const rows = await prisma.shoppingItem.findMany({
       where: { userId, id: { in: shopIds } },
-      select: { id: true, listId: true },
+      select: { id: true, listId: true, transactionId: true },
     });
+    const txnIds = rows.map((r) => r.transactionId).filter((t): t is string => !!t);
+    if (txnIds.length) {
+      await prisma.transaction.deleteMany({ where: { userId, id: { in: txnIds } } });
+    }
     await prisma.shoppingItem.updateMany({
       where: { userId, id: { in: shopIds } },
-      data: { bought: done },
+      data: { bought: done, transactionId: null },
     });
     for (const r of rows) revalidatePath(`/money/shopping/${r.listId}`);
   }
@@ -131,27 +135,6 @@ export async function syncLinkedStatus(
     revalidatePath("/money/shopping");
     revalidatePath("/money/plan");
   }
-}
-
-// True when the linked group of a node already owns a wish/plan transaction, so
-// the basket log can skip an item whose spend is recorded elsewhere.
-export async function groupHasTransaction(userId: string, type: LinkType, id: string) {
-  const group = await collectGroup(userId, type, id);
-  const wishIds = [...group.wish];
-  const planIds = [...group.plan];
-  if (wishIds.length) {
-    const c = await prisma.wishlistItem.count({
-      where: { userId, id: { in: wishIds }, transactionId: { not: null } },
-    });
-    if (c > 0) return true;
-  }
-  if (planIds.length) {
-    const c = await prisma.budgetItem.count({
-      where: { userId, id: { in: planIds }, transactionId: { not: null } },
-    });
-    if (c > 0) return true;
-  }
-  return false;
 }
 
 // Severs links pointing at a deleted row so its imported copies do not dangle.

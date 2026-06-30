@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Plus, Minus, ShoppingBag, X, ChevronLeft, Pencil, Trash2, Download, Link2 } from "lucide-react";
+import { Check, Plus, Minus, X, ChevronLeft, Pencil, Trash2, Download, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,6 @@ import {
   toggleBought,
   setQuantity,
   deleteShoppingItem,
-  logListAsExpense,
   renameShoppingList,
   deleteShoppingList,
   importToShoppingList,
@@ -136,19 +135,8 @@ export function ShoppingListDetailView({
     });
   }
 
-  function logBasket() {
-    startTransition(async () => {
-      try {
-        await logListAsExpense(list.id);
-        toast.success("Logged as expense");
-      } catch {
-        toast.error("Could not log the basket");
-      }
-    });
-  }
-
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-8">
       <Link
         href="/money/shopping"
         className="text-fg-3 hover:text-fg-2 inline-flex items-center gap-1 font-mono text-xs"
@@ -342,17 +330,6 @@ export function ShoppingListDetailView({
         }
       />
 
-      {basket.length > 0 ? (
-        <div className="bg-surface border-border-2 fixed inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[1100px] items-center justify-between gap-3 rounded-lg border px-5 py-3 shadow-[var(--shadow-pop)] md:left-[272px] md:right-8 md:mx-0">
-          <span className="text-fg-2 text-sm">
-            {basket.length} in basket ·{" "}
-            <span className="text-fg font-mono">{formatZAR(centsToRand(basketTotal))}</span>
-          </span>
-          <Button onClick={logBasket} disabled={pending}>
-            <ShoppingBag /> Log as expense
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 }

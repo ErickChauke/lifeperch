@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { MoneyEmpty } from "./money-empty";
@@ -80,6 +81,8 @@ function CollectionCard({
 }) {
   const worth = collection.items.reduce((s, w) => s + w.price, 0);
   const saving = collection.items.filter((w) => goalNames.has(w.name)).length;
+  const allDone =
+    collection.items.length > 0 && collection.items.every((w) => w.completed);
 
   const meta =
     collection.items.length === 0
@@ -89,7 +92,10 @@ function CollectionCard({
   return (
     <Link
       href={`/money/wishlist/${collection.id}`}
-      className="bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px"
+      className={cn(
+        "bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px",
+        allDone && "opacity-50",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-fg min-w-0 truncate font-semibold">{collection.title}</span>

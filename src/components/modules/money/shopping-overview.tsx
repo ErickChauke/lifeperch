@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, ShoppingBag } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
 import { MoneyEmpty } from "./money-empty";
@@ -73,18 +74,27 @@ function ListCard({ list }: { list: ShoppingListWithItems }) {
   const toBuy = list.items.filter((i) => !i.bought);
   const basket = list.items.filter((i) => i.bought);
   const estimate = toBuy.reduce((s, i) => s + i.price * i.quantity, 0);
+  const spent = basket.reduce((s, i) => s + i.price * i.quantity, 0);
+  const allDone = list.items.length > 0 && toBuy.length === 0;
+  const itemWord = list.items.length === 1 ? "item" : "items";
 
   const meta =
     list.items.length === 0
       ? "Empty list"
-      : toBuy.length === 0
-        ? "List is clear"
-        : `${toBuy.length} to buy · ${list.items.length} items`;
+      : allDone
+        ? `All bought · ${list.items.length} ${itemWord}`
+        : `${toBuy.length} to buy · ${list.items.length} ${itemWord}`;
+
+  // When the list is cleared the estimate is zero, so show what was spent.
+  const amount = allDone ? spent : estimate;
 
   return (
     <Link
       href={`/money/shopping/${list.id}`}
-      className="bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px"
+      className={cn(
+        "bg-surface hover:bg-surface-2 hover:border-border-2 focus-visible:border-accent-line flex flex-col gap-2 rounded-lg border p-4 transition-all hover:-translate-y-px",
+        allDone && "opacity-50",
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-fg min-w-0 truncate font-semibold">{list.title}</span>
@@ -94,17 +104,11 @@ function ListCard({ list }: { list: ShoppingListWithItems }) {
       </div>
       <span
         className="text-fg truncate font-mono text-2xl font-medium"
-        title={formatCurrency(centsToRand(estimate))}
+        title={formatCurrency(centsToRand(amount))}
       >
-        {formatCurrencyShort(centsToRand(estimate))}
+        {formatCurrencyShort(centsToRand(amount))}
       </span>
       <span className="text-fg-3 font-mono text-xs">{meta}</span>
-      {basket.length > 0 ? (
-        <span className="text-accent-read flex items-center gap-1.5 font-mono text-xs">
-          <ShoppingBag className="size-3.5" />
-          {basket.length} in basket · ready to log
-        </span>
-      ) : null}
     </Link>
   );
 }

@@ -10,7 +10,7 @@ import {
   type ShoppingItemInput,
 } from "@/lib/shopping";
 import { randToCents, dayToDate, dateToDay } from "@/lib/money";
-import { syncLinkedStatus, clearInboundLinks, groupHasTransaction } from "@/lib/money-links";
+import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -107,17 +107,49 @@ export async function updateShoppingItem(id: string, input: ShoppingItemInput) {
   revalidateShopping(item.listId);
 }
 
-// Moves an item between to-buy and the basket.
+// Marks an item bought or back to-buy. Marking it bought logs an expense in the
+// list's category (so the spend shows in the transactions log) and greys it;
+// un-marking removes that transaction. A free item (price 0) just flips the flag.
 export async function toggleBought(id: string) {
   const userId = await requireUserId();
-  const item = await prisma.shoppingItem.findFirst({ where: { id, userId } });
-  if (!item) return;
-  await prisma.shoppingItem.updateMany({
+  const item = await prisma.shoppingItem.findFirst({
     where: { id, userId },
-    data: { bought: !item.bought },
+    include: { list: { select: { category: true } } },
   });
+  if (!item) return;
+
+  if (!item.bought) {
+    let transactionId: string | null = null;
+    if (item.price > 0) {
+      const txn = await prisma.transaction.create({
+        data: {
+          userId,
+          type: "expense",
+          amount: item.price * item.quantity,
+          category: item.list.category || "Other",
+          description: item.name,
+          date: dayToDate(dateToDay(new Date())),
+        },
+      });
+      transactionId = txn.id;
+    }
+    await prisma.shoppingItem.update({
+      where: { id },
+      data: { bought: true, transactionId },
+    });
+  } else {
+    if (item.transactionId) {
+      await prisma.transaction.deleteMany({ where: { id: item.transactionId, userId } });
+    }
+    await prisma.shoppingItem.update({
+      where: { id },
+      data: { bought: false, transactionId: null },
+    });
+  }
+
   await syncLinkedStatus(userId, "shopping", id, !item.bought);
   revalidateShopping(item.listId);
+  revalidatePath("/money/transactions");
 }
 
 // Sets an item's quantity, floored at 1.
@@ -140,49 +172,6 @@ export async function deleteShoppingItem(id: string) {
   await prisma.shoppingItem.deleteMany({ where: { id, userId } });
   await clearInboundLinks(userId, id);
   revalidateShopping(item.listId);
-}
-
-// Logs a list's basket (bought items) as one expense in the list's category,
-// dated today and described with the list title, then clears those items. A list
-// is single-category, so it is always one clean transaction.
-export async function logListAsExpense(listId: string) {
-  const userId = await requireUserId();
-  const list = await prisma.shoppingList.findFirst({
-    where: { id: listId, userId },
-    include: { items: { where: { bought: true } } },
-  });
-  if (!list || list.items.length === 0) return;
-
-  // Skip any item whose linked group already recorded the spend (e.g. a linked
-  // wish or plan line that was marked done), so the basket never double counts.
-  const toLog = [];
-  for (const item of list.items) {
-    const linked = await groupHasTransaction(userId, "shopping", item.id);
-    if (!linked) toLog.push(item);
-  }
-
-  if (toLog.length > 0) {
-    const total = toLog.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const count = toLog.length;
-    const date = dayToDate(dateToDay(new Date()));
-    await prisma.transaction.create({
-      data: {
-        userId,
-        type: "expense",
-        amount: total,
-        category: list.category,
-        description: `${list.title} · ${count} ${count === 1 ? "item" : "items"}`,
-        date,
-      },
-    });
-  }
-
-  const deletedIds = list.items.map((i) => i.id);
-  await prisma.shoppingItem.deleteMany({ where: { userId, listId, bought: true } });
-  for (const did of deletedIds) await clearInboundLinks(userId, did);
-
-  revalidateShopping(listId);
-  revalidatePath("/money/transactions");
 }
 
 // Imports wishes and plan expense lines into this list as linked shopping items.
