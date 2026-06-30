@@ -61,6 +61,12 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
     milestones,
     habits,
     events,
+    mealPlans,
+    workoutRoutines,
+    workoutSessions,
+    medicines,
+    healthRules,
+    healthNotes,
   ] = await Promise.all([
     prisma.todo.findMany({
       where: { userId, OR: [{ title: ci(q) }, { notes: ci(q) }] },
@@ -194,6 +200,39 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
         OR: [{ title: ci(q) }, { notes: ci(q) }, { location: ci(q) }],
       },
       select: { id: true, title: true, location: true, type: true },
+      take: TAKE,
+    }),
+    prisma.mealPlan.findMany({
+      where: { userId, OR: [{ name: ci(q) }, { notes: ci(q) }] },
+      select: { id: true, name: true },
+      take: TAKE,
+    }),
+    prisma.workoutRoutine.findMany({
+      where: { userId, OR: [{ name: ci(q) }, { notes: ci(q) }] },
+      select: { id: true, name: true },
+      take: TAKE,
+    }),
+    prisma.workoutSession.findMany({
+      where: { userId, OR: [{ name: ci(q) }, { notes: ci(q) }] },
+      select: { id: true, name: true, date: true },
+      take: TAKE,
+    }),
+    prisma.medicine.findMany({
+      where: {
+        userId,
+        OR: [{ name: ci(q) }, { dose: ci(q) }, { schedule: ci(q) }],
+      },
+      select: { id: true, name: true, dose: true },
+      take: TAKE,
+    }),
+    prisma.healthRule.findMany({
+      where: { userId, OR: [{ text: ci(q) }, { category: ci(q) }] },
+      select: { id: true, text: true, category: true },
+      take: TAKE,
+    }),
+    prisma.healthNote.findMany({
+      where: { userId, body: ci(q) },
+      select: { id: true, body: true, date: true },
       take: TAKE,
     }),
   ]);
@@ -369,6 +408,60 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
       title: e.title,
       subtitle: [e.type, e.location].filter(Boolean).join(" · ") || undefined,
       href: "/timetable",
+    });
+  }
+  for (const p of mealPlans) {
+    results.push({
+      id: p.id,
+      moduleId: "health",
+      title: p.name,
+      subtitle: "Meal plan",
+      href: "/health",
+    });
+  }
+  for (const r of workoutRoutines) {
+    results.push({
+      id: r.id,
+      moduleId: "health",
+      title: r.name,
+      subtitle: "Routine",
+      href: "/health",
+    });
+  }
+  for (const s of workoutSessions) {
+    results.push({
+      id: s.id,
+      moduleId: "health",
+      title: s.name,
+      subtitle: `Workout · ${format(s.date, DATE_FMT)}`,
+      href: "/health",
+    });
+  }
+  for (const m of medicines) {
+    results.push({
+      id: m.id,
+      moduleId: "health",
+      title: m.name,
+      subtitle: m.dose ?? "Medicine",
+      href: "/health",
+    });
+  }
+  for (const r of healthRules) {
+    results.push({
+      id: r.id,
+      moduleId: "health",
+      title: r.text,
+      subtitle: r.category ?? "Rule",
+      href: "/health",
+    });
+  }
+  for (const n of healthNotes) {
+    results.push({
+      id: n.id,
+      moduleId: "health",
+      title: n.body.length > 60 ? `${n.body.slice(0, 60)}…` : n.body,
+      subtitle: `Note · ${format(n.date, DATE_FMT)}`,
+      href: "/health",
     });
   }
 
