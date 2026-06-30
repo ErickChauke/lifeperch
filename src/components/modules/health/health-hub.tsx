@@ -17,10 +17,12 @@ import {
 import { MedicinesSection, type Medicine } from "./medicines-section";
 import { RulesSection, type HealthRule } from "./rules-section";
 import { JournalSection, type HealthNote } from "./journal-section";
+import { OverviewSection } from "./overview-section";
 
-// The areas the hub switches between. The list grows as each feature lands; the
+// The areas the hub switches between. Overview is the landing snapshot; the
 // switcher scrolls horizontally on narrow screens.
 const AREAS = [
+  { value: "overview", label: "Overview" },
   { value: "meals", label: "Meals" },
   { value: "plans", label: "Plans" },
   { value: "workouts", label: "Workouts" },
@@ -52,7 +54,7 @@ export function HealthHub({
   notes: HealthNote[];
   today: string;
 }) {
-  const [area, setArea] = useState<Area>("meals");
+  const [area, setArea] = useState<Area>("overview");
 
   return (
     <PageShell>
@@ -66,7 +68,19 @@ export function HealthHub({
       </PageHeader>
 
       <PageBody className="space-y-6">
-        {area === "meals" ? (
+        {area === "overview" ? (
+          <OverviewSection
+            meals={meals}
+            mealPlans={mealPlans}
+            routines={routines}
+            sessions={sessions}
+            medicines={medicines}
+            rules={rules}
+            notes={notes}
+            today={today}
+            onNavigate={(a) => setArea(a as Area)}
+          />
+        ) : area === "meals" ? (
           <MealsLog meals={meals} today={today} />
         ) : area === "plans" ? (
           <MealPlansSection mealPlans={mealPlans} />
