@@ -11,41 +11,51 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  name            String?
-  email           String?          @unique
-  emailVerified   DateTime?
-  image           String?
-  dailyDigest     Boolean          @default(true)
-  accounts        Account[]
-  sessions        Session[]
-  timetableEvents TimetableEvent[]
-  noteCollections NoteCollection[]
-  notes           Note[]
-  noteAttachments NoteAttachment[]
-  dailyEntries    DailyEntry[]
-  transactions    Transaction[]
-  savingsGoals    SavingsGoal[]
-  shoppingLists   ShoppingList[]
-  shoppingItems   ShoppingItem[]
-  wishlistCollections WishlistCollection[]
-  wishlistItems   WishlistItem[]
-  budgetPlans     BudgetPlan[]
-  budgetItems     BudgetItem[]
-  vaultCollections VaultCollection[]
-  documents       Document[]
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?
+  image                 String?
+  dailyDigest           Boolean                @default(true)
+  accounts              Account[]
+  sessions              Session[]
+  timetableEvents       TimetableEvent[]
+  noteCollections       NoteCollection[]
+  notes                 Note[]
+  noteAttachments       NoteAttachment[]
+  dailyEntries          DailyEntry[]
+  transactions          Transaction[]
+  savingsGoals          SavingsGoal[]
+  shoppingLists         ShoppingList[]
+  shoppingItems         ShoppingItem[]
+  wishlistCollections   WishlistCollection[]
+  wishlistItems         WishlistItem[]
+  budgetPlans           BudgetPlan[]
+  budgetItems           BudgetItem[]
+  vaultCollections      VaultCollection[]
+  documents             Document[]
   literatureCollections LiteratureCollection[]
-  literature      Literature[]
-  habits          Habit[]
-  habitLogs       HabitLog[]
-  meals           Meal[]
-  jobApplications JobApplication[]
-  appStages       AppStage[]
-  timelines       Timeline[]
-  milestones      Milestone[]
-  todoCollections TodoCollection[]
-  todos           Todo[]
-  createdAt       DateTime         @default(now())
+  literature            Literature[]
+  habits                Habit[]
+  habitLogs             HabitLog[]
+  meals                 Meal[]
+  mealPlans             MealPlan[]
+  mealPlanSlots         MealPlanSlot[]
+  mealPlanOptions       MealPlanOption[]
+  workoutRoutines       WorkoutRoutine[]
+  routineExercises      RoutineExercise[]
+  workoutSessions       WorkoutSession[]
+  medicines             Medicine[]
+  medicineLogs          MedicineLog[]
+  healthRules           HealthRule[]
+  healthNotes           HealthNote[]
+  jobApplications       JobApplication[]
+  appStages             AppStage[]
+  timelines             Timeline[]
+  milestones            Milestone[]
+  todoCollections       TodoCollection[]
+  todos                 Todo[]
+  createdAt             DateTime               @default(now())
 }
 
 model TimetableEvent {
@@ -78,18 +88,18 @@ model NoteCollection {
 }
 
 model Note {
-  id           String         @id @default(cuid())
+  id           String           @id @default(cuid())
   userId       String
   collectionId String
   title        String
-  body         String         @default("") @db.Text
-  bodyFormat   String         @default("markdown")
-  tags         String[]       @default([])
-  collection   NoteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body         String           @default("") @db.Text
+  bodyFormat   String           @default("markdown")
+  tags         String[]         @default([])
+  collection   NoteCollection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   attachments  NoteAttachment[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 }
 
 // A file uploaded to Cloudinary and attached to a note. publicId is kept so the
@@ -171,20 +181,20 @@ model ShoppingList {
 // A planned purchase inside a list. price is the estimated unit price in cents;
 // the category is inherited from the parent list.
 model ShoppingItem {
-  id        String       @id @default(cuid())
-  userId    String
-  listId    String
-  name      String
-  price     Int          @default(0)
-  quantity  Int          @default(1)
-  bought    Boolean      @default(false)
+  id            String       @id @default(cuid())
+  userId        String
+  listId        String
+  name          String
+  price         Int          @default(0)
+  quantity      Int          @default(1)
+  bought        Boolean      @default(false)
   transactionId String?
-  originType String?
-  originId   String?
-  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  originType    String?
+  originId      String?
+  list          ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 // A budget plan for a period: a monthly/weekly/custom envelope of expected money
@@ -207,24 +217,24 @@ model BudgetPlan {
 // (a planned allocation). category matches the transaction categories so actual
 // spend/income for the plan's period can be summed by category. amount in cents.
 model BudgetItem {
-  id        String       @id @default(cuid())
-  userId    String
-  planId    String
-  kind      String       @default("expense")
-  category  String
-  title     String?
-  amount    Int          @default(0)
-  note      String?
-  goalId    String?
-  completed Boolean      @default(false)
+  id            String       @id @default(cuid())
+  userId        String
+  planId        String
+  kind          String       @default("expense")
+  category      String
+  title         String?
+  amount        Int          @default(0)
+  note          String?
+  goalId        String?
+  completed     Boolean      @default(false)
   transactionId String?
-  originType String?
-  originId   String?
-  plan      BudgetPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
-  goal      SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  originType    String?
+  originId      String?
+  plan          BudgetPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  goal          SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 // A titled wishlist collection scoped to one category (e.g. "Photography kit").
@@ -235,30 +245,30 @@ model WishlistCollection {
   category    String?
   description String?
   items       WishlistItem[]
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 // Something to buy someday, inside a collection. price in cents; priority is
 // "high"/"medium"/"low"; the category is inherited from the parent collection.
 // One tap turns it into a savings goal (linked by name).
 model WishlistItem {
-  id           String             @id @default(cuid())
-  userId       String
-  collectionId String
-  name         String
-  price        Int                @default(0)
-  priority     String             @default("medium")
-  note         String?
-  completed    Boolean            @default(false)
+  id            String             @id @default(cuid())
+  userId        String
+  collectionId  String
+  name          String
+  price         Int                @default(0)
+  priority      String             @default("medium")
+  note          String?
+  completed     Boolean            @default(false)
   transactionId String?
-  originType String?
-  originId   String?
-  collection   WishlistCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  originType    String?
+  originId      String?
+  collection    WishlistCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 }
 
 // A vault collection card: a titled folder that groups documents. description
@@ -384,6 +394,165 @@ model Meal {
   name      String
   time      String?
   calories  Int?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// A reusable meal plan template. Holds ordered slots (Breakfast, Lunch...), each
+// with swappable options. active hides retired plans without losing them. Can be
+// linked to the timetable or another module via the linked* triple.
+model MealPlan {
+  id           String         @id @default(cuid())
+  userId       String
+  name         String
+  notes        String?
+  active       Boolean        @default(true)
+  linkedModule String?
+  linkedId     String?
+  linkedLabel  String?
+  slots        MealPlanSlot[]
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// One slot in a meal plan (e.g. "Breakfast"). order sorts slots within the plan.
+model MealPlanSlot {
+  id        String           @id @default(cuid())
+  userId    String
+  planId    String
+  label     String
+  order     Int              @default(0)
+  options   MealPlanOption[]
+  plan      MealPlan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+// One swappable option within a slot. calories and notes are optional.
+model MealPlanOption {
+  id        String       @id @default(cuid())
+  userId    String
+  slotId    String
+  name      String
+  calories  Int?
+  notes     String?
+  order     Int          @default(0)
+  slot      MealPlanSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+// A reusable workout routine (e.g. "Push day"). Holds ordered exercises. active
+// hides retired routines. Linkable to the timetable via the linked* triple.
+model WorkoutRoutine {
+  id           String            @id @default(cuid())
+  userId       String
+  name         String
+  notes        String?
+  active       Boolean           @default(true)
+  linkedModule String?
+  linkedId     String?
+  linkedLabel  String?
+  exercises    RoutineExercise[]
+  sessions     WorkoutSession[]
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+// One exercise in a routine. sets/reps/weight are optional. order sorts the list.
+model RoutineExercise {
+  id        String         @id @default(cuid())
+  userId    String
+  routineId String
+  name      String
+  sets      Int?
+  reps      Int?
+  weight    Float?
+  notes     String?
+  order     Int            @default(0)
+  routine   WorkoutRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// A dated workout session logged against a routine. routineId is cleared if the
+// routine is deleted, keeping the session history. Linkable via the linked* triple.
+model WorkoutSession {
+  id           String          @id @default(cuid())
+  userId       String
+  date         DateTime        @db.Date
+  routineId    String?
+  name         String
+  durationMin  Int?
+  notes        String?
+  linkedModule String?
+  linkedId     String?
+  linkedLabel  String?
+  routine      WorkoutRoutine? @relation(fields: [routineId], references: [id], onDelete: SetNull)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+// A medicine or supplement. dose and schedule are free text. A taken-today check
+// stores one MedicineLog row per day. active hides retired entries.
+model Medicine {
+  id           String        @id @default(cuid())
+  userId       String
+  name         String
+  dose         String?
+  schedule     String?
+  active       Boolean       @default(true)
+  order        Int           @default(0)
+  linkedModule String?
+  linkedId     String?
+  linkedLabel  String?
+  logs         MedicineLog[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// One day's "taken" mark for a medicine. Row presence means taken that day. One
+// row per medicine per day.
+model MedicineLog {
+  id         String   @id @default(cuid())
+  userId     String
+  medicineId String
+  date       DateTime @db.Date
+  medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([medicineId, date])
+}
+
+// A standing health rule or "don't" (e.g. "no eating mushrooms"). category is an
+// optional grouping label. active retires a rule without losing it.
+model HealthRule {
+  id        String   @id @default(cuid())
+  userId    String
+  text      String
+  category  String?
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// A quick health-journal jotting tied to a day.
+model HealthNote {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  body      String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
