@@ -15,6 +15,8 @@ import {
   type WorkoutSession,
 } from "./workouts-section";
 import { MedicinesSection, type Medicine } from "./medicines-section";
+import { RulesSection, type HealthRule } from "./rules-section";
+import { JournalSection, type HealthNote } from "./journal-section";
 
 // The areas the hub switches between. The list grows as each feature lands; the
 // switcher scrolls horizontally on narrow screens.
@@ -23,6 +25,8 @@ const AREAS = [
   { value: "plans", label: "Plans" },
   { value: "workouts", label: "Workouts" },
   { value: "medicines", label: "Medicines" },
+  { value: "rules", label: "Rules" },
+  { value: "journal", label: "Journal" },
 ] as const;
 
 type Area = (typeof AREAS)[number]["value"];
@@ -35,6 +39,8 @@ export function HealthHub({
   routines,
   sessions,
   medicines,
+  rules,
+  notes,
   today,
 }: {
   meals: Meal[];
@@ -42,6 +48,8 @@ export function HealthHub({
   routines: Routine[];
   sessions: WorkoutSession[];
   medicines: Medicine[];
+  rules: HealthRule[];
+  notes: HealthNote[];
   today: string;
 }) {
   const [area, setArea] = useState<Area>("meals");
@@ -68,8 +76,12 @@ export function HealthHub({
             sessions={sessions}
             today={today}
           />
-        ) : (
+        ) : area === "medicines" ? (
           <MedicinesSection medicines={medicines} today={today} />
+        ) : area === "rules" ? (
+          <RulesSection rules={rules} />
+        ) : (
+          <JournalSection notes={notes} today={today} />
         )}
       </PageBody>
     </PageShell>
