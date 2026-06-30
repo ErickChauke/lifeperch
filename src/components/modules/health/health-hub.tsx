@@ -9,12 +9,18 @@ import {
 import { Segmented } from "@/components/modules/money/segmented";
 import { MealsLog, type Meal } from "./meals-log";
 import { MealPlansSection, type MealPlan } from "./meal-plans-section";
+import {
+  WorkoutsSection,
+  type Routine,
+  type WorkoutSession,
+} from "./workouts-section";
 
 // The areas the hub switches between. The list grows as each feature lands; the
 // switcher scrolls horizontally on narrow screens.
 const AREAS = [
   { value: "meals", label: "Meals" },
   { value: "plans", label: "Plans" },
+  { value: "workouts", label: "Workouts" },
 ] as const;
 
 type Area = (typeof AREAS)[number]["value"];
@@ -24,10 +30,14 @@ type Area = (typeof AREAS)[number]["value"];
 export function HealthHub({
   meals,
   mealPlans,
+  routines,
+  sessions,
   today,
 }: {
   meals: Meal[];
   mealPlans: MealPlan[];
+  routines: Routine[];
+  sessions: WorkoutSession[];
   today: string;
 }) {
   const [area, setArea] = useState<Area>("meals");
@@ -46,8 +56,14 @@ export function HealthHub({
       <PageBody className="space-y-6">
         {area === "meals" ? (
           <MealsLog meals={meals} today={today} />
-        ) : (
+        ) : area === "plans" ? (
           <MealPlansSection mealPlans={mealPlans} />
+        ) : (
+          <WorkoutsSection
+            routines={routines}
+            sessions={sessions}
+            today={today}
+          />
         )}
       </PageBody>
     </PageShell>
