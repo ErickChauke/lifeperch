@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { mealSchema, MEAL_TYPES, MEAL_TYPE_META, type MealInput, type MealType } from "@/lib/health";
 import { createMeal, updateMeal, deleteMeal } from "@/actions/health";
-import type { Meal } from "./health-board";
+import type { Meal } from "./meals-log";
 
 export function MealModal({
   open,
