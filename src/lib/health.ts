@@ -82,3 +82,55 @@ export type MealPlanInput = z.infer<typeof mealPlanSchema>;
 
 // The slot labels a fresh plan starts with, matching the meal-log groups.
 export const DEFAULT_PLAN_SLOTS = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
+// Workout routines are reusable templates of ordered exercises. sets/reps/weight
+// are all optional so a routine can be as loose as a list of moves.
+export const routineExerciseSchema = z.object({
+  name: z.string().min(1, "Name the exercise"),
+  sets: z.number().int().min(0).nullable(),
+  reps: z.number().int().min(0).nullable(),
+  weight: z.number().min(0).nullable(),
+  notes: z.string().nullable(),
+});
+
+export const workoutRoutineSchema = z.object({
+  name: z.string().min(1, "Name the routine"),
+  notes: z.string().nullable(),
+  active: z.boolean(),
+  linkedModule: z.string().nullable(),
+  linkedId: z.string().nullable(),
+  linkedLabel: z.string().nullable(),
+  exercises: z.array(routineExerciseSchema),
+});
+
+export type WorkoutRoutineInput = z.infer<typeof workoutRoutineSchema>;
+
+// A workout session is a dated log, optionally against a routine. durationMin is
+// the session length in minutes.
+export const workoutSessionSchema = z.object({
+  date: z.string().regex(dayRegex, "Use yyyy-MM-dd"),
+  routineId: z.string().nullable(),
+  name: z.string().min(1, "Name the session"),
+  durationMin: z.number().int().min(0).nullable(),
+  notes: z.string().nullable(),
+  linkedModule: z.string().nullable(),
+  linkedId: z.string().nullable(),
+  linkedLabel: z.string().nullable(),
+});
+
+export type WorkoutSessionInput = z.infer<typeof workoutSessionSchema>;
+
+// Renders a routine's set/rep/weight line, e.g. "4 x 8 · 60kg", skipping the
+// parts that are not set.
+export function exerciseDetail(ex: {
+  sets: number | null;
+  reps: number | null;
+  weight: number | null;
+}): string {
+  const parts: string[] = [];
+  if (ex.sets != null && ex.reps != null) parts.push(`${ex.sets} x ${ex.reps}`);
+  else if (ex.sets != null) parts.push(`${ex.sets} sets`);
+  else if (ex.reps != null) parts.push(`${ex.reps} reps`);
+  if (ex.weight != null) parts.push(`${ex.weight}kg`);
+  return parts.join(" · ");
+}
