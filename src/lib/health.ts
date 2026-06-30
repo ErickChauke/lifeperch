@@ -134,6 +134,24 @@ export const medicineSchema = z.object({
 
 export type MedicineInput = z.infer<typeof medicineSchema>;
 
+// A standing health rule or "don't" (e.g. "no eating mushrooms"). category is an
+// optional grouping label; active retires a rule without losing it.
+export const healthRuleSchema = z.object({
+  text: z.string().min(1, "Write the rule"),
+  category: z.string().nullable(),
+  active: z.boolean(),
+});
+
+export type HealthRuleInput = z.infer<typeof healthRuleSchema>;
+
+// A quick health-journal jotting tied to a day.
+export const healthNoteSchema = z.object({
+  date: z.string().regex(dayRegex, "Use yyyy-MM-dd"),
+  body: z.string().min(1, "Write something"),
+});
+
+export type HealthNoteInput = z.infer<typeof healthNoteSchema>;
+
 // Renders a routine's set/rep/weight line, e.g. "4 x 8 · 60kg", skipping the
 // parts that are not set.
 export function exerciseDetail(ex: {
