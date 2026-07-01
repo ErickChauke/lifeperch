@@ -156,9 +156,9 @@ export function WeekView({
   }, []);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:items-start lg:gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:gap-4">
       {allDayGroups.length > 0 ? (
-        <div className="bg-surface scrollbar-hide shrink-0 rounded-[var(--r-lg)] border p-3 lg:sticky lg:top-4 lg:max-h-[80svh] lg:w-[300px] lg:overflow-auto">
+        <div className="bg-surface scrollbar-hide shrink-0 rounded-[var(--r-lg)] border p-3 lg:min-h-0 lg:w-[300px] lg:overflow-auto">
           <p className="text-fg-3 mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
             All day
           </p>
@@ -222,7 +222,7 @@ export function WeekView({
 
       <div
         ref={scrollRef}
-        className="bg-surface scrollbar-hide max-h-[70svh] min-h-0 w-full min-w-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border md:max-h-none"
+        className="bg-surface scrollbar-hide max-h-[70svh] min-h-0 min-w-0 flex-1 overflow-auto overscroll-none rounded-[var(--r-lg)] border md:max-h-none"
       >
         <div className="flex min-w-[720px]">
           <div className="bg-surface sticky left-0 z-20 w-14 shrink-0">
