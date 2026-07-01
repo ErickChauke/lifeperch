@@ -23,7 +23,6 @@ import { normalizeTags } from "@/lib/notes";
 import {
   todoSchema,
   PRIORITIES,
-  LINKABLE_MODULES,
   type Priority,
   type TodoInput,
 } from "@/lib/todo";
@@ -287,30 +286,6 @@ export function TodoModal({
                 }}
                 placeholder="+ tag"
                 className="placeholder:text-fg-4 w-20 flex-1 bg-transparent text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="linkedModule">Link to</Label>
-              <Select
-                id="linkedModule"
-                {...register("linkedModule", { setValueAs: (v) => v || null })}
-              >
-                <option value="">None</option>
-                {LINKABLE_MODULES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="linkedLabel">Link label</Label>
-              <Input
-                id="linkedLabel"
-                {...register("linkedLabel", { setValueAs: (v) => v || null })}
               />
             </div>
           </div>

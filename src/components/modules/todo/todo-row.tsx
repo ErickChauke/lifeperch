@@ -25,7 +25,22 @@ export function TodoRow({
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(isDone(todo, today));
   const overdue = isOverdue(todo, today);
-  const href = linkHref(todo.linkedModule, todo.linkedId);
+
+  // Chips that jump to connected modules. A linked module gets its chip; a timed
+  // todo is a timetable item by default, so it also gets a timetable chip. A todo
+  // can carry more than one.
+  const moduleHref = linkHref(todo.linkedModule, todo.linkedId);
+  const chips: { key: string; href: string; label: string }[] = [];
+  if (moduleHref) {
+    chips.push({
+      key: "module",
+      href: moduleHref,
+      label: todo.linkedLabel || todo.linkedModule || "",
+    });
+  }
+  if (todo.startTime != null && todo.linkedModule !== "timetable") {
+    chips.push({ key: "timetable", href: "/timetable", label: "timetable" });
+  }
 
   function toggle() {
     setDone((d) => !d);
@@ -106,15 +121,20 @@ export function TodoRow({
         ) : null}
       </button>
 
-      {href ? (
-        <Link
-          href={href}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-surface-2 text-fg-2 hover:text-fg hover:bg-surface-3 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] transition-colors"
-        >
-          {todo.linkedLabel || todo.linkedModule}
-          <ArrowUpRight className="size-3" />
-        </Link>
+      {chips.length > 0 ? (
+        <div className="flex shrink-0 items-center gap-1.5">
+          {chips.map((chip) => (
+            <Link
+              key={chip.key}
+              href={chip.href}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface-2 text-fg-2 hover:text-fg hover:bg-surface-3 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] transition-colors"
+            >
+              {chip.label}
+              <ArrowUpRight className="size-3" />
+            </Link>
+          ))}
+        </div>
       ) : null}
     </div>
   );
