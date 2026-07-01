@@ -19,6 +19,8 @@ import { getMilestones } from "@/actions/timeline";
 import { getEntryByDate } from "@/actions/journal";
 import { getTransactions } from "@/actions/money";
 import { getMedicines } from "@/actions/medicines";
+import { getRecentNotes } from "@/actions/notes";
+import { getReading } from "@/actions/literature";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { DashboardGreeting } from "@/components/modules/dashboard/dashboard-greeting";
 import { TodaysTodos } from "@/components/modules/dashboard/todays-todos";
@@ -28,6 +30,8 @@ import { TodayHabits } from "@/components/modules/dashboard/today-habits";
 import { DueSoon } from "@/components/modules/dashboard/due-soon";
 import { MoneySnapshot } from "@/components/modules/dashboard/money-snapshot";
 import { MedsToday } from "@/components/modules/dashboard/meds-today";
+import { RecentNotes } from "@/components/modules/dashboard/recent-notes";
+import { ReadingList } from "@/components/modules/dashboard/reading-list";
 
 type QuickStart = {
   title: string;
@@ -77,6 +81,8 @@ export default async function DashboardPage() {
     journalEntry,
     transactions,
     medicines,
+    recentNotes,
+    reading,
   ] = await Promise.all([
     getTodayTodos(),
     getEvents(),
@@ -86,6 +92,8 @@ export default async function DashboardPage() {
     getEntryByDate(todayStr),
     getTransactions(),
     getMedicines(),
+    getRecentNotes(),
+    getReading(),
   ]);
   const hasTodos = dueToday.length > 0 || overdue.length > 0;
   const activeHabits = habits.filter((h) => !h.archived);
@@ -133,6 +141,10 @@ export default async function DashboardPage() {
           <MedsToday medicines={medicines} today={todayStr} />
 
           <MoneySnapshot transactions={transactions} today={todayStr} />
+
+          <ReadingList papers={reading} />
+
+          <RecentNotes notes={recentNotes} />
 
           <Link
             href="/journal"

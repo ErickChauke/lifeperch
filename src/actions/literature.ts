@@ -53,6 +53,23 @@ export async function getCollections() {
   });
 }
 
+// Fetches the papers the user is currently reading, most recently touched first,
+// for the dashboard.
+export async function getReading(take = 5) {
+  const userId = await requireUserId();
+  return prisma.literature.findMany({
+    where: { userId, status: "reading" },
+    orderBy: { updatedAt: "desc" },
+    take,
+    select: {
+      id: true,
+      title: true,
+      authors: true,
+      collectionId: true,
+    },
+  });
+}
+
 // Fetches one topic and its papers (newest first), scoped to the user.
 export async function getCollection(id: string) {
   const userId = await requireUserId();
