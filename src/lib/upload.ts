@@ -14,7 +14,11 @@ export type UploadResult = {
 // actions store. Runs client-side only (uses XMLHttpRequest).
 export async function uploadFile(
   file: File,
-  folder: "lifeperch/vault" | "lifeperch/literature" | "lifeperch/notes",
+  folder:
+    | "lifeperch/vault"
+    | "lifeperch/literature"
+    | "lifeperch/notes"
+    | "lifeperch/journal",
   onProgress?: (percent: number) => void,
 ): Promise<UploadResult> {
   const sig = await getUploadSignature(folder);

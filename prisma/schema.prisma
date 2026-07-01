@@ -24,6 +24,7 @@ model User {
   notes                 Note[]
   noteAttachments       NoteAttachment[]
   dailyEntries          DailyEntry[]
+  journalEntryAttachments DailyEntryAttachment[]
   transactions          Transaction[]
   savingsGoals          SavingsGoal[]
   shoppingLists         ShoppingList[]
@@ -128,10 +129,28 @@ model DailyEntry {
   bodyFormat String   @default("markdown")
   mood       Int      @default(5)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments DailyEntryAttachment[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   @@unique([userId, date])
+}
+
+// A file uploaded to Cloudinary and attached to a journal entry. publicId is kept
+// so the asset can be deleted when the attachment or its entry is removed.
+model DailyEntryAttachment {
+  id        String     @id @default(cuid())
+  userId    String
+  entryId   String
+  name      String
+  url       String
+  publicId  String
+  format    String?
+  bytes     Int?
+  entry     DailyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 // One money event. Amounts are stored in cents (integer) to avoid float drift.

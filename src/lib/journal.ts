@@ -21,6 +21,18 @@ export const entrySchema = z.object({
 
 export type EntryInput = z.infer<typeof entrySchema>;
 
+// Validates the fields returned from a Cloudinary browser upload before an
+// attachment row is stored. Mirrors the notes attachment schema.
+export const attachmentSchema = z.object({
+  name: z.string().min(1),
+  url: z.string().url(),
+  publicId: z.string().min(1),
+  format: z.string().nullable().optional(),
+  bytes: z.number().nullable().optional(),
+});
+
+export type AttachmentInput = z.infer<typeof attachmentSchema>;
+
 // Converts a "yyyy-MM-dd" day string to a UTC-midnight Date for the @db.Date
 // column, so the stored day never drifts with the local timezone.
 export function dayToDate(day: string): Date {
