@@ -384,9 +384,11 @@ export function TodoHome({
   );
 }
 
-// Today: the full actionable picture, leading with today (plus a progress bar),
-// then overdue one-offs, then the dateless backlog. Each section only shows when
-// it has items. Completed backlog stays hidden so pending work reads first.
+// Today: a full overview so the whole backlog reads on landing. Leads with today
+// (plus a progress bar) and overdue one-offs, then the remaining day buckets
+// (Tomorrow, This week, Later, No date). Completed items stay hidden so pending
+// work leads. Overdue and due-today items live in the "today" bucket, so they are
+// pulled out here and that bucket is dropped from the tail to avoid repeats.
 function TodayView({
   todos,
   today,
@@ -402,18 +404,23 @@ function TodayView({
   const overdueList = todos
     .filter((t) => isOverdue(t, today))
     .sort(todoComparator(today));
-  const noDateList = todos
-    .filter((t) => dueDay(t, today) === null && !isDone(t, today))
-    .sort(todoComparator(today));
+  const restGroups = groupByBucket(
+    todos.filter((t) => !isDone(t, today)),
+    today,
+  ).filter((g) => g.key !== "today" && g.todos.length > 0);
 
   const total = todayList.length;
   const done = todayList.filter((t) => isDone(t, today)).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
-  if (todayList.length + overdueList.length + noDateList.length === 0) {
+  if (
+    todayList.length === 0 &&
+    overdueList.length === 0 &&
+    restGroups.length === 0
+  ) {
     return (
       <p className="text-fg-3 text-sm">
-        Nothing due today. Enjoy the breathing room or pull something forward.
+        Nothing here yet. Capture a task above to fill your backlog.
       </p>
     );
   }
@@ -457,16 +464,16 @@ function TodayView({
         </div>
       ) : null}
 
-      {noDateList.length > 0 ? (
-        <div className="space-y-2">
+      {restGroups.map((group) => (
+        <div key={group.key} className="space-y-2">
           <h3 className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
-            No date
+            {group.label}
           </h3>
-          {noDateList.map((todo) => (
+          {group.todos.map((todo) => (
             <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
           ))}
         </div>
-      ) : null}
+      ))}
     </div>
   );
 }
