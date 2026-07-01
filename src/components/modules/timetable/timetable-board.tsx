@@ -85,9 +85,9 @@ export function TimetableBoard({
         : inWeek(t.specificDate)
       : false,
   );
-  // A todo linked to the timetable overrides the events it overlaps while still
-  // pending; once done the event returns and the done todo drops off the grid,
-  // so the week reads as normal again.
+  // A timed todo is a timetable item by default: while pending it overrides the
+  // events it overlaps; once done it drops off the grid and the underlying event
+  // returns, so the week reads as normal again.
   const colOf = (item: {
     isRecurring: boolean;
     dayOfWeek: number | null;
@@ -100,9 +100,7 @@ export function TimetableBoard({
         : null;
   const overlaps = (aS: number, aE: number, bS: number, bE: number) =>
     aS < bE && bS < aE;
-  const overriders = weekTimedTodos.filter(
-    (t) => t.linkedModule === "timetable" && !isDone(t, today),
-  );
+  const overriders = weekTimedTodos.filter((t) => !isDone(t, today));
   const visibleEvents = weekEvents.filter((e) => {
     const eStart = timeToMinutes(e.startTime);
     const eEnd = timeToMinutes(e.endTime);
@@ -114,9 +112,7 @@ export function TimetableBoard({
       return overlaps(tStart, tEnd, eStart, eEnd);
     });
   });
-  const visibleTodos = weekTimedTodos.filter(
-    (t) => !(t.linkedModule === "timetable" && isDone(t, today)),
-  );
+  const visibleTodos = weekTimedTodos.filter((t) => !isDone(t, today));
 
   const marks: WeekMark[] = [
     ...jobs
