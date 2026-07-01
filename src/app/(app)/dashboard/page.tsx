@@ -17,6 +17,8 @@ import { getHabits } from "@/actions/habits";
 import { getJobs } from "@/actions/jobs";
 import { getMilestones } from "@/actions/timeline";
 import { getEntryByDate } from "@/actions/journal";
+import { getTransactions } from "@/actions/money";
+import { getMedicines } from "@/actions/medicines";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { DashboardGreeting } from "@/components/modules/dashboard/dashboard-greeting";
 import { TodaysTodos } from "@/components/modules/dashboard/todays-todos";
@@ -24,6 +26,8 @@ import { QuickAddTodo } from "@/components/modules/dashboard/quick-add-todo";
 import { TodayAgenda } from "@/components/modules/dashboard/today-agenda";
 import { TodayHabits } from "@/components/modules/dashboard/today-habits";
 import { DueSoon } from "@/components/modules/dashboard/due-soon";
+import { MoneySnapshot } from "@/components/modules/dashboard/money-snapshot";
+import { MedsToday } from "@/components/modules/dashboard/meds-today";
 
 type QuickStart = {
   title: string;
@@ -71,6 +75,8 @@ export default async function DashboardPage() {
     jobs,
     milestones,
     journalEntry,
+    transactions,
+    medicines,
   ] = await Promise.all([
     getTodayTodos(),
     getEvents(),
@@ -78,6 +84,8 @@ export default async function DashboardPage() {
     getJobs(),
     getMilestones(),
     getEntryByDate(todayStr),
+    getTransactions(),
+    getMedicines(),
   ]);
   const hasTodos = dueToday.length > 0 || overdue.length > 0;
   const activeHabits = habits.filter((h) => !h.archived);
@@ -121,6 +129,10 @@ export default async function DashboardPage() {
           <TodayHabits habits={activeHabits} today={todayStr} />
 
           <DueSoon jobs={jobs} milestones={milestones} today={todayStr} />
+
+          <MedsToday medicines={medicines} today={todayStr} />
+
+          <MoneySnapshot transactions={transactions} today={todayStr} />
 
           <Link
             href="/journal"
