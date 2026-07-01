@@ -6,6 +6,7 @@ import {
   eachDayOfInterval,
   endOfWeek,
   format,
+  parseISO,
   startOfWeek,
 } from "date-fns";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
@@ -13,9 +14,15 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-shell";
 import { dateToDay } from "@/lib/money";
 import { isHabitExpected } from "@/lib/habits";
-import { isDone } from "@/lib/todo";
+import { isDone, isOverdue, dueDay } from "@/lib/todo";
 import { weekdayIndex, timeToMinutes } from "@/lib/timetable";
-import { WeekView, type WeekMark, type HabitBlock } from "./week-view";
+import {
+  WeekView,
+  type WeekMark,
+  type HabitBlock,
+  type AllDayGroup,
+  type AllDayChip,
+} from "./week-view";
 import { EventModal } from "./event-modal";
 import type { getEvents } from "@/actions/timetable";
 import type { getJobs } from "@/actions/jobs";
@@ -78,14 +85,6 @@ export function TimetableBoard({
         : inWeek(t.specificDate)
       : false,
   );
-  const allDayTodos = todos.filter((t) =>
-    t.startTime
-      ? false
-      : t.isRecurring
-        ? t.dayOfWeek !== null
-        : inWeek(t.specificDate),
-  );
-
   // A todo linked to the timetable overrides the events it overlaps while still
   // pending; once done the event returns and the done todo drops off the grid,
   // so the week reads as normal again.
@@ -139,6 +138,111 @@ export function TimetableBoard({
         tone: "milestone" as const,
       })),
   ];
+
+  // Untimed todos feed the all-day strip. On the current week it reads as a task
+  // triage: overdue first, then today, the rest of the week, then the dateless
+  // backlog, with completed items dropped so pending work leads. Other weeks keep
+  // a simple day-tagged strip of that week's pending items.
+  const untimedPending = todos.filter((t) => !t.startTime && !isDone(t, today));
+
+  const todoChip = (t: Todo, dayLabel: string | null): AllDayChip => ({
+    kind: "todo",
+    id: t.id,
+    title: t.title,
+    priority: t.priority,
+    dayLabel,
+  });
+  const markChip = (m: WeekMark, dayLabel: string | null): AllDayChip => ({
+    kind: "mark",
+    id: m.id,
+    label: m.label,
+    tone: m.tone,
+    href: m.href,
+    dayLabel,
+  });
+
+  // True when an untimed todo is due on a given "yyyy-MM-dd" within the week.
+  const dueOnDay = (t: Todo, day: string): boolean => {
+    if (t.specificDate) return dateToDay(t.specificDate) === day;
+    if (t.isRecurring && t.dayOfWeek !== null) {
+      return weekdayIndex(parseISO(day)) === t.dayOfWeek;
+    }
+    return false;
+  };
+
+  const wkMarks = [...marks].sort((a, b) => (a.day < b.day ? -1 : 1));
+
+  let allDayGroups: AllDayGroup[];
+  if (weekOffset === 0) {
+    const overdueTodos = untimedPending
+      .filter((t) => isOverdue(t, today))
+      .sort((a, b) =>
+        dateToDay(a.specificDate!) < dateToDay(b.specificDate!) ? -1 : 1,
+      );
+    const overdueIds = new Set(overdueTodos.map((t) => t.id));
+    const placed = untimedPending
+      .filter((t) => !overdueIds.has(t.id))
+      .map((t) => ({ t, day: weekDays.find((d) => dueOnDay(t, d)) }))
+      .filter((x): x is { t: Todo; day: string } => Boolean(x.day))
+      .sort((a, b) => (a.day < b.day ? -1 : 1));
+    const unscheduled = untimedPending.filter(
+      (t) => dueDay(t, today) === null,
+    );
+
+    allDayGroups = [
+      {
+        key: "overdue",
+        label: "Overdue",
+        chips: [
+          ...overdueTodos.map((t) =>
+            todoChip(t, format(t.specificDate!, "MMM d")),
+          ),
+          ...wkMarks
+            .filter((m) => m.day < today)
+            .map((m) => markChip(m, format(parseISO(m.day), "MMM d"))),
+        ],
+      },
+      {
+        key: "today",
+        label: "Today",
+        chips: [
+          ...placed
+            .filter((x) => x.day === today)
+            .map((x) => todoChip(x.t, null)),
+          ...wkMarks
+            .filter((m) => m.day === today)
+            .map((m) => markChip(m, null)),
+        ],
+      },
+      {
+        key: "week",
+        label: "This week",
+        chips: [
+          ...placed
+            .filter((x) => x.day !== today)
+            .map((x) => todoChip(x.t, format(parseISO(x.day), "EEE"))),
+          ...wkMarks
+            .filter((m) => m.day > today)
+            .map((m) => markChip(m, format(parseISO(m.day), "EEE"))),
+        ],
+      },
+      {
+        key: "none",
+        label: "Not scheduled",
+        chips: unscheduled.map((t) => todoChip(t, null)),
+      },
+    ].filter((g) => g.chips.length > 0);
+  } else {
+    const chips: AllDayChip[] = [
+      ...untimedPending
+        .map((t) => ({ t, day: weekDays.find((d) => dueOnDay(t, d)) }))
+        .filter((x): x is { t: Todo; day: string } => Boolean(x.day))
+        .sort((a, b) => (a.day < b.day ? -1 : 1))
+        .map((x) => todoChip(x.t, format(parseISO(x.day), "EEE"))),
+      ...wkMarks.map((m) => markChip(m, format(parseISO(m.day), "EEE"))),
+    ];
+    allDayGroups = chips.length > 0 ? [{ key: "week", label: null, chips }] : [];
+  }
 
   // Timed habits with a fixed cadence (daily or specific weekdays) drop onto the
   // grid on each day of the week they are expected. Flexible (weekly) habits have
@@ -240,8 +344,7 @@ export function TimetableBoard({
         events={visibleEvents}
         onEventClick={openEdit}
         todos={visibleTodos}
-        allDayTodos={allDayTodos}
-        marks={marks}
+        allDayGroups={allDayGroups}
         habits={habitBlocks}
         weekDays={weekDays}
         today={today}
