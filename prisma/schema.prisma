@@ -442,6 +442,7 @@ model MealPlanSlot {
   userId    String
   planId    String
   label     String
+  time      String? // "HH:MM"; when set, an active plan's slot lands on the timetable
   order     Int              @default(0)
   options   MealPlanOption[]
   plan      MealPlan         @relation(fields: [planId], references: [id], onDelete: Cascade)

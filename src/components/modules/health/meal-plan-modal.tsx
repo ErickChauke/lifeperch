@@ -36,7 +36,11 @@ const EMPTY: MealPlanInput = {
   linkedId: null,
   linkedLabel: null,
   slots: [
-    { label: "Breakfast", options: [{ name: "", calories: null, notes: null }] },
+    {
+      label: "Breakfast",
+      time: null,
+      options: [{ name: "", calories: null, notes: null }],
+    },
   ],
 };
 
@@ -63,8 +67,16 @@ function SlotEditor({
       <div className="flex items-center gap-2">
         <Input
           placeholder="Slot, e.g. Breakfast"
-          className="font-medium"
+          className="flex-1 font-medium"
           {...register(`slots.${index}.label`)}
+        />
+        <Input
+          type="time"
+          className="w-[7.5rem] font-mono"
+          title="Time (puts this slot on the timetable)"
+          {...register(`slots.${index}.time`, {
+            setValueAs: (v) => v || null,
+          })}
         />
         <Button
           type="button"
@@ -160,6 +172,7 @@ export function MealPlanModal({
         linkedLabel: plan.linkedLabel,
         slots: plan.slots.map((s) => ({
           label: s.label,
+          time: s.time,
           options: s.options.map((o) => ({
             name: o.name,
             calories: o.calories,
@@ -240,6 +253,7 @@ export function MealPlanModal({
               onClick={() =>
                 slots.append({
                   label: "",
+                  time: null,
                   options: [{ name: "", calories: null, notes: null }],
                 })
               }

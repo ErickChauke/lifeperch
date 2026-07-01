@@ -65,6 +65,10 @@ export const mealPlanOptionSchema = z.object({
 
 export const mealPlanSlotSchema = z.object({
   label: z.string().min(1, "Name the slot"),
+  time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullable(),
   options: z.array(mealPlanOptionSchema),
 });
 

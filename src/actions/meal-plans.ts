@@ -18,6 +18,7 @@ function toSlotsCreate(userId: string, data: MealPlanInput) {
   return data.slots.map((slot, i) => ({
     userId,
     label: slot.label.trim(),
+    time: slot.time || null,
     order: i,
     options: {
       create: slot.options.map((opt, j) => ({
