@@ -13,8 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
-import { LINKABLE_MODULES } from "@/lib/todo";
 import { medicineSchema, type MedicineInput } from "@/lib/health";
 import {
   createMedicine,
@@ -142,31 +140,6 @@ export function MedicineModal({
                 id="schedule"
                 placeholder="e.g. morning"
                 {...register("schedule", { setValueAs: (v) => v || null })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="linkedModule">Link to</Label>
-              <Select
-                id="linkedModule"
-                {...register("linkedModule", { setValueAs: (v) => v || null })}
-              >
-                <option value="">None</option>
-                {LINKABLE_MODULES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="linkedLabel">Link label</Label>
-              <Input
-                id="linkedLabel"
-                placeholder="Optional"
-                {...register("linkedLabel", { setValueAs: (v) => v || null })}
               />
             </div>
           </div>
