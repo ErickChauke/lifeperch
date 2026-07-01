@@ -11,8 +11,7 @@ import {
   timeToMinutes,
   weekdayIndex,
 } from "@/lib/timetable";
-import { priorityColor, isDone } from "@/lib/todo";
-import { dateToDay } from "@/lib/money";
+import { priorityColor } from "@/lib/todo";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./event-card";
 import { TodoBlockCard } from "./todo-block-card";
@@ -53,15 +52,6 @@ function dayColumn(item: Schedulable): number | null {
   return null;
 }
 
-// True when an untimed todo is due on a given "yyyy-MM-dd".
-function dueOn(todo: Todo, day: string): boolean {
-  if (todo.specificDate) return dateToDay(todo.specificDate) === day;
-  if (todo.isRecurring && todo.dayOfWeek !== null) {
-    return weekdayIndex(parseISO(day)) === todo.dayOfWeek;
-  }
-  return false;
-}
-
 // A dated commitment from another module (job deadline, milestone) shown in the
 // all-day strip.
 export type WeekMark = {
@@ -72,6 +62,34 @@ export type WeekMark = {
   tone: "deadline" | "milestone";
 };
 
+// One chip in the all-day strip: a todo or a cross-module mark. dayLabel is a
+// short pre-formatted hint (weekday or date) shown on the right, or null when the
+// group already implies the day (Today, Not scheduled).
+export type AllDayChip =
+  | {
+      kind: "todo";
+      id: string;
+      title: string;
+      priority: string;
+      dayLabel: string | null;
+    }
+  | {
+      kind: "mark";
+      id: string;
+      label: string;
+      tone: "deadline" | "milestone";
+      href: string;
+      dayLabel: string | null;
+    };
+
+// A labeled cluster of chips in the all-day strip (Overdue, Today, ...). A null
+// label renders the chips with no sub-heading, matching the flat week strip.
+export type AllDayGroup = {
+  key: string;
+  label: string | null;
+  chips: AllDayChip[];
+};
+
 // Weekly time grid: a time gutter plus seven day columns. Events are positioned
 // by their start and end time. Time-blocked todos overlay as distinct blocks.
 // Untimed todos and cross-module marks due in the week sit in an all-day strip.
@@ -79,8 +97,7 @@ export function WeekView({
   events,
   onEventClick,
   todos = [],
-  allDayTodos = [],
-  marks = [],
+  allDayGroups = [],
   habits = [],
   weekDays,
   today,
@@ -88,8 +105,7 @@ export function WeekView({
   events: TimetableEvent[];
   onEventClick: (event: TimetableEvent) => void;
   todos?: Todo[];
-  allDayTodos?: Todo[];
-  marks?: WeekMark[];
+  allDayGroups?: AllDayGroup[];
   habits?: HabitBlock[];
   weekDays: string[];
   today: string;
@@ -139,63 +155,66 @@ export function WeekView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const allDay = allDayTodos
-    .map((t) => ({ todo: t, day: weekDays.find((d) => dueOn(t, d)) }))
-    .filter((x): x is { todo: Todo; day: string } => Boolean(x.day))
-    .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
-  const sortedMarks = [...marks].sort((a, b) =>
-    a.day < b.day ? -1 : a.day > b.day ? 1 : 0,
-  );
-
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      {allDay.length > 0 || sortedMarks.length > 0 ? (
+      {allDayGroups.length > 0 ? (
         <div className="bg-surface shrink-0 rounded-[var(--r-lg)] border p-3">
           <p className="text-fg-3 mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
             All day
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {allDay.map(({ todo, day }) => (
-              <Link
-                key={todo.id}
-                href="/todo"
-                className="bg-surface-2 hover:bg-surface-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors"
-              >
-                <span
-                  className="size-1.5 shrink-0 rounded-full"
-                  style={{ background: priorityColor(todo.priority) }}
-                />
-                <span
-                  className={cn(
-                    "max-w-[14rem] truncate",
-                    isDone(todo, today) ? "text-fg-4 line-through" : "text-fg",
+          <div className="space-y-2.5">
+            {allDayGroups.map((group) => (
+              <div key={group.key} className="space-y-1.5">
+                {group.label ? (
+                  <p className="text-fg-4 font-mono text-[10px] font-semibold uppercase tracking-[0.08em]">
+                    {group.label}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap gap-1.5">
+                  {group.chips.map((chip) =>
+                    chip.kind === "todo" ? (
+                      <Link
+                        key={chip.id}
+                        href="/todo"
+                        className="bg-surface-2 hover:bg-surface-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors"
+                      >
+                        <span
+                          className="size-1.5 shrink-0 rounded-full"
+                          style={{ background: priorityColor(chip.priority) }}
+                        />
+                        <span className="text-fg max-w-[14rem] truncate">
+                          {chip.title}
+                        </span>
+                        {chip.dayLabel ? (
+                          <span className="text-fg-3 shrink-0 font-mono text-[10.5px]">
+                            {chip.dayLabel}
+                          </span>
+                        ) : null}
+                      </Link>
+                    ) : (
+                      <Link
+                        key={chip.id}
+                        href={chip.href}
+                        className="bg-surface-2 hover:bg-surface-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors"
+                      >
+                        {chip.tone === "deadline" ? (
+                          <Flag className="text-destructive size-3 shrink-0" />
+                        ) : (
+                          <Milestone className="text-accent size-3 shrink-0" />
+                        )}
+                        <span className="text-fg max-w-[14rem] truncate">
+                          {chip.label}
+                        </span>
+                        {chip.dayLabel ? (
+                          <span className="text-fg-3 shrink-0 font-mono text-[10.5px]">
+                            {chip.dayLabel}
+                          </span>
+                        ) : null}
+                      </Link>
+                    ),
                   )}
-                >
-                  {todo.title}
-                </span>
-                <span className="text-fg-3 shrink-0 font-mono text-[10.5px]">
-                  {format(parseISO(day), "EEE")}
-                </span>
-              </Link>
-            ))}
-            {sortedMarks.map((mark) => (
-              <Link
-                key={mark.id}
-                href={mark.href}
-                className="bg-surface-2 hover:bg-surface-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors"
-              >
-                {mark.tone === "deadline" ? (
-                  <Flag className="text-destructive size-3 shrink-0" />
-                ) : (
-                  <Milestone className="text-accent size-3 shrink-0" />
-                )}
-                <span className="text-fg max-w-[14rem] truncate">
-                  {mark.label}
-                </span>
-                <span className="text-fg-3 shrink-0 font-mono text-[10.5px]">
-                  {format(parseISO(mark.day), "EEE")}
-                </span>
-              </Link>
+                </div>
+              </div>
             ))}
           </div>
         </div>

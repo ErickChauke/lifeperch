@@ -25,11 +25,11 @@ import { Segmented } from "@/components/modules/money/segmented";
 import { dateToDay } from "@/lib/money";
 import { weekdayIndex } from "@/lib/timetable";
 import {
-  belongsToToday,
   bucketOf,
   dueDay,
   groupByBucket,
   isDone,
+  isOverdue,
   todoComparator,
   type TodoInput,
 } from "@/lib/todo";
@@ -384,7 +384,9 @@ export function TodoHome({
   );
 }
 
-// Today: overdue + due-today, with a progress bar and N of M done.
+// Today: the full actionable picture, leading with today (plus a progress bar),
+// then overdue one-offs, then the dateless backlog. Each section only shows when
+// it has items. Completed backlog stays hidden so pending work reads first.
 function TodayView({
   todos,
   today,
@@ -394,14 +396,21 @@ function TodayView({
   today: string;
   onEdit: (todo: Todo) => void;
 }) {
-  const list = todos
-    .filter((t) => belongsToToday(t, today))
+  const todayList = todos
+    .filter((t) => dueDay(t, today) === today)
     .sort(todoComparator(today));
-  const total = list.length;
-  const done = list.filter((t) => isDone(t, today)).length;
+  const overdueList = todos
+    .filter((t) => isOverdue(t, today))
+    .sort(todoComparator(today));
+  const noDateList = todos
+    .filter((t) => dueDay(t, today) === null && !isDone(t, today))
+    .sort(todoComparator(today));
+
+  const total = todayList.length;
+  const done = todayList.filter((t) => isDone(t, today)).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
-  if (total === 0) {
+  if (todayList.length + overdueList.length + noDateList.length === 0) {
     return (
       <p className="text-fg-3 text-sm">
         Nothing due today. Enjoy the breathing room or pull something forward.
@@ -410,28 +419,54 @@ function TodayView({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
-            Progress
-          </span>
-          <span className="text-fg-2 font-mono text-xs">
-            {done} of {total} done
-          </span>
+    <div className="space-y-6">
+      {todayList.length > 0 ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
+                Today
+              </span>
+              <span className="text-fg-2 font-mono text-xs">
+                {done} of {total} done
+              </span>
+            </div>
+            <div className="bg-surface-2 h-2 w-full overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            {todayList.map((todo) => (
+              <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
+            ))}
+          </div>
         </div>
-        <div className="bg-surface-2 h-2 w-full overflow-hidden rounded-full">
-          <div
-            className="bg-primary h-full rounded-full transition-all"
-            style={{ width: `${pct}%` }}
-          />
+      ) : null}
+
+      {overdueList.length > 0 ? (
+        <div className="space-y-2">
+          <h3 className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
+            Overdue
+          </h3>
+          {overdueList.map((todo) => (
+            <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
+          ))}
         </div>
-      </div>
-      <div className="space-y-2">
-        {list.map((todo) => (
-          <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
-        ))}
-      </div>
+      ) : null}
+
+      {noDateList.length > 0 ? (
+        <div className="space-y-2">
+          <h3 className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
+            No date
+          </h3>
+          {noDateList.map((todo) => (
+            <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
