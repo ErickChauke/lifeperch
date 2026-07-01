@@ -51,6 +51,23 @@ export async function getCollections() {
   });
 }
 
+// Fetches the user's most recently edited notes across all notebooks, for the
+// dashboard.
+export async function getRecentNotes(take = 4) {
+  const userId = await requireUserId();
+  return prisma.note.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+    take,
+    select: {
+      id: true,
+      title: true,
+      collectionId: true,
+      collection: { select: { title: true } },
+    },
+  });
+}
+
 // Fetches one notebook and its notes (most recently edited first), scoped.
 export async function getCollection(id: string) {
   const userId = await requireUserId();
