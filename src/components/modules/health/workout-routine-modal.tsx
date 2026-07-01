@@ -15,8 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
-import { LINKABLE_MODULES } from "@/lib/todo";
 import { workoutRoutineSchema, type WorkoutRoutineInput } from "@/lib/health";
 import {
   createRoutine,
@@ -202,31 +200,6 @@ export function WorkoutRoutineModal({
                 Every exercise needs a name.
               </p>
             ) : null}
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="linkedModule">Link to</Label>
-              <Select
-                id="linkedModule"
-                {...register("linkedModule", { setValueAs: (v) => v || null })}
-              >
-                <option value="">None</option>
-                {LINKABLE_MODULES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="linkedLabel">Link label</Label>
-              <Input
-                id="linkedLabel"
-                placeholder="Optional"
-                {...register("linkedLabel", { setValueAs: (v) => v || null })}
-              />
-            </div>
           </div>
 
           <div className="space-y-1.5">
