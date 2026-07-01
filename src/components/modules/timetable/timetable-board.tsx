@@ -21,6 +21,7 @@ import {
   type WeekMark,
   type HabitBlock,
   type MedicineBlock,
+  type MealBlock,
   type AllDayGroup,
   type AllDayChip,
 } from "./week-view";
@@ -30,6 +31,7 @@ import type { getJobs } from "@/actions/jobs";
 import type { getMilestones } from "@/actions/timeline";
 import type { getHabits } from "@/actions/habits";
 import type { getMedicines } from "@/actions/medicines";
+import type { getMealPlans } from "@/actions/meal-plans";
 import type { Todo } from "@/components/modules/todo/todo-board";
 
 export type TimetableEvent = Awaited<ReturnType<typeof getEvents>>[number];
@@ -37,6 +39,7 @@ type Job = Awaited<ReturnType<typeof getJobs>>[number];
 type Milestone = Awaited<ReturnType<typeof getMilestones>>[number];
 type Habit = Awaited<ReturnType<typeof getHabits>>[number];
 type Medicine = Awaited<ReturnType<typeof getMedicines>>[number];
+type MealPlan = Awaited<ReturnType<typeof getMealPlans>>[number];
 
 // Client container for the timetable. Owns the add/edit modal and which week is
 // shown, scoping events, todos and cross-module dates to that week.
@@ -47,6 +50,7 @@ export function TimetableBoard({
   milestones,
   habits,
   medicines,
+  mealPlans,
 }: {
   events: TimetableEvent[];
   todos: Todo[];
@@ -54,6 +58,7 @@ export function TimetableBoard({
   milestones: Milestone[];
   habits: Habit[];
   medicines: Medicine[];
+  mealPlans: MealPlan[];
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TimetableEvent | null>(null);
@@ -299,6 +304,25 @@ export function TimetableBoard({
     });
   }
 
+  // Slots of active meal plans that carry a time drop onto the grid every day, so
+  // the eating rhythm sits alongside the rest of the week.
+  const mealBlocks: MealBlock[] = [];
+  for (const plan of mealPlans) {
+    if (!plan.active) continue;
+    for (const slot of plan.slots) {
+      if (!slot.time) continue;
+      weekDays.forEach((_, i) => {
+        mealBlocks.push({
+          id: `${slot.id}-${i}`,
+          dayIdx: i,
+          time: slot.time!,
+          label: slot.label,
+          plan: plan.name,
+        });
+      });
+    }
+  }
+
   function openAdd() {
     setSelected(null);
     setOpen(true);
@@ -382,6 +406,7 @@ export function TimetableBoard({
         allDayGroups={allDayGroups}
         habits={habitBlocks}
         medicines={medicineBlocks}
+        meals={mealBlocks}
         weekDays={weekDays}
         today={today}
       />

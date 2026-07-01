@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Flag, Milestone, CalendarClock, Pill } from "lucide-react";
+import { Flag, Milestone, CalendarClock, Pill, Utensils } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import {
   WEEKDAYS,
@@ -38,10 +38,21 @@ export type MedicineBlock = {
   dose: string | null;
 };
 
+// A meal-plan slot with a time on the grid for one day of the visible week.
+export type MealBlock = {
+  id: string;
+  dayIdx: number;
+  time: string;
+  label: string;
+  plan: string;
+};
+
 const HABIT_TONE = "var(--info)";
 const MEDICINE_TONE = "var(--success)";
-// Visual length of a medicine dose block, which is a point in time.
+const MEAL_TONE = "var(--warning)";
+// Visual length of point-in-time blocks (a dose, a meal slot).
 const MEDICINE_MINUTES = 30;
+const MEAL_MINUTES = 45;
 
 const HOUR_PX = 48;
 // Breathing room at the top and bottom so the first and last hour labels,
@@ -112,6 +123,7 @@ export function WeekView({
   allDayGroups = [],
   habits = [],
   medicines = [],
+  meals = [],
   weekDays,
   today,
 }: {
@@ -121,6 +133,7 @@ export function WeekView({
   allDayGroups?: AllDayGroup[];
   habits?: HabitBlock[];
   medicines?: MedicineBlock[];
+  meals?: MealBlock[];
   weekDays: string[];
   today: string;
 }) {
@@ -394,6 +407,41 @@ export function WeekView({
                           <p className="text-fg-3 truncate font-mono text-[11px]">
                             {m.time}
                             {m.dose ? ` · ${m.dose}` : ""}
+                          </p>
+                        </Link>
+                      );
+                    })}
+                  {meals
+                    .filter((m) => m.dayIdx === dayIdx)
+                    .map((m) => {
+                      const startMin = timeToMinutes(m.time);
+                      const start = startMin - GRID_START_HOUR * 60;
+                      const top = Math.max(0, (start / 60) * HOUR_PX) + GRID_PAD;
+                      const height = Math.max(
+                        18,
+                        (MEAL_MINUTES / 60) * HOUR_PX - 2,
+                      );
+                      return (
+                        <Link
+                          key={m.id}
+                          href="/health"
+                          className="absolute inset-x-1 z-20 block overflow-hidden rounded-[var(--r-sm)] border px-1.5 py-1 transition-opacity hover:opacity-80"
+                          style={{
+                            top,
+                            height,
+                            background: `color-mix(in oklch, ${MEAL_TONE} 14%, transparent)`,
+                            borderColor: MEAL_TONE,
+                          }}
+                        >
+                          <p
+                            className="flex items-center gap-1 truncate text-xs font-medium"
+                            style={{ color: MEAL_TONE }}
+                          >
+                            <Utensils className="size-3 shrink-0" />
+                            {m.label}
+                          </p>
+                          <p className="text-fg-3 truncate font-mono text-[11px]">
+                            {m.time} · {m.plan}
                           </p>
                         </Link>
                       );
