@@ -133,6 +133,19 @@ export function TimetableBoard({
         href: "/timeline",
         tone: "milestone" as const,
       })),
+    ...jobs
+      .filter((j) => j.status !== "outcome")
+      .flatMap((j) =>
+        j.stages
+          .filter((s) => s.date && inWeek(s.date))
+          .map((s) => ({
+            id: `s-${s.id}`,
+            day: dateToDay(s.date!),
+            label: `${s.label} · ${j.organisation}`,
+            href: "/jobs",
+            tone: "interview" as const,
+          })),
+      ),
   ];
 
   // Untimed todos feed the all-day strip. On the current week it reads as a task

@@ -11,8 +11,9 @@ type Item = { id: string; day: string; label: string; sub: string; href: string 
 
 const HORIZON_DAYS = 14;
 
-// Forward look across modules: application deadlines and milestone target dates
-// landing within the next two weeks, merged and sorted by date. Read-only.
+// Forward look across modules: application deadlines, interview/stage dates, and
+// milestone target dates landing within the next two weeks, merged and sorted by
+// date. Read-only.
 export function DueSoon({
   jobs,
   milestones,
@@ -47,6 +48,21 @@ export function DueSoon({
         label: milestone.title,
         sub: milestone.timeline?.name ?? "Milestone",
         href: "/timeline",
+      })),
+    ...jobs
+      .filter((j) => j.status !== "outcome")
+      .flatMap((j) =>
+        j.stages
+          .filter((s) => s.date)
+          .map((s) => ({ job: j, stage: s, day: dateToDay(s.date!) })),
+      )
+      .filter((x) => within(x.day))
+      .map(({ job, stage, day }) => ({
+        id: `s-${stage.id}`,
+        day,
+        label: `${stage.label} · ${job.organisation}`,
+        sub: "Interview",
+        href: "/jobs",
       })),
   ].sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
 

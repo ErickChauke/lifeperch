@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Flag, Milestone } from "lucide-react";
+import { Flag, Milestone, CalendarClock } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import {
   WEEKDAYS,
@@ -59,7 +59,7 @@ export type WeekMark = {
   day: string;
   label: string;
   href: string;
-  tone: "deadline" | "milestone";
+  tone: "deadline" | "milestone" | "interview";
 };
 
 // One chip in the all-day strip: a todo or a cross-module mark. dayLabel is a
@@ -77,7 +77,7 @@ export type AllDayChip =
       kind: "mark";
       id: string;
       label: string;
-      tone: "deadline" | "milestone";
+      tone: "deadline" | "milestone" | "interview";
       href: string;
       dayLabel: string | null;
     };
@@ -199,6 +199,8 @@ export function WeekView({
                       >
                         {chip.tone === "deadline" ? (
                           <Flag className="text-destructive size-3 shrink-0" />
+                        ) : chip.tone === "interview" ? (
+                          <CalendarClock className="size-3 shrink-0 text-[var(--info)]" />
                         ) : (
                           <Milestone className="text-accent size-3 shrink-0" />
                         )}
