@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Medicine" ADD COLUMN     "days" INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+ADD COLUMN     "times" TEXT[] DEFAULT ARRAY[]::TEXT[];

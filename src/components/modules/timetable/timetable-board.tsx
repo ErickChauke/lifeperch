@@ -20,6 +20,7 @@ import {
   WeekView,
   type WeekMark,
   type HabitBlock,
+  type MedicineBlock,
   type AllDayGroup,
   type AllDayChip,
 } from "./week-view";
@@ -28,12 +29,14 @@ import type { getEvents } from "@/actions/timetable";
 import type { getJobs } from "@/actions/jobs";
 import type { getMilestones } from "@/actions/timeline";
 import type { getHabits } from "@/actions/habits";
+import type { getMedicines } from "@/actions/medicines";
 import type { Todo } from "@/components/modules/todo/todo-board";
 
 export type TimetableEvent = Awaited<ReturnType<typeof getEvents>>[number];
 type Job = Awaited<ReturnType<typeof getJobs>>[number];
 type Milestone = Awaited<ReturnType<typeof getMilestones>>[number];
 type Habit = Awaited<ReturnType<typeof getHabits>>[number];
+type Medicine = Awaited<ReturnType<typeof getMedicines>>[number];
 
 // Client container for the timetable. Owns the add/edit modal and which week is
 // shown, scoping events, todos and cross-module dates to that week.
@@ -43,12 +46,14 @@ export function TimetableBoard({
   jobs,
   milestones,
   habits,
+  medicines,
 }: {
   events: TimetableEvent[];
   todos: Todo[];
   jobs: Job[];
   milestones: Milestone[];
   habits: Habit[];
+  medicines: Medicine[];
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TimetableEvent | null>(null);
@@ -273,6 +278,27 @@ export function TimetableBoard({
     });
   }
 
+  // Active medicines with scheduled times drop a dose block onto the grid at each
+  // time, on every day they are expected (empty days = every day).
+  const medicineBlocks: MedicineBlock[] = [];
+  for (const m of medicines) {
+    if (!m.active || m.times.length === 0) continue;
+    weekDays.forEach((day, i) => {
+      const expected =
+        m.days.length === 0 || m.days.includes(weekdayIndex(parseISO(day)));
+      if (!expected) return;
+      for (const time of m.times) {
+        medicineBlocks.push({
+          id: `${m.id}-${i}-${time}`,
+          dayIdx: i,
+          time,
+          name: m.name,
+          dose: m.dose,
+        });
+      }
+    });
+  }
+
   function openAdd() {
     setSelected(null);
     setOpen(true);
@@ -355,6 +381,7 @@ export function TimetableBoard({
         todos={visibleTodos}
         allDayGroups={allDayGroups}
         habits={habitBlocks}
+        medicines={medicineBlocks}
         weekDays={weekDays}
         today={today}
       />

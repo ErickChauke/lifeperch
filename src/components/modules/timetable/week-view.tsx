@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Flag, Milestone, CalendarClock } from "lucide-react";
+import { Flag, Milestone, CalendarClock, Pill } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import {
   WEEKDAYS,
@@ -29,7 +29,19 @@ export type HabitBlock = {
   icon: string | null;
 };
 
+// A scheduled medicine dose on the grid for one day of the visible week.
+export type MedicineBlock = {
+  id: string;
+  dayIdx: number;
+  time: string;
+  name: string;
+  dose: string | null;
+};
+
 const HABIT_TONE = "var(--info)";
+const MEDICINE_TONE = "var(--success)";
+// Visual length of a medicine dose block, which is a point in time.
+const MEDICINE_MINUTES = 30;
 
 const HOUR_PX = 48;
 // Breathing room at the top and bottom so the first and last hour labels,
@@ -99,6 +111,7 @@ export function WeekView({
   todos = [],
   allDayGroups = [],
   habits = [],
+  medicines = [],
   weekDays,
   today,
 }: {
@@ -107,6 +120,7 @@ export function WeekView({
   todos?: Todo[];
   allDayGroups?: AllDayGroup[];
   habits?: HabitBlock[];
+  medicines?: MedicineBlock[];
   weekDays: string[];
   today: string;
 }) {
@@ -344,6 +358,42 @@ export function WeekView({
                           <p className="text-fg-3 truncate font-mono text-[11px]">
                             {h.startTime}
                             {h.endTime ? `–${h.endTime}` : ""}
+                          </p>
+                        </Link>
+                      );
+                    })}
+                  {medicines
+                    .filter((m) => m.dayIdx === dayIdx)
+                    .map((m) => {
+                      const startMin = timeToMinutes(m.time);
+                      const start = startMin - GRID_START_HOUR * 60;
+                      const top = Math.max(0, (start / 60) * HOUR_PX) + GRID_PAD;
+                      const height = Math.max(
+                        18,
+                        (MEDICINE_MINUTES / 60) * HOUR_PX - 2,
+                      );
+                      return (
+                        <Link
+                          key={m.id}
+                          href="/health"
+                          className="absolute inset-x-1 z-20 block overflow-hidden rounded-[var(--r-sm)] border px-1.5 py-1 transition-opacity hover:opacity-80"
+                          style={{
+                            top,
+                            height,
+                            background: `color-mix(in oklch, ${MEDICINE_TONE} 14%, transparent)`,
+                            borderColor: MEDICINE_TONE,
+                          }}
+                        >
+                          <p
+                            className="flex items-center gap-1 truncate text-xs font-medium"
+                            style={{ color: MEDICINE_TONE }}
+                          >
+                            <Pill className="size-3 shrink-0" />
+                            {m.name}
+                          </p>
+                          <p className="text-fg-3 truncate font-mono text-[11px]">
+                            {m.time}
+                            {m.dose ? ` · ${m.dose}` : ""}
                           </p>
                         </Link>
                       );

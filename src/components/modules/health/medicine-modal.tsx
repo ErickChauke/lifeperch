@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WEEKDAYS } from "@/lib/timetable";
+import { cn } from "@/lib/utils";
 import { medicineSchema, type MedicineInput } from "@/lib/health";
 import {
   createMedicine,
@@ -25,6 +28,8 @@ const EMPTY: MedicineInput = {
   name: "",
   dose: null,
   schedule: null,
+  times: [],
+  days: [],
   active: true,
   linkedModule: null,
   linkedId: null,
@@ -46,11 +51,41 @@ export function MedicineModal({
     register,
     handleSubmit,
     reset,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<MedicineInput>({
     resolver: zodResolver(medicineSchema),
     defaultValues: EMPTY,
   });
+
+  const times = useWatch({ control, name: "times" }) ?? [];
+  const days = useWatch({ control, name: "days" }) ?? [];
+
+  function addTime() {
+    setValue("times", [...times, "08:00"], { shouldDirty: true });
+  }
+  function setTime(i: number, v: string) {
+    setValue(
+      "times",
+      times.map((t, idx) => (idx === i ? v : t)),
+      { shouldDirty: true },
+    );
+  }
+  function removeTime(i: number) {
+    setValue(
+      "times",
+      times.filter((_, idx) => idx !== i),
+      { shouldDirty: true },
+    );
+  }
+  function toggleDay(d: number) {
+    setValue(
+      "days",
+      days.includes(d) ? days.filter((x) => x !== d) : [...days, d],
+      { shouldDirty: true },
+    );
+  }
 
   function close() {
     setConfirmDelete(false);
@@ -63,6 +98,8 @@ export function MedicineModal({
         name: medicine.name,
         dose: medicine.dose,
         schedule: medicine.schedule,
+        times: medicine.times,
+        days: medicine.days,
         active: medicine.active,
         linkedModule: medicine.linkedModule,
         linkedId: medicine.linkedId,
@@ -142,6 +179,66 @@ export function MedicineModal({
                 {...register("schedule", { setValueAs: (v) => v || null })}
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Times</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {times.map((t, i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <Input
+                    type="time"
+                    value={t}
+                    onChange={(e) => setTime(i, e.target.value)}
+                    className="w-[7.5rem]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeTime(i)}
+                    aria-label="Remove time"
+                    className="text-fg-4 hover:text-destructive transition-colors"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addTime}
+              >
+                + time
+              </Button>
+            </div>
+            <p className="text-fg-3 text-xs">
+              Times put this dose on the timetable. Leave empty to keep it off the
+              grid.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Days</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {WEEKDAYS.map((d, i) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(i)}
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-xs transition-colors",
+                    days.includes(i)
+                      ? "bg-primary text-[var(--accent-fg)]"
+                      : "bg-surface-2 text-fg-2 hover:bg-surface-3",
+                  )}
+                >
+                  {d.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+            <p className="text-fg-3 text-xs">
+              {days.length === 0 ? "Every day." : "Selected days only."}
+            </p>
           </div>
 
           <label className="text-fg-2 flex items-center gap-2 text-sm">
