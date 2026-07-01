@@ -527,6 +527,8 @@ model Medicine {
   name         String
   dose         String?
   schedule     String?
+  times        String[]      @default([]) // "HH:MM" doses that land on the timetable
+  days         Int[]         @default([]) // 0=Monday...6=Sunday; empty = every day
   active       Boolean       @default(true)
   order        Int           @default(0)
   linkedModule String?

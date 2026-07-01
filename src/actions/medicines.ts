@@ -19,6 +19,8 @@ function toRecord(data: MedicineInput) {
     name: data.name.trim(),
     dose: data.dose?.trim() || null,
     schedule: data.schedule?.trim() || null,
+    times: data.times,
+    days: data.days,
     active: data.active,
     linkedModule: data.linkedModule,
     linkedId: data.linkedId,

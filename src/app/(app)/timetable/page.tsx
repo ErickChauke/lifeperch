@@ -3,6 +3,7 @@ import { getTodos } from "@/actions/todo";
 import { getJobs } from "@/actions/jobs";
 import { getMilestones } from "@/actions/timeline";
 import { getHabits } from "@/actions/habits";
+import { getMedicines } from "@/actions/medicines";
 import { PageShell } from "@/components/layout/page-shell";
 import { TimetableBoard } from "@/components/modules/timetable/timetable-board";
 
@@ -10,13 +11,15 @@ import { TimetableBoard } from "@/components/modules/timetable/timetable-board";
 // hands them to the board, which scopes them to the week it is showing. The week
 // grid is the page's scroll region, so the board renders as the body.
 export default async function TimetablePage() {
-  const [events, todos, jobs, milestones, habits] = await Promise.all([
-    getEvents(),
-    getTodos(),
-    getJobs(),
-    getMilestones(),
-    getHabits(),
-  ]);
+  const [events, todos, jobs, milestones, habits, medicines] =
+    await Promise.all([
+      getEvents(),
+      getTodos(),
+      getJobs(),
+      getMilestones(),
+      getHabits(),
+      getMedicines(),
+    ]);
 
   return (
     <PageShell>
@@ -26,6 +29,7 @@ export default async function TimetablePage() {
         jobs={jobs}
         milestones={milestones}
         habits={habits}
+        medicines={medicines}
       />
     </PageShell>
   );
