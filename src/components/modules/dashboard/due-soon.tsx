@@ -80,6 +80,13 @@ export function DueSoon({
             href={item.href}
             className="bg-surface hover:bg-surface-2 flex items-center gap-3 rounded-md border border-border px-3 py-2 transition-colors"
           >
+            <span
+              className="size-1.5 shrink-0 rounded-full"
+              style={{
+                background:
+                  item.day === today ? "var(--warning)" : "var(--success)",
+              }}
+            />
             <span className="text-fg-3 w-16 shrink-0 font-mono text-[11px]">
               {item.day === today ? "Today" : format(parseISO(item.day), "EEE d")}
             </span>
