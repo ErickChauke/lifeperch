@@ -26,7 +26,12 @@ import {
   type HabitInput,
   type FrequencyMode,
 } from "@/lib/habits";
-import { createHabit, updateHabit, archiveHabit } from "@/actions/habits";
+import {
+  createHabit,
+  updateHabit,
+  archiveHabit,
+  deleteHabit,
+} from "@/actions/habits";
 import type { Habit } from "./habits-board";
 
 const KINDS = [
@@ -74,6 +79,7 @@ export function HabitModal({
 }) {
   const [pending, startTransition] = useTransition();
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [freq, setFreq] = useState<FrequencyMode>("daily");
   const {
     register,
@@ -108,6 +114,7 @@ export function HabitModal({
 
   function close() {
     setConfirmArchive(false);
+    setConfirmDelete(false);
     onOpenChange(false);
   }
 
@@ -189,6 +196,7 @@ export function HabitModal({
     if (!habit) return;
     if (!confirmArchive) {
       setConfirmArchive(true);
+      setConfirmDelete(false);
       return;
     }
     startTransition(async () => {
@@ -198,6 +206,24 @@ export function HabitModal({
         close();
       } catch {
         toast.error("Could not archive habit");
+      }
+    });
+  }
+
+  function onDelete() {
+    if (!habit) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setConfirmArchive(false);
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await deleteHabit(habit.id);
+        toast.success("Habit deleted");
+        close();
+      } catch {
+        toast.error("Could not delete habit");
       }
     });
   }
@@ -387,15 +413,26 @@ export function HabitModal({
 
           <div className="flex items-center justify-between gap-2 pt-2">
             {habit ? (
-              <Button
-                type="button"
-                variant={confirmArchive ? "destructive" : "ghost"}
-                size="sm"
-                onClick={onArchive}
-                disabled={pending}
-              >
-                {confirmArchive ? "Archive habit?" : "Archive"}
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  type="button"
+                  variant={confirmDelete ? "destructive" : "ghost"}
+                  size="sm"
+                  onClick={onDelete}
+                  disabled={pending}
+                >
+                  {confirmDelete ? "Delete habit?" : "Delete"}
+                </Button>
+                <Button
+                  type="button"
+                  variant={confirmArchive ? "destructive" : "ghost"}
+                  size="sm"
+                  onClick={onArchive}
+                  disabled={pending}
+                >
+                  {confirmArchive ? "Archive habit?" : "Archive"}
+                </Button>
+              </div>
             ) : (
               <span />
             )}

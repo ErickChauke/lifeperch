@@ -100,6 +100,13 @@ export async function archiveHabit(id: string) {
   revalidatePath("/habits");
 }
 
+// Deletes a habit permanently, scoped to the current user. Logs cascade.
+export async function deleteHabit(id: string) {
+  const userId = await requireUserId();
+  await prisma.habit.deleteMany({ where: { id, userId } });
+  revalidatePath("/habits");
+}
+
 // Sets the logged value for a habit on a day (the daily check-in). value is the
 // count reached, or 0/1 for a boolean. Upserts the one row per habit per day.
 export async function setHabitLog(habitId: string, day: string, value: number) {
