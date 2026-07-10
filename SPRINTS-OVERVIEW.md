@@ -9,14 +9,21 @@
 
 ## Progress tracker
 
+_Sprints 0-10 are all done and merged to main. Since sprint-6, work has continued as small feature-branch PRs off main rather than numbered sprint branches._
+
 | Sprint | Branch | Focus | Status |
 |--------|--------|-------|--------|
-| 0 | sprint-0 | Foundation: auth, layout shell, Vercel deploy | not started |
-| 1 | sprint-1 | Timetable: week view, recurring + one-off events | not started |
-| 2 | sprint-2 | Notes + daily journal | not started |
-| 3 | sprint-3 | Money dashboard: income, expenses, savings goals | not started |
-| 4 | sprint-4 | Vault (PIN protected) + literature reviews | not started |
-| 5 | sprint-5 | Habits, health, jobs pipeline, future timeline | not started |
+| 0 | sprint-0 | Foundation: auth, layout shell, Vercel deploy | done |
+| 1 | sprint-1 | Timetable: week view, recurring + one-off events | done |
+| 2 | sprint-2 | Notes + daily journal | done |
+| 3 | sprint-3 | Money dashboard: income, expenses, savings goals | done |
+| 4 | sprint-4 | Vault (PIN protected) + literature reviews | done |
+| 5 | sprint-5 | Habits, health, jobs pipeline, future timeline | done |
+| 6 | sprint-6 | Pinned viewport layout | done |
+| 7 | sprint-7 | Todo | done |
+| 8 | sprint-8 | Daily todo email digest | done |
+| 9 | sprint-9 | Notes rich-text editor | done |
+| 10 | sprint-10 | Vault collection cards (folders) | done |
 
 ## Sprint status key
 - `not started` - branch not created yet
@@ -37,6 +44,16 @@
 **Sprint 4:** vault requires PIN before showing documents, documents upload to Cloudinary, literature entries support PDF or link with personal notes.
 
 **Sprint 5:** habits check in daily (boolean or countable), meals log by type, job applications track full pipeline from applied to outcome, timeline shows life milestones.
+
+**Sprint 6:** the window never scrolls on any route, the sidebar is fixed on desktop and an off-canvas drawer on mobile, each page pins its header and scrolls its own body.
+
+**Sprint 7:** todos live in collections, support dateless, dated, and recurring tasks with priority and cross-module links, and surface a today view.
+
+**Sprint 8:** a scheduled cron emails the day's todos to users who opted in to the daily digest.
+
+**Sprint 9:** notes and journal entries support a rich-text editor alongside markdown.
+
+**Sprint 10:** the vault holds PIN-gated collection cards (folders) with an optional per-card password and a reset flow.
 
 ## Maintenance reminders
 - Timetable changed: edit scripts/update-timetable.ts and run it.
