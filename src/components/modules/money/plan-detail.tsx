@@ -54,7 +54,9 @@ function originLabel(originType: string): string {
     ? "from wishlist"
     : originType === "shopping"
       ? "from shopping"
-      : "from plan";
+      : originType === "fixed"
+        ? "from basics"
+        : "from plan";
 }
 
 // The muted line under the heading: the category (only when a custom title has
@@ -319,7 +321,7 @@ export function PlanDetailView({
         title="Import to this plan"
         sources={importSources}
         onImport={(picked) =>
-          importToPlan(plan.id, picked as { type: "wish" | "shopping"; id: string }[])
+          importToPlan(plan.id, picked as { type: "wish" | "shopping" | "fixed"; id: string }[])
         }
       />
     </div>

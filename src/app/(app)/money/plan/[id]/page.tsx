@@ -3,23 +3,26 @@ import { getPlan } from "@/actions/budget";
 import { getGoals } from "@/actions/goals";
 import { getCollections } from "@/actions/wishlist";
 import { getShoppingLists } from "@/actions/shopping";
+import { getFixedItems } from "@/actions/basic";
 import { PlanDetailView } from "@/components/modules/money/plan-detail";
 import type { ImportSource } from "@/components/modules/money/import-picker-modal";
 
 // One budget plan: its lines and the planned-vs-actual figures for its period.
 // Goals are passed so an allocation can fund one and show its progress. Open
-// wishes and shopping items are gathered so they can be imported as expense lines.
+// wishes, shopping items and fixed items are gathered so they can be imported as
+// lines.
 export default async function PlanDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [plan, goals, collections, lists] = await Promise.all([
+  const [plan, goals, collections, lists, fixed] = await Promise.all([
     getPlan(id),
     getGoals(),
     getCollections(),
     getShoppingLists(),
+    getFixedItems(),
   ]);
   if (!plan) notFound();
 
@@ -48,6 +51,15 @@ export default async function PlanDetailPage({
           group: "From shopping",
         })),
     ),
+    ...fixed
+      .filter((f) => !linked.has(f.id))
+      .map((f) => ({
+        type: "fixed" as const,
+        id: f.id,
+        name: f.title,
+        price: f.amount,
+        group: "From basics",
+      })),
   ];
 
   return <PlanDetailView plan={plan} goals={goals} importSources={importSources} />;
