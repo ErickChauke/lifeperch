@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { randToCents, dayToDate, dateToDay, EXPENSE_CATEGORIES } from "@/lib/money";
+import {
+  randToCents,
+  dayToDate,
+  dateToDay,
+  EXPENSE_CATEGORIES,
+  INCOME_CATEGORIES,
+} from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 import {
   planSchema,
@@ -250,12 +256,15 @@ export async function toggleItemComplete(id: string) {
   revalidatePath("/money");
 }
 
-// Imports wishes and shopping items into a plan as linked expense lines. The
-// category follows the source when it is a known expense category, else "Other".
-// Sources already linked into this plan are skipped. Returns how many were added.
+// Imports wishes, shopping items and fixed items into a plan as linked lines. A
+// wish or shopping item becomes an expense line; a fixed item keeps its own kind
+// (so a fixed salary lands as income) and is imported at its stored amount, ready
+// to adjust. The category follows the source when it is a known category for that
+// kind, else "Other". Sources already linked into this plan are skipped. Returns
+// how many were added.
 export async function importToPlan(
   planId: string,
-  sources: { type: "wish" | "shopping"; id: string }[],
+  sources: { type: "wish" | "shopping" | "fixed"; id: string }[],
 ) {
   const userId = await requireUserId();
   const plan = await prisma.budgetPlan.findFirst({ where: { id: planId, userId } });
@@ -263,7 +272,8 @@ export async function importToPlan(
 
   const wishIds = sources.filter((s) => s.type === "wish").map((s) => s.id);
   const shopIds = sources.filter((s) => s.type === "shopping").map((s) => s.id);
-  const [wishes, items, existing] = await Promise.all([
+  const fixedIds = sources.filter((s) => s.type === "fixed").map((s) => s.id);
+  const [wishes, items, fixed, existing] = await Promise.all([
     wishIds.length
       ? prisma.wishlistItem.findMany({
           where: { userId, id: { in: wishIds } },
@@ -276,6 +286,9 @@ export async function importToPlan(
           include: { list: { select: { category: true } } },
         })
       : Promise.resolve([]),
+    fixedIds.length
+      ? prisma.fixedItem.findMany({ where: { userId, id: { in: fixedIds } } })
+      : Promise.resolve([]),
     prisma.budgetItem.findMany({
       where: { userId, planId, originId: { in: sources.map((s) => s.id) } },
       select: { originId: true },
@@ -284,6 +297,8 @@ export async function importToPlan(
 
   const valid = new Set<string>(EXPENSE_CATEGORIES.map((c) => c.value));
   const cat = (c: string | null | undefined) => (c && valid.has(c) ? c : "Other");
+  const incomeValid = new Set<string>(INCOME_CATEGORIES.map((c) => c.value));
+  const incCat = (c: string | null | undefined) => (c && incomeValid.has(c) ? c : "Other");
   const taken = new Set(existing.map((e) => e.originId));
   const rows: {
     userId: string;
@@ -319,6 +334,19 @@ export async function importToPlan(
       amount: it.price * it.quantity,
       originType: "shopping",
       originId: it.id,
+    });
+  }
+  for (const f of fixed) {
+    if (taken.has(f.id)) continue;
+    rows.push({
+      userId,
+      planId,
+      kind: f.kind,
+      category: f.kind === "income" ? incCat(f.category) : cat(f.category),
+      title: f.title,
+      amount: f.amount,
+      originType: "fixed",
+      originId: f.id,
     });
   }
   if (rows.length) await prisma.budgetItem.createMany({ data: rows });

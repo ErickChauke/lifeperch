@@ -33,6 +33,7 @@ model User {
   wishlistItems         WishlistItem[]
   budgetPlans           BudgetPlan[]
   budgetItems           BudgetItem[]
+  fixedItems            FixedItem[]
   vaultCollections      VaultCollection[]
   documents             Document[]
   literatureCollections LiteratureCollection[]
@@ -254,6 +255,24 @@ model BudgetItem {
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+}
+
+// A fixed recurring amount set once on the money Basic page: salary, rent, a
+// subscription. kind is "income" or "expense"; frequency is "day" | "week" |
+// "month". amount in cents. The Basic page normalises these to a monthly figure,
+// and they can be imported into a budget plan as lines.
+model FixedItem {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String   @default("expense")
+  category  String
+  title     String
+  amount    Int      @default(0)
+  frequency String   @default("month")
+  note      String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // A titled wishlist collection scoped to one category (e.g. "Photography kit").
