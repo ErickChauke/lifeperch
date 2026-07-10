@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 
-export type ImportSourceType = "wish" | "shopping" | "plan";
+export type ImportSourceType = "wish" | "shopping" | "plan" | "fixed";
 
 export type ImportSource = {
   type: ImportSourceType;
@@ -92,6 +92,10 @@ export function ImportPickerModal({
   }
 
   const count = selected.size;
+  const total = useMemo(
+    () => sources.reduce((sum, s) => (selected.has(`${s.type}:${s.id}`) ? sum + s.price : sum), 0),
+    [sources, selected],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -161,6 +165,11 @@ export function ImportPickerModal({
         <div className="flex items-center justify-between gap-2 border-t pt-3">
           <span className="text-fg-3 text-sm">
             {count} selected
+            {count > 0 ? (
+              <span className="text-fg-2 ml-1 font-mono tabular-nums">
+                · {formatZAR(centsToRand(total))}
+              </span>
+            ) : null}
           </span>
           <div className="flex gap-2">
             <Button
