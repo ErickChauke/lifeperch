@@ -11,6 +11,7 @@ const TABS = [
   { href: "/money/shopping", label: "Shopping" },
   { href: "/money/wishlist", label: "Wishlist" },
   { href: "/money/plan", label: "Plan" },
+  { href: "/money/basic", label: "Basic" },
 ];
 
 // Sub-nav for the Money module: pinned on desktop, sticky-blurred on mobile.
