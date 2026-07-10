@@ -31,20 +31,34 @@ export function dateToDay(date: Date): string {
 
 // Investing is carried by this expense category and reframed on the dashboard as
 // its own figure, excluded from the spending donut and the SPENT total.
-export const INVESTMENT_CATEGORY = "Investment";
+export const INVESTMENT_CATEGORY = "Investments";
 
 // Category presets. value doubles as the stored string and the label; icon is a
 // lucide-react name mapped to a component in the UI (see modules/money).
 export const EXPENSE_CATEGORIES = [
   { value: "Groceries", icon: "shopping-cart" },
-  { value: "Rent", icon: "house" },
+  { value: "Rent / Mortgage", icon: "house" },
   { value: "Transport", icon: "car" },
-  { value: "Eating out", icon: "utensils" },
+  { value: "Eating Out", icon: "utensils" },
   { value: "Utilities", icon: "plug" },
+  { value: "Phone & Internet", icon: "wifi" },
   { value: "Health", icon: "heart-pulse" },
-  { value: "Entertainment", icon: "clapperboard" },
+  { value: "Education", icon: "graduation-cap" },
   { value: "Shopping", icon: "shopping-bag" },
+  { value: "Entertainment", icon: "clapperboard" },
+  { value: "Work Expenses", icon: "briefcase" },
+  { value: "Childcare / Family", icon: "baby" },
+  { value: "Pets", icon: "paw-print" },
+  { value: "Travel", icon: "plane" },
+  { value: "Gifts & Donations", icon: "gift" },
+  { value: "Debt Repayments", icon: "credit-card" },
+  { value: "Savings", icon: "piggy-bank" },
   { value: INVESTMENT_CATEGORY, icon: "trending-up" },
+  { value: "Insurance", icon: "umbrella" },
+  { value: "Taxes", icon: "landmark" },
+  { value: "Banking Fees", icon: "banknote" },
+  { value: "Maintenance & Repairs", icon: "wrench" },
+  { value: "Subscriptions", icon: "repeat" },
   { value: "Other", icon: "circle-dashed" },
 ] as const;
 
