@@ -59,7 +59,7 @@ export function BasicBoard({ items }: { items: FixedItem[] }) {
       </div>
 
       {/* Monthly-equivalent summary */}
-      <div className="bg-surface grid grid-cols-3 gap-2 rounded-lg border p-4 sm:gap-3">
+      <div className="bg-surface grid grid-cols-1 gap-2 rounded-lg border p-4 sm:grid-cols-3 sm:gap-3">
         <Figure label="In / month" value={monthlyIn} />
         <Figure label="Out / month" value={monthlyOut} />
         <Figure label="Net / month" value={net} danger={net < 0} />
