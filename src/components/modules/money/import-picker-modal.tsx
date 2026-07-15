@@ -23,6 +23,8 @@ export type ImportSource = {
   name: string;
   price: number;
   group: string;
+  // Which plan section the source belongs in; absent where the picker is not split.
+  kind?: "income" | "expense";
 };
 
 export function ImportPickerModal({

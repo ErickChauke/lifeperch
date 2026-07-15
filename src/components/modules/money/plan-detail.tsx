@@ -80,7 +80,7 @@ export function PlanDetailView({
   const [pending, startTransition] = useTransition();
   const [editingPlan, setEditingPlan] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState<null | "income" | "expense">(null);
   const [status, setStatus] = useState<StatusFilter>("all");
   const goalsById = new Map(goals.map((g) => [g.id, g]));
   const [itemModal, setItemModal] = useState<{
@@ -95,6 +95,9 @@ export function PlanDetailView({
     status === "all" ? true : status === "done" ? i.completed : !i.completed;
   const income = plan.items.filter((i) => i.kind === "income" && matchStatus(i));
   const expense = plan.items.filter((i) => i.kind === "expense" && matchStatus(i));
+  // Each section imports only sources of its own kind.
+  const incomeSources = importSources.filter((s) => s.kind === "income");
+  const expenseSources = importSources.filter((s) => s.kind !== "income");
   const plannedIn = sum(income);
   const plannedOut = sum(expense);
   const left = plannedIn - plannedOut;
@@ -236,6 +239,7 @@ export function PlanDetailView({
       <Section
         title="Money in"
         onAdd={() => openItem(null, "income")}
+        onImport={incomeSources.length > 0 ? () => setImporting("income") : undefined}
         empty="No income planned yet. Add what you expect to come in."
         show={income.length > 0}
       >
@@ -288,7 +292,7 @@ export function PlanDetailView({
       <Section
         title="Planned out"
         onAdd={() => openItem(null, "expense")}
-        onImport={importSources.length > 0 ? () => setImporting(true) : undefined}
+        onImport={expenseSources.length > 0 ? () => setImporting("expense") : undefined}
         empty="Nothing allocated yet. Plan where the money goes."
         show={expense.length > 0}
       >
@@ -316,10 +320,10 @@ export function PlanDetailView({
         goals={goals}
       />
       <ImportPickerModal
-        open={importing}
-        onOpenChange={setImporting}
-        title="Import to this plan"
-        sources={importSources}
+        open={importing !== null}
+        onOpenChange={(o) => !o && setImporting(null)}
+        title={importing === "income" ? "Import money in" : "Import planned out"}
+        sources={importing === "income" ? incomeSources : expenseSources}
         onImport={(picked) =>
           importToPlan(plan.id, picked as { type: "wish" | "shopping" | "fixed"; id: string }[])
         }
