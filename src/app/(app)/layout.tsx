@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { AppMain } from "@/components/layout/app-main";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
 
 // Shared shell for all protected pages. Redirects to login when no session,
@@ -21,9 +22,7 @@ export default async function AppLayout({
         <Sidebar user={session.user} />
         <div className="flex h-full min-w-0 flex-1 flex-col md:ml-64">
           <Topbar />
-          <main className="scrollbar-hide min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none pb-[env(safe-area-inset-bottom)]">
-            {children}
-          </main>
+          <AppMain>{children}</AppMain>
         </div>
       </div>
     </SidebarProvider>
