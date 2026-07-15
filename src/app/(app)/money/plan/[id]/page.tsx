@@ -38,6 +38,7 @@ export default async function PlanDetailPage({
           name: w.name,
           price: w.price,
           group: "From your wishlist",
+          kind: "expense" as const,
         })),
     ),
     ...lists.flatMap((l) =>
@@ -49,6 +50,7 @@ export default async function PlanDetailPage({
           name: i.name,
           price: i.price * i.quantity,
           group: "From shopping",
+          kind: "expense" as const,
         })),
     ),
     ...fixed
@@ -59,6 +61,7 @@ export default async function PlanDetailPage({
         name: f.title,
         price: f.amount,
         group: "From basics",
+        kind: f.kind === "income" ? ("income" as const) : ("expense" as const),
       })),
   ];
 
