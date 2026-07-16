@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { destroyAsset } from "@/lib/cloudinary";
+import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 import { sendEmail } from "@/lib/email";
 import { buildPasswordResetEmail } from "@/lib/vault-email";
 import {
@@ -122,10 +122,12 @@ export async function getCollection(id: string) {
   if (!collection) return null;
   const unlocked = !collection.passwordHash || (await isCollectionUnlocked(id));
   const documents = unlocked
-    ? await prisma.document.findMany({
-        where: { userId, collectionId: id },
-        orderBy: { createdAt: "desc" },
-      })
+    ? (
+        await prisma.document.findMany({
+          where: { userId, collectionId: id },
+          orderBy: { createdAt: "desc" },
+        })
+      ).map((d) => ({ ...d, url: signedFileUrl(d.url) }))
     : [];
   return { ...collection, documents, unlocked };
 }

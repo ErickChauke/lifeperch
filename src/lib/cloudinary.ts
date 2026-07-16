@@ -23,3 +23,30 @@ export async function destroyAsset(publicId: string): Promise<void> {
     }
   }
 }
+
+// Matches a stored Cloudinary delivery URL:
+// /<cloud>/<resource_type>/<type>/v<version>/<public_id.ext>
+const DELIVERY_URL =
+  /^https:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/(upload|private|authenticated)\/(?:v(\d+)\/)?([^?#]+)$/;
+
+// Rebuilds a stored Cloudinary delivery URL as a signed URL so restricted
+// types (pdf, zip) are deliverable. Non-Cloudinary and already signed URLs
+// pass through unchanged.
+export function signedFileUrl(url: string): string {
+  const match = url.match(DELIVERY_URL);
+  if (!match) return url;
+  const [, resourceType, type, version, publicId] = match;
+  if (publicId.startsWith("s--")) return url;
+  try {
+    return cloudinary.url(publicId, {
+      resource_type: resourceType,
+      type,
+      sign_url: true,
+      secure: true,
+      analytics: false,
+      ...(version ? { version } : {}),
+    });
+  } catch {
+    return url;
+  }
+}

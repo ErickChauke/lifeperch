@@ -14,7 +14,7 @@ import {
   type AttachmentInput,
 } from "@/lib/notes";
 import { sanitizeRichHtml } from "@/lib/rich-html";
-import { destroyAsset } from "@/lib/cloudinary";
+import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -80,7 +80,13 @@ export async function getCollection(id: string) {
     orderBy: { updatedAt: "desc" },
     include: { attachments: { orderBy: { createdAt: "asc" } } },
   });
-  return { ...collection, notes };
+  return {
+    ...collection,
+    notes: notes.map((note) => ({
+      ...note,
+      attachments: note.attachments.map((a) => ({ ...a, url: signedFileUrl(a.url) })),
+    })),
+  };
 }
 
 // Creates a notebook and returns it so the UI can navigate into it.
@@ -183,7 +189,7 @@ export async function addNoteAttachment(noteId: string, input: AttachmentInput) 
     data: { userId, noteId, ...data },
   });
   revalidateNotes(note.collectionId);
-  return attachment;
+  return { ...attachment, url: signedFileUrl(attachment.url) };
 }
 
 // Deletes an attachment and its Cloudinary asset, scoped to the current user.
