@@ -11,7 +11,7 @@ import {
   type AttachmentInput,
 } from "@/lib/journal";
 import { sanitizeRichHtml } from "@/lib/rich-html";
-import { destroyAsset } from "@/lib/cloudinary";
+import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -34,11 +34,15 @@ function toRecord(data: EntryInput) {
 // Fetches the current user's entries, newest day first.
 export async function getEntries() {
   const userId = await requireUserId();
-  return prisma.dailyEntry.findMany({
+  const entries = await prisma.dailyEntry.findMany({
     where: { userId },
     orderBy: { date: "desc" },
     include: { attachments: { orderBy: { createdAt: "asc" } } },
   });
+  return entries.map((entry) => ({
+    ...entry,
+    attachments: entry.attachments.map((a) => ({ ...a, url: signedFileUrl(a.url) })),
+  }));
 }
 
 // Fetches the single entry for a given "yyyy-MM-dd" day, or null if unwritten.
@@ -103,7 +107,7 @@ export async function addJournalAttachment(
     data: { userId, entryId, ...data },
   });
   revalidatePath("/journal");
-  return attachment;
+  return { ...attachment, url: signedFileUrl(attachment.url) };
 }
 
 // Removes an attachment and destroys its Cloudinary asset.

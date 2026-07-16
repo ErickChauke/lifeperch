@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { destroyAsset } from "@/lib/cloudinary";
+import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 import {
   literatureSchema,
   litCollectionSchema,
@@ -81,7 +81,13 @@ export async function getCollection(id: string) {
     where: { userId, collectionId: id },
     orderBy: { createdAt: "desc" },
   });
-  return { ...collection, papers };
+  return {
+    ...collection,
+    papers: papers.map((p) => ({
+      ...p,
+      fileUrl: p.fileUrl ? signedFileUrl(p.fileUrl) : null,
+    })),
+  };
 }
 
 // Creates a topic and returns it so the UI can navigate into it.
