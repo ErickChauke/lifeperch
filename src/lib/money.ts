@@ -34,39 +34,40 @@ export function dateToDay(date: Date): string {
 export const INVESTMENT_CATEGORY = "Investments";
 
 // Category presets. value doubles as the stored string and the label; icon is a
-// lucide-react name mapped to a component in the UI (see modules/money).
+// lucide-react name mapped to a component in the UI (see modules/money). hue is
+// the category's soft tint (degrees); Other stays neutral with no hue.
 export const EXPENSE_CATEGORIES = [
-  { value: "Groceries", icon: "shopping-cart" },
-  { value: "Rent / Mortgage", icon: "house" },
-  { value: "Transport", icon: "car" },
-  { value: "Eating Out", icon: "utensils" },
-  { value: "Utilities", icon: "plug" },
-  { value: "Phone & Internet", icon: "wifi" },
-  { value: "Health", icon: "heart-pulse" },
-  { value: "Education", icon: "graduation-cap" },
-  { value: "Shopping", icon: "shopping-bag" },
-  { value: "Entertainment", icon: "clapperboard" },
-  { value: "Work Expenses", icon: "briefcase" },
-  { value: "Childcare / Family", icon: "baby" },
-  { value: "Pets", icon: "paw-print" },
-  { value: "Travel", icon: "plane" },
-  { value: "Gifts & Donations", icon: "gift" },
-  { value: "Debt Repayments", icon: "credit-card" },
-  { value: "Savings", icon: "piggy-bank" },
-  { value: INVESTMENT_CATEGORY, icon: "trending-up" },
-  { value: "Insurance", icon: "umbrella" },
-  { value: "Taxes", icon: "landmark" },
-  { value: "Banking Fees", icon: "banknote" },
-  { value: "Maintenance & Repairs", icon: "wrench" },
-  { value: "Subscriptions", icon: "repeat" },
+  { value: "Groceries", icon: "shopping-cart", hue: 130 },
+  { value: "Rent / Mortgage", icon: "house", hue: 25 },
+  { value: "Transport", icon: "car", hue: 215 },
+  { value: "Eating Out", icon: "utensils", hue: 40 },
+  { value: "Utilities", icon: "plug", hue: 55 },
+  { value: "Phone & Internet", icon: "wifi", hue: 190 },
+  { value: "Health", icon: "heart-pulse", hue: 345 },
+  { value: "Education", icon: "graduation-cap", hue: 260 },
+  { value: "Shopping", icon: "shopping-bag", hue: 315 },
+  { value: "Entertainment", icon: "clapperboard", hue: 280 },
+  { value: "Work Expenses", icon: "briefcase", hue: 230 },
+  { value: "Childcare / Family", icon: "baby", hue: 20 },
+  { value: "Pets", icon: "paw-print", hue: 95 },
+  { value: "Travel", icon: "plane", hue: 200 },
+  { value: "Gifts & Donations", icon: "gift", hue: 330 },
+  { value: "Debt Repayments", icon: "credit-card", hue: 10 },
+  { value: "Savings", icon: "piggy-bank", hue: 160 },
+  { value: INVESTMENT_CATEGORY, icon: "trending-up", hue: 170 },
+  { value: "Insurance", icon: "umbrella", hue: 245 },
+  { value: "Taxes", icon: "landmark", hue: 70 },
+  { value: "Banking Fees", icon: "banknote", hue: 205 },
+  { value: "Maintenance & Repairs", icon: "wrench", hue: 30 },
+  { value: "Subscriptions", icon: "repeat", hue: 265 },
   { value: "Other", icon: "circle-dashed" },
 ] as const;
 
 export const INCOME_CATEGORIES = [
-  { value: "Salary", icon: "wallet" },
-  { value: "Freelance", icon: "laptop" },
-  { value: "Gift", icon: "gift" },
-  { value: "Refund", icon: "rotate-ccw" },
+  { value: "Salary", icon: "wallet", hue: 145 },
+  { value: "Freelance", icon: "laptop", hue: 210 },
+  { value: "Gift", icon: "gift", hue: 330 },
+  { value: "Refund", icon: "rotate-ccw", hue: 185 },
   { value: "Other", icon: "circle-dashed" },
 ] as const;
 
@@ -80,6 +81,13 @@ export const SPENDING_CATEGORIES = EXPENSE_CATEGORIES.filter(
 export function categoryIcon(category: string): string {
   const all = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
   return all.find((c) => c.value === category)?.icon ?? "circle-dashed";
+}
+
+// Returns the tint hue for a category, or null for Other/unknown (neutral).
+export function categoryHue(category: string): number | null {
+  const all = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
+  const preset = all.find((c) => c.value === category);
+  return preset && "hue" in preset ? preset.hue : null;
 }
 
 // Returns the category list for a transaction type.
