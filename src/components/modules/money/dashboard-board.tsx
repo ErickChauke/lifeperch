@@ -29,7 +29,7 @@ import {
   monthlyTotals,
   txnsInPeriod,
 } from "@/lib/money-stats";
-import { goalPercent, monthsToGoal } from "@/lib/goals";
+import { goalPercent, monthsToGoal, formatEta } from "@/lib/goals";
 import { Segmented } from "./segmented";
 import { MoneyEmpty } from "./money-empty";
 import { SpendingDonut } from "./spending-donut";
@@ -369,7 +369,7 @@ function GoalRow({ goal }: { goal: Goal }) {
       ? "set a target"
       : eta === null
         ? `${formatCurrencyShort(centsToRand(remaining))} to go · set a monthly amount`
-        : `≈ ${eta} months to go`;
+        : `≈ ${formatEta(eta)} to go`;
   const etaTitle =
     !reached && !unset && eta === null ? formatCurrency(centsToRand(remaining)) : undefined;
 
