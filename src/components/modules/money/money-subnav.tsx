@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/money", label: "Overview" },
   { href: "/money/transactions", label: "Transactions" },
+  { href: "/money/loans", label: "Loans" },
   { href: "/money/goals", label: "Goals" },
   { href: "/money/shopping", label: "Shopping" },
   { href: "/money/wishlist", label: "Wishlist" },
   { href: "/money/plan", label: "Plan" },
   { href: "/money/basic", label: "Basic" },
-  { href: "/money/loans", label: "Loans" },
 ];
 
 // Sub-nav for the Money module: pinned on desktop, sticky-blurred on mobile.
