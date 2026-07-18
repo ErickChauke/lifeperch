@@ -27,6 +27,7 @@ model User {
   journalEntryAttachments DailyEntryAttachment[]
   transactions          Transaction[]
   savingsGoals          SavingsGoal[]
+  selfLoans             SelfLoan[]
   shoppingLists         ShoppingList[]
   shoppingItems         ShoppingItem[]
   wishlistCollections   WishlistCollection[]
@@ -180,6 +181,27 @@ model SavingsGoal {
   currentAmount Int          @default(0)
   monthlyAmount Int          @default(0)
   budgetItems   BudgetItem[]
+  loans         SelfLoan[]
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// A loan borrowed from your own savings. Borrowing from a goal moves the
+// amount out of that goal's balance and repayments move it back; without a
+// goal the debt is tracked against general savings. monthlyAmount is the
+// planned repayment that drives the payoff estimate. Amounts in cents.
+model SelfLoan {
+  id            String       @id @default(cuid())
+  userId        String
+  goalId        String?
+  title         String
+  principal     Int          @default(0)
+  repaid        Int          @default(0)
+  monthlyAmount Int          @default(0)
+  note          String?
+  settledAt     DateTime?
+  goal          SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

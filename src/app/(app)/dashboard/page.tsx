@@ -21,6 +21,9 @@ import { getTransactions } from "@/actions/money";
 import { getMedicines } from "@/actions/medicines";
 import { getRecentNotes } from "@/actions/notes";
 import { getReading } from "@/actions/literature";
+import { getLoans } from "@/actions/loans";
+import { loanOutstanding } from "@/lib/loans";
+import { DebtBanner } from "@/components/modules/money/debt-banner";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { DashboardGreeting } from "@/components/modules/dashboard/dashboard-greeting";
 import { TodaysTodos } from "@/components/modules/dashboard/todays-todos";
@@ -83,6 +86,7 @@ export default async function DashboardPage() {
     medicines,
     recentNotes,
     reading,
+    loans,
   ] = await Promise.all([
     getTodayTodos(),
     getEvents(),
@@ -94,7 +98,11 @@ export default async function DashboardPage() {
     getMedicines(),
     getRecentNotes(),
     getReading(),
+    getLoans(),
   ]);
+  const openLoans = loans.filter((l) => !l.settledAt);
+  const debt = openLoans.reduce((sum, l) => sum + loanOutstanding(l), 0);
+  const repaying = openLoans.reduce((sum, l) => sum + l.monthlyAmount, 0);
   const hasTodos = dueToday.length > 0 || overdue.length > 0;
   const activeHabits = habits.filter((h) => !h.archived);
   const journaledToday = !!journalEntry && journalEntry.body.trim().length > 0;
@@ -127,6 +135,12 @@ export default async function DashboardPage() {
               LifePerch lives inside - pick a place to begin.
             </p>
           )}
+
+          {debt > 0 ? (
+            <div className="mt-6">
+              <DebtBanner debtCents={debt} monthlyCents={repaying} />
+            </div>
+          ) : null}
 
           <div className="mt-6">
             <QuickAddTodo today={todayStr} />
