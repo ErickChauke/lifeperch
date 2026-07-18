@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { addMonths, format } from "date-fns";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
-import { goalPercent, monthsToGoal } from "@/lib/goals";
+import { goalPercent, monthsToGoal, formatEta, etaTargetDate } from "@/lib/goals";
 import { MoneyEmpty } from "./money-empty";
 import { GoalModal } from "./goal-modal";
 import { Segmented } from "./segmented";
@@ -214,7 +214,7 @@ function GoalFoot({
       </span>
       <span className="text-fg-2">
         {" · ≈ "}
-        {eta} months · {format(addMonths(new Date(), eta), "MMM yyyy")}
+        {formatEta(eta)} · {format(etaTargetDate(eta), "MMM yyyy")}
       </span>
     </p>
   );

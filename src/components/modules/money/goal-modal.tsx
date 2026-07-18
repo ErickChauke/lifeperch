@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { goalSchema, monthsToGoal, type GoalInput } from "@/lib/goals";
+import { goalSchema, monthsToGoal, formatEta, type GoalInput } from "@/lib/goals";
 import { randToCents, centsToRand, stripNegative } from "@/lib/money";
 import { MAX_AMOUNT } from "@/lib/currency";
 import { createGoal, updateGoal, deleteGoal } from "@/actions/goals";
@@ -156,7 +156,7 @@ export function GoalModal({
           <MoneyField id="monthly" label="Monthly contribution" register={register} error={errors.monthly?.message} />
 
           {eta !== null && eta > 0 ? (
-            <p className="text-fg-3 font-mono text-xs">≈ {eta} months to reach it</p>
+            <p className="text-fg-3 font-mono text-xs">≈ {formatEta(eta)} to reach it</p>
           ) : null}
 
           <div className="flex items-center justify-between gap-2 pt-2">
