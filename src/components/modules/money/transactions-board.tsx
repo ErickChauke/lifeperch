@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { cn, formatZAR } from "@/lib/utils";
-import { centsToRand } from "@/lib/money";
+import { centsToRand, categoryHue } from "@/lib/money";
 import { CategoryIcon } from "./category-icon";
 import { Segmented } from "./segmented";
 import { MoneyEmpty } from "./money-empty";
@@ -175,16 +175,31 @@ function TransactionRow({
 }) {
   const income = transaction.type === "income";
   const label = transaction.description?.trim() || transaction.category;
+  const hue = categoryHue(transaction.category);
+  // Soft per-category tint driven by the --cat hue; Other stays neutral.
+  const tint =
+    "bg-[hsl(var(--cat)_60%_55%_/_0.14)] text-[hsl(var(--cat)_45%_36%)] dark:text-[hsl(var(--cat)_60%_74%)]";
   return (
     <button
       type="button"
       onClick={onClick}
       className="hover:bg-surface-2 focus-visible:border-accent-line flex w-full items-center gap-3 border-transparent px-4 py-3 text-left transition-colors"
+      style={hue !== null ? ({ "--cat": String(hue) } as React.CSSProperties) : undefined}
     >
-      <span className="bg-surface-2 text-fg-2 flex size-8 shrink-0 items-center justify-center rounded-sm">
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-sm",
+          hue === null ? "bg-surface-2 text-fg-2" : tint,
+        )}
+      >
         <CategoryIcon category={transaction.category} className="size-[17px]" />
       </span>
-      <span className="bg-surface-3 text-fg-2 hidden shrink-0 rounded-full px-2 py-0.5 text-xs sm:inline-flex">
+      <span
+        className={cn(
+          "hidden shrink-0 rounded-full px-2 py-0.5 text-xs sm:inline-flex",
+          hue === null ? "bg-surface-3 text-fg-2" : tint,
+        )}
+      >
         {transaction.category}
       </span>
       <span
