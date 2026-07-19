@@ -24,7 +24,7 @@ import {
   stripNegative,
   type TransactionInput,
 } from "@/lib/money";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import {
   createTransaction,
   updateTransaction,
@@ -159,7 +159,7 @@ export function TransactionModal({
                 type="number"
                 step="0.01"
                 min="0"
-                max={MAX_AMOUNT}
+                max={MAX_DB_AMOUNT}
                 className="pl-7 font-mono"
                 {...amountReg}
                 onChange={(e) => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 
 // Lists deal only in spending categories (re-exported from money, which already
 // excludes investing).
@@ -21,7 +21,7 @@ export const shoppingItemSchema = z.object({
   price: z
     .number()
     .min(0, "Price cannot be negative")
-    .max(MAX_AMOUNT, "Price is too large"),
+    .max(MAX_DB_AMOUNT, "Price is too large"),
   quantity: z.number().int().min(1, "Quantity is at least 1"),
 });
 

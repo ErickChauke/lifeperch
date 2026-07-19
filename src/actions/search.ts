@@ -298,7 +298,7 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
       id: g.id,
       moduleId: "money",
       title: g.name,
-      subtitle: `Goal · ${formatZAR(centsToRand(g.targetAmount))}`,
+      subtitle: `Goal · ${formatZAR(centsToRand(Number(g.targetAmount)))}`,
       href: "/money/goals",
     });
   }

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, formatZAR } from "@/lib/utils";
 import { format } from "date-fns";
-import { formatCurrency, formatCurrencyShort, MAX_AMOUNT } from "@/lib/currency";
+import { formatCurrency, formatCurrencyShort, MAX_DB_AMOUNT } from "@/lib/currency";
 import { centsToRand, stripNegative } from "@/lib/money";
 import { formatEta, etaTargetDate } from "@/lib/goals";
 import { loanOutstanding } from "@/lib/loans";
@@ -271,7 +271,7 @@ function RepayDialog({
                 type="number"
                 step="0.01"
                 min="0"
-                max={MAX_AMOUNT}
+                max={MAX_DB_AMOUNT}
                 className="pl-7 font-mono"
                 value={amount}
                 onChange={(e) => setAmount(stripNegative(e.target.value))}

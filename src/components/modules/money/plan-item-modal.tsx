@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { categoriesFor, stripNegative } from "@/lib/money";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { addItem, updateItem, deleteItem } from "@/actions/budget";
 import type { getPlan } from "@/actions/budget";
 import type { getGoals } from "@/actions/goals";
@@ -83,7 +83,7 @@ export function PlanItemModal({
       toast.error("Enter an amount greater than 0");
       return;
     }
-    if (value > MAX_AMOUNT) {
+    if (value > MAX_DB_AMOUNT) {
       toast.error("Amount is too large");
       return;
     }
@@ -202,7 +202,7 @@ export function PlanItemModal({
                 type="number"
                 step="0.01"
                 min="0"
-                max={MAX_AMOUNT}
+                max={MAX_DB_AMOUNT}
                 value={amount}
                 onChange={(e) => setAmount(stripNegative(e.target.value))}
                 placeholder="0.00"

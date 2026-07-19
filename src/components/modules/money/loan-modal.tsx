@@ -18,7 +18,7 @@ import { loanSchema, loanOutstanding, type LoanInput } from "@/lib/loans";
 import { formatEta } from "@/lib/goals";
 import { randToCents, centsToRand, stripNegative } from "@/lib/money";
 import { formatZAR } from "@/lib/utils";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { createLoan, updateLoan, deleteLoan } from "@/actions/loans";
 import type { Loan } from "./loans-board";
 import type { Goal } from "./goals-board";
@@ -50,7 +50,7 @@ function MoneyField({
           type="number"
           step="0.01"
           min="0"
-          max={MAX_AMOUNT}
+          max={MAX_DB_AMOUNT}
           className="pl-7 font-mono"
           {...reg}
           onChange={(e) => {

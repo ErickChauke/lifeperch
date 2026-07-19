@@ -17,7 +17,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Segmented } from "./segmented";
 import { categoriesFor, centsToRand, stripNegative } from "@/lib/money";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { fixedItemSchema, FREQUENCIES, type FixedItemInput } from "@/lib/basic";
 import { createFixedItem, updateFixedItem, deleteFixedItem } from "@/actions/basic";
 import type { FixedItem } from "./basic-board";
@@ -153,7 +153,7 @@ export function FixedItemModal({
                   type="number"
                   step="0.01"
                   min="0"
-                  max={MAX_AMOUNT}
+                  max={MAX_DB_AMOUNT}
                   className="pl-7 font-mono"
                   {...amountReg}
                   onChange={(e) => {
