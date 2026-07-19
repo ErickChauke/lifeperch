@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 
 // Shared validation for the loan form and the server actions. Amounts are
 // entered in rand and converted to cents in the action. goalId null means the
@@ -9,12 +9,12 @@ export const loanSchema = z.object({
   amount: z
     .number()
     .min(0.01, "Borrow at least something")
-    .max(MAX_AMOUNT, "Amount is too large"),
+    .max(MAX_DB_AMOUNT, "Amount is too large"),
   goalId: z.string().nullable(),
   monthly: z
     .number()
     .min(0, "Monthly amount cannot be negative")
-    .max(MAX_AMOUNT, "Amount is too large"),
+    .max(MAX_DB_AMOUNT, "Amount is too large"),
   note: z.string().optional(),
 });
 

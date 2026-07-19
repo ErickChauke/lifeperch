@@ -27,6 +27,10 @@ export function symbolFor(currencyCode: string): string {
 // this app needs to display. Beyond this, switch the column to BigInt/decimal.
 export const MAX_AMOUNT = Math.floor(Number.MAX_SAFE_INTEGER / 100);
 
+// Ceiling for amounts stored in Int columns: cents must fit a signed 32-bit
+// integer. Goal amounts are BigInt-backed and use MAX_AMOUNT instead.
+export const MAX_DB_AMOUNT = Math.floor(2147483647 / 100);
+
 // Groups the integer part with non-breaking-space thousands separators.
 function group(whole: string): string {
   return whole.replace(/\B(?=(\d{3})+(?!\d))/g, NB);

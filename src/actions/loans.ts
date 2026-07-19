@@ -49,11 +49,11 @@ export async function createLoan(input: LoanInput) {
         where: { id: data.goalId, userId },
       });
       if (!goal) throw new Error("Goal not found");
-      if (goal.currentAmount < principal)
+      if (Number(goal.currentAmount) < principal)
         throw new Error("The goal does not hold that much");
       await tx.savingsGoal.update({
         where: { id: goal.id },
-        data: { currentAmount: { decrement: principal } },
+        data: { currentAmount: { decrement: BigInt(principal) } },
       });
     }
     await tx.selfLoan.create({
@@ -90,7 +90,7 @@ export async function repayLoan(id: string, amountRand: number) {
     if (loan.goalId) {
       await tx.savingsGoal.updateMany({
         where: { id: loan.goalId, userId },
-        data: { currentAmount: { increment: paid } },
+        data: { currentAmount: { increment: BigInt(paid) } },
       });
     }
   });

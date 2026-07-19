@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Segmented } from "./segmented";
 import { wishlistSchema, PRIORITIES, type WishlistInput } from "@/lib/wishlist";
 import { centsToRand, stripNegative } from "@/lib/money";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { createWish, updateWish, deleteWish } from "@/actions/wishlist";
 import type { Wish } from "./collection-detail";
 
@@ -127,7 +127,7 @@ export function WishModal({
                 type="number"
                 step="0.01"
                 min="0"
-                max={MAX_AMOUNT}
+                max={MAX_DB_AMOUNT}
                 className="pl-7 font-mono"
                 {...priceReg}
                 onChange={(e) => {

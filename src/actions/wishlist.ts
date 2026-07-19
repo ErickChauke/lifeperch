@@ -221,9 +221,9 @@ export async function saveForWish(id: string) {
       data: {
         userId,
         name: wish.name,
-        targetAmount: wish.price,
-        currentAmount: 0,
-        monthlyAmount: 0,
+        targetAmount: BigInt(wish.price),
+        currentAmount: BigInt(0),
+        monthlyAmount: BigInt(0),
       },
     });
   }

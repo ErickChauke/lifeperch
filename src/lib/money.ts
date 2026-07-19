@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 
 // Money is stored in cents (integer) everywhere in the database and converted
 // to rand at the form/display boundary, so there is no floating-point drift.
@@ -102,7 +102,7 @@ export const transactionSchema = z.object({
   amount: z
     .number()
     .positive("Enter an amount greater than 0")
-    .max(MAX_AMOUNT, "Amount is too large"),
+    .max(MAX_DB_AMOUNT, "Amount is too large"),
   category: z.string().min(1, "Pick a category"),
   date: z.string().regex(dateRegex, "Use yyyy-MM-dd"),
   description: z.string().nullable(),

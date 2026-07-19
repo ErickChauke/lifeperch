@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import {
   parseISO,
   format,
@@ -45,7 +45,7 @@ export const budgetItemSchema = z.object({
   amount: z
     .number()
     .positive("Enter an amount greater than 0")
-    .max(MAX_AMOUNT, "Amount is too large"),
+    .max(MAX_DB_AMOUNT, "Amount is too large"),
   note: z.string().nullable().optional(),
   goalId: z.string().nullable().optional(),
 });

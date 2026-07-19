@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "SavingsGoal" ALTER COLUMN "targetAmount" SET DATA TYPE BIGINT,
+ALTER COLUMN "currentAmount" SET DATA TYPE BIGINT,
+ALTER COLUMN "monthlyAmount" SET DATA TYPE BIGINT;

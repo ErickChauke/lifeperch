@@ -177,9 +177,9 @@ model SavingsGoal {
   id            String       @id @default(cuid())
   userId        String
   name          String
-  targetAmount  Int          @default(0)
-  currentAmount Int          @default(0)
-  monthlyAmount Int          @default(0)
+  targetAmount  BigInt       @default(0)
+  currentAmount BigInt       @default(0)
+  monthlyAmount BigInt       @default(0)
   budgetItems   BudgetItem[]
   loans         SelfLoan[]
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)

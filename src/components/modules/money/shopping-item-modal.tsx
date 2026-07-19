@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { shoppingItemSchema, type ShoppingItemInput } from "@/lib/shopping";
 import { centsToRand, stripNegative } from "@/lib/money";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { updateShoppingItem } from "@/actions/shopping";
 import type { Item } from "./shopping-list-detail";
 
@@ -92,7 +92,7 @@ export function ShoppingItemModal({
                   type="number"
                   step="0.01"
                   min="0"
-                  max={MAX_AMOUNT}
+                  max={MAX_DB_AMOUNT}
                   className="pl-7 font-mono"
                   {...priceReg}
                   onChange={(e) => {

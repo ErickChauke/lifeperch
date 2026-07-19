@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_AMOUNT } from "@/lib/currency";
+import { MAX_DB_AMOUNT } from "@/lib/currency";
 
 // Wishes carry a priority that drives card ordering (high first).
 export const PRIORITIES = [
@@ -35,7 +35,7 @@ export const wishlistSchema = z.object({
   price: z
     .number()
     .min(0, "Price cannot be negative")
-    .max(MAX_AMOUNT, "Price is too large"),
+    .max(MAX_DB_AMOUNT, "Price is too large"),
   priority: z.enum(PRIORITY_VALUES),
   note: z.string().nullable(),
 });
