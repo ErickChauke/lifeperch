@@ -19,6 +19,7 @@ import { formatCurrency, formatCurrencyShort, MAX_DB_AMOUNT } from "@/lib/curren
 import { centsToRand, stripNegative } from "@/lib/money";
 import { formatEta, etaTargetDate } from "@/lib/goals";
 import { loanOutstanding, loanUnused, loanOverdrawn } from "@/lib/loans";
+import { monthsToClear, extraMonthly, extraLabel } from "@/lib/extra";
 import { repayLoan, type getLoans } from "@/actions/loans";
 import { MoneyEmpty } from "./money-empty";
 import { LoanModal } from "./loan-modal";
@@ -34,7 +35,9 @@ export function LoansBoard({ loans, goals }: { loans: Loan[]; goals: Goal[] }) {
   const open = loans.filter((l) => !l.settledAt);
   const settled = loans.filter((l) => l.settledAt);
   const debt = open.reduce((sum, l) => sum + loanOutstanding(l), 0);
-  const monthly = open.reduce((sum, l) => sum + l.monthlyAmount, 0);
+  // Repeating extras count toward the rate; a one-off lands on its own date and
+  // only shows on that loan's card.
+  const monthly = open.reduce((sum, l) => sum + l.monthlyAmount + extraMonthly(l), 0);
   const unused = open.reduce((sum, l) => sum + loanUnused(l), 0);
   const eta = monthly > 0 && debt > 0 ? debt / monthly : null;
 
@@ -165,7 +168,8 @@ function LoanCard({
 }) {
   const outstanding = loanOutstanding(loan);
   const percent = loan.principal > 0 ? Math.round((loan.repaid / loan.principal) * 100) : 0;
-  const eta = loan.monthlyAmount > 0 ? outstanding / loan.monthlyAmount : null;
+  const eta = monthsToClear(outstanding, loan.monthlyAmount, loan);
+  const extra = extraLabel(loan, (cents) => formatCurrencyShort(centsToRand(cents)));
   const left = loanUnused(loan);
   const over = loanOverdrawn(loan);
 
@@ -197,7 +201,7 @@ function LoanCard({
         <p className="text-fg-3 font-mono text-xs break-words">
           {formatCurrencyShort(centsToRand(loan.repaid))} of{" "}
           {formatCurrencyShort(centsToRand(loan.principal))} back
-          {loan.monthlyAmount > 0 && eta !== null ? (
+          {eta !== null ? (
             <span className="text-fg-2">
               {" · ≈ "}
               {formatEta(eta)} · {format(etaTargetDate(eta), "MMM yyyy")}
@@ -205,6 +209,7 @@ function LoanCard({
           ) : (
             <span className="text-[var(--warning)]"> · set a monthly amount for an ETA</span>
           )}
+          {extra ? <span className="text-fg-3">{` · plus ${extra}`}</span> : null}
         </p>
 
         <p className="text-fg-3 font-mono text-xs break-words">

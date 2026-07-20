@@ -180,6 +180,9 @@ model SavingsGoal {
   targetAmount  BigInt       @default(0)
   currentAmount BigInt       @default(0)
   monthlyAmount BigInt       @default(0)
+  extraAmount   BigInt       @default(0)
+  extraFrequency String?
+  extraDate     DateTime?    @db.Date
   budgetItems   BudgetItem[]
   loans         SelfLoan[]
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -199,6 +202,9 @@ model SelfLoan {
   principal     Int          @default(0)
   repaid        Int          @default(0)
   monthlyAmount Int          @default(0)
+  extraAmount   Int          @default(0)
+  extraFrequency String?
+  extraDate     DateTime?    @db.Date
   note          String?
   settledAt     DateTime?
   budgetItems   BudgetItem[]

@@ -19,6 +19,12 @@ export const goalSchema = z.object({
     .number()
     .min(0, "Monthly amount cannot be negative")
     .max(MAX_AMOUNT, "Amount is too large"),
+  extraAmount: z
+    .number()
+    .min(0, "Extra cannot be negative")
+    .max(MAX_AMOUNT, "Amount is too large"),
+  extraFrequency: z.enum(["month", "week", "day", "once"]).nullable(),
+  extraDate: z.string().nullable(),
 });
 
 export type GoalInput = z.infer<typeof goalSchema>;

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { goalSchema, type GoalInput } from "@/lib/goals";
+import { toExtraRecord } from "@/lib/extra";
 import { randToCents } from "@/lib/money";
 
 // Returns the current user id or throws when there is no session.
@@ -22,11 +23,15 @@ function revalidateMoney() {
 // converted from rand to cents here. Goal columns are BigInt so dream-sized
 // targets fit; everything downstream works in plain numbers via getGoals.
 function toRecord(data: GoalInput) {
+  const extra = toExtraRecord(data);
   return {
     name: data.name.trim(),
     targetAmount: BigInt(randToCents(data.target)),
     currentAmount: BigInt(randToCents(data.current)),
     monthlyAmount: BigInt(randToCents(data.monthly)),
+    extraAmount: BigInt(extra.extraAmount),
+    extraFrequency: extra.extraFrequency,
+    extraDate: extra.extraDate,
   };
 }
 
@@ -43,6 +48,7 @@ export async function getGoals() {
     targetAmount: Number(g.targetAmount),
     currentAmount: Number(g.currentAmount),
     monthlyAmount: Number(g.monthlyAmount),
+    extraAmount: Number(g.extraAmount),
   }));
 }
 
