@@ -201,6 +201,7 @@ model SelfLoan {
   monthlyAmount Int          @default(0)
   note          String?
   settledAt     DateTime?
+  budgetItems   BudgetItem[]
   goal          SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime     @default(now())
@@ -272,8 +273,10 @@ model BudgetItem {
   transactionId String?
   originType    String?
   originId      String?
+  loanId        String?
   plan          BudgetPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   goal          SavingsGoal? @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  loan          SelfLoan?    @relation(fields: [loanId], references: [id], onDelete: SetNull)
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

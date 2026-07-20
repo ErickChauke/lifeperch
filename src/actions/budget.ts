@@ -139,6 +139,7 @@ export async function duplicatePlan(id: string) {
           title: i.title,
           amount: i.amount,
           goalId: i.goalId,
+          loanId: i.loanId,
         })),
       },
     },
@@ -156,8 +157,10 @@ function toItemRecord(data: BudgetItemInput) {
     title: data.title?.trim() || null,
     amount: randToCents(data.amount),
     note: data.note?.trim() || null,
-    // Only an expense line can fund a goal.
-    goalId: data.kind === "expense" ? (data.goalId ?? null) : null,
+    // Only an expense line can fund a goal or repay a loan, and only one of the
+    // two, so a line never claims to do both.
+    goalId: data.kind === "expense" && !data.loanId ? (data.goalId ?? null) : null,
+    loanId: data.kind === "expense" ? (data.loanId ?? null) : null,
   };
 }
 
