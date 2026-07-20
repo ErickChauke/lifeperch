@@ -73,7 +73,6 @@ export default async function PlanDetailPage({
     // once used and shows greyed with the reason instead of disappearing.
     ...loans.map((l) => {
       const left = loanUnused(l);
-      const used = linked.has(l.id);
       return {
         type: "loan" as const,
         id: l.id,
@@ -81,14 +80,15 @@ export default async function PlanDetailPage({
         price: left,
         group: "From your loans",
         kind: "income" as const,
-        disabled: used || l.settledAt !== null || left <= 0,
-        hint: used
-          ? "already on this plan"
-          : l.settledAt
-            ? "settled"
-            : left <= 0
-              ? "fully used"
-              : `${formatZAR(centsToRand(left))} left to use`,
+        // Only the pot running dry or the debt closing takes a loan off the
+        // table; drawing part of it leaves the rest available, here included.
+        editableAmount: true,
+        disabled: l.settledAt !== null || left <= 0,
+        hint: l.settledAt
+          ? "settled"
+          : left <= 0
+            ? "fully used"
+            : `${formatZAR(centsToRand(left))} left to use`,
       };
     }),
   ];

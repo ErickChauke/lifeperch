@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn, formatZAR } from "@/lib/utils";
-import { centsToRand } from "@/lib/money";
+import { centsToRand, stripNegative } from "@/lib/money";
 
 export type ImportSourceType = "wish" | "shopping" | "plan" | "fixed" | "loan";
 
@@ -28,6 +28,9 @@ export type ImportSource = {
   // Listed but not selectable, with hint explaining why.
   disabled?: boolean;
   hint?: string;
+  // Lets the amount be trimmed on the way in, capped at price. Used by pots
+  // like a loan, where only part of what is left may be wanted.
+  editableAmount?: boolean;
 };
 
 export function ImportPickerModal({
@@ -41,19 +44,34 @@ export function ImportPickerModal({
   onOpenChange: (open: boolean) => void;
   title?: string;
   sources: ImportSource[];
-  onImport: (picked: { type: ImportSourceType; id: string }[]) => Promise<number>;
+  onImport: (
+    picked: { type: ImportSourceType; id: string; amount?: number }[],
+  ) => Promise<number>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Trimmed amounts in rand, keyed by source, for sources that allow it.
+  const [amounts, setAmounts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!open) {
       setQuery("");
       setSelected(new Set());
+      setAmounts({});
     }
   }, [open]);
+
+  // The cents this source will import at: the trimmed amount when one is
+  // entered and valid, else the full price. Never more than the price.
+  function amountFor(s: ImportSource): number {
+    const raw = amounts[`${s.type}:${s.id}`];
+    if (!s.editableAmount || raw === undefined || raw.trim() === "") return s.price;
+    const cents = Math.round(Number(raw) * 100);
+    if (!Number.isFinite(cents) || cents <= 0) return s.price;
+    return Math.min(cents, s.price);
+  }
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -84,7 +102,7 @@ export function ImportPickerModal({
   function submit() {
     const picked = sources
       .filter((s) => !s.disabled && selected.has(`${s.type}:${s.id}`))
-      .map((s) => ({ type: s.type, id: s.id }));
+      .map((s) => ({ type: s.type, id: s.id, amount: amountFor(s) }));
     if (picked.length === 0) return;
     startTransition(async () => {
       try {
@@ -99,13 +117,9 @@ export function ImportPickerModal({
   }
 
   const count = selected.size;
-  const total = useMemo(
-    () =>
-      sources.reduce(
-        (sum, s) => (!s.disabled && selected.has(`${s.type}:${s.id}`) ? sum + s.price : sum),
-        0,
-      ),
-    [sources, selected],
+  const total = sources.reduce(
+    (sum, s) => (!s.disabled && selected.has(`${s.type}:${s.id}`) ? sum + amountFor(s) : sum),
+    0,
   );
 
   return (
@@ -141,41 +155,72 @@ export function ImportPickerModal({
                     const key = `${s.type}:${s.id}`;
                     const on = selected.has(key);
                     const off = !!s.disabled;
+                    const trim = on && !off && s.editableAmount;
                     return (
-                      <button
-                        key={key}
-                        type="button"
-                        disabled={off}
-                        onClick={() => toggle(s)}
-                        className={cn(
-                          "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
-                          off
-                            ? "opacity-50"
-                            : on
-                              ? "border-accent-line bg-accent-soft"
-                              : "hover:bg-surface-2",
-                        )}
-                      >
-                        <span
+                      <div key={key}>
+                        <button
+                          type="button"
+                          disabled={off}
+                          onClick={() => toggle(s)}
                           className={cn(
-                            "flex size-5 shrink-0 items-center justify-center rounded-[6px] border transition-colors",
-                            on
-                              ? "border-transparent bg-[var(--accent)] text-[var(--accent-fg)]"
-                              : "border-border-2",
+                            "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
+                            off
+                              ? "opacity-50"
+                              : on
+                                ? "border-accent-line bg-accent-soft"
+                                : "hover:bg-surface-2",
+                            trim && "rounded-b-none border-b-0",
                           )}
                         >
-                          {on ? <Check className="size-3.5" /> : null}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="text-fg block truncate text-sm">{s.name}</span>
-                          {s.hint ? (
-                            <span className="text-fg-3 block truncate text-xs">{s.hint}</span>
-                          ) : null}
-                        </span>
-                        <span className="text-fg-2 shrink-0 font-mono text-sm tabular-nums">
-                          {formatZAR(centsToRand(s.price))}
-                        </span>
-                      </button>
+                          <span
+                            className={cn(
+                              "flex size-5 shrink-0 items-center justify-center rounded-[6px] border transition-colors",
+                              on
+                                ? "border-transparent bg-[var(--accent)] text-[var(--accent-fg)]"
+                                : "border-border-2",
+                            )}
+                          >
+                            {on ? <Check className="size-3.5" /> : null}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="text-fg block truncate text-sm">{s.name}</span>
+                            {s.hint ? (
+                              <span className="text-fg-3 block truncate text-xs">{s.hint}</span>
+                            ) : null}
+                          </span>
+                          <span className="text-fg-2 shrink-0 font-mono text-sm tabular-nums">
+                            {formatZAR(centsToRand(amountFor(s)))}
+                          </span>
+                        </button>
+                        {trim ? (
+                          <div className="border-accent-line bg-accent-soft flex items-center gap-2 rounded-b-lg border border-t-0 px-3 pb-3">
+                            <span className="text-fg-3 shrink-0 text-xs">Take</span>
+                            <div className="relative flex-1">
+                              <span className="text-fg-3 pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 font-mono text-xs">
+                                R
+                              </span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max={centsToRand(s.price)}
+                                value={amounts[key] ?? ""}
+                                placeholder={centsToRand(s.price).toFixed(2)}
+                                onChange={(e) =>
+                                  setAmounts((prev) => ({
+                                    ...prev,
+                                    [key]: stripNegative(e.target.value),
+                                  }))
+                                }
+                                className="h-8 pl-6 font-mono text-sm"
+                              />
+                            </div>
+                            <span className="text-fg-3 shrink-0 text-xs">
+                              of {formatZAR(centsToRand(s.price))}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
                     );
                   })}
                 </div>

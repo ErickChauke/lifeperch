@@ -334,7 +334,11 @@ export function PlanDetailView({
         onImport={(picked) =>
           importToPlan(
             plan.id,
-            picked as { type: "wish" | "shopping" | "fixed" | "loan"; id: string }[],
+            picked as {
+              type: "wish" | "shopping" | "fixed" | "loan";
+              id: string;
+              amount?: number;
+            }[],
           )
         }
       />
