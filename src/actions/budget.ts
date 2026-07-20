@@ -269,7 +269,7 @@ export async function toggleItemComplete(id: string) {
 // are skipped. Returns how many were added.
 export async function importToPlan(
   planId: string,
-  sources: { type: "wish" | "shopping" | "fixed" | "loan"; id: string }[],
+  sources: { type: "wish" | "shopping" | "fixed" | "loan"; id: string; amount?: number }[],
 ) {
   const userId = await requireUserId();
   const plan = await prisma.budgetPlan.findFirst({ where: { id: planId, userId } });
@@ -368,17 +368,21 @@ export async function importToPlan(
   // A loan lands at what is left of its principal after the lines already
   // imported from it elsewhere, so the pot cannot be over-allocated.
   const loanUsed = new Map(loanSpend.map((s) => [s.originId, s._sum.amount ?? 0]));
+  const wanted = new Map(sources.map((s) => [s.id, s.amount]));
   for (const l of loans) {
-    if (taken.has(l.id)) continue;
     const left = loanUnused({ principal: l.principal, used: loanUsed.get(l.id) ?? 0 });
     if (left <= 0) continue;
+    // Part of a loan can be drawn, so the caller may ask for less than is left.
+    // Anything larger, missing or nonsensical falls back to the whole remainder.
+    const ask = wanted.get(l.id);
+    const amount = ask && ask > 0 ? Math.min(ask, left) : left;
     rows.push({
       userId,
       planId,
       kind: "income",
       category: "Other",
       title: l.title,
-      amount: left,
+      amount,
       originType: "loan",
       originId: l.id,
     });
