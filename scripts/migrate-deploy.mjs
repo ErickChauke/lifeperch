@@ -6,7 +6,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 // connection, which would otherwise fail a deploy that has nothing to do with
 // the schema. A real migration error is reported straight away, never retried.
 const BACKOFF_MS = [3000, 8000, 15000];
-const TRANSIENT = /P1001|P1002|Can't reach database server|Timed out/i;
+const TRANSIENT =
+  /P1001|P1002|P1017|Can't reach database server|Timed out|Server has closed the connection/i;
 
 for (let attempt = 0; ; attempt++) {
   const run = spawnSync("npx", ["prisma", "migrate", "deploy"], {

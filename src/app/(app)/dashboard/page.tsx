@@ -23,6 +23,7 @@ import { getRecentNotes } from "@/actions/notes";
 import { getReading } from "@/actions/literature";
 import { getLoans } from "@/actions/loans";
 import { loanOutstanding } from "@/lib/loans";
+import { extraMonthly } from "@/lib/extra";
 import { DebtBanner } from "@/components/modules/money/debt-banner";
 import { PageShell, PageBody } from "@/components/layout/page-shell";
 import { DashboardGreeting } from "@/components/modules/dashboard/dashboard-greeting";
@@ -102,7 +103,7 @@ export default async function DashboardPage() {
   ]);
   const openLoans = loans.filter((l) => !l.settledAt);
   const debt = openLoans.reduce((sum, l) => sum + loanOutstanding(l), 0);
-  const repaying = openLoans.reduce((sum, l) => sum + l.monthlyAmount, 0);
+  const repaying = openLoans.reduce((sum, l) => sum + l.monthlyAmount + extraMonthly(l), 0);
   const hasTodos = dueToday.length > 0 || overdue.length > 0;
   const activeHabits = habits.filter((h) => !h.archived);
   const journaledToday = !!journalEntry && journalEntry.body.trim().length > 0;

@@ -20,10 +20,22 @@ import { randToCents, centsToRand, stripNegative } from "@/lib/money";
 import { formatZAR } from "@/lib/utils";
 import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { createLoan, updateLoan, deleteLoan } from "@/actions/loans";
+import { monthsToClear } from "@/lib/extra";
+import { dayToDate, dateToDay } from "@/lib/money";
+import { ExtraFields } from "./extra-fields";
 import type { Loan } from "./loans-board";
 import type { Goal } from "./goals-board";
 
-const EMPTY: LoanInput = { title: "", amount: 0, goalId: null, monthly: 0, note: "" };
+const EMPTY: LoanInput = {
+  title: "",
+  amount: 0,
+  goalId: null,
+  monthly: 0,
+  extraAmount: 0,
+  extraFrequency: "month",
+  extraDate: "",
+  note: "",
+};
 
 // A money field with a leading R adornment, registered as a number.
 function MoneyField({
@@ -91,9 +103,16 @@ export function LoanModal({
   const amount = watch("amount");
   const monthly = watch("monthly");
   const goalId = watch("goalId");
+  const extraAmount = watch("extraAmount");
+  const extraFrequency = watch("extraFrequency");
+  const extraDate = watch("extraDate");
   const monthlyCents = randToCents(Number(monthly) || 0);
   const amountCents = loan ? loanOutstanding(loan) : randToCents(Number(amount) || 0);
-  const eta = monthlyCents > 0 && amountCents > 0 ? amountCents / monthlyCents : null;
+  const eta = monthsToClear(amountCents, monthlyCents, {
+    extraAmount: randToCents(Number(extraAmount) || 0),
+    extraFrequency,
+    extraDate: extraDate ? dayToDate(extraDate) : null,
+  });
   const sourceGoal = goals.find((g) => g.id === goalId);
 
   useEffect(() => {
@@ -104,6 +123,9 @@ export function LoanModal({
         amount: centsToRand(loan.principal),
         goalId: loan.goalId,
         monthly: centsToRand(loan.monthlyAmount),
+        extraAmount: centsToRand(loan.extraAmount),
+        extraFrequency: (loan.extraFrequency as LoanInput["extraFrequency"]) ?? "month",
+        extraDate: loan.extraDate ? dateToDay(loan.extraDate) : "",
         note: loan.note ?? "",
       });
     } else {
@@ -118,6 +140,9 @@ export function LoanModal({
           await updateLoan(loan.id, {
             title: values.title,
             monthly: values.monthly,
+            extraAmount: values.extraAmount,
+            extraFrequency: values.extraFrequency,
+            extraDate: values.extraDate,
             note: values.note,
           });
         } else {
@@ -204,6 +229,14 @@ export function LoanModal({
             label="Monthly repayment"
             register={register}
             error={errors.monthly?.message}
+          />
+
+          <ExtraFields
+            amount={register("extraAmount", { valueAsNumber: true })}
+            frequency={register("extraFrequency")}
+            date={register("extraDate")}
+            cadence={extraFrequency}
+            hint="Anything you put in beyond the monthly amount, like R50 a day, or a payment you are expecting on a date."
           />
 
           <div className="space-y-1.5">

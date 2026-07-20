@@ -15,6 +15,12 @@ export const loanSchema = z.object({
     .number()
     .min(0, "Monthly amount cannot be negative")
     .max(MAX_DB_AMOUNT, "Amount is too large"),
+  extraAmount: z
+    .number()
+    .min(0, "Extra cannot be negative")
+    .max(MAX_DB_AMOUNT, "Amount is too large"),
+  extraFrequency: z.enum(["month", "week", "day", "once"]).nullable(),
+  extraDate: z.string().nullable(),
   note: z.string().optional(),
 });
 
@@ -25,6 +31,9 @@ export type LoanInput = z.infer<typeof loanSchema>;
 export const loanUpdateSchema = loanSchema.pick({
   title: true,
   monthly: true,
+  extraAmount: true,
+  extraFrequency: true,
+  extraDate: true,
   note: true,
 });
 

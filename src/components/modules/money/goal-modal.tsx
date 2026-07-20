@@ -13,13 +13,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { goalSchema, monthsToGoal, formatEta, type GoalInput } from "@/lib/goals";
-import { randToCents, centsToRand, stripNegative } from "@/lib/money";
+import { goalSchema, formatEta, type GoalInput } from "@/lib/goals";
+import { monthsToClear } from "@/lib/extra";
+import { randToCents, centsToRand, stripNegative, dayToDate, dateToDay } from "@/lib/money";
+import { ExtraFields } from "./extra-fields";
 import { MAX_AMOUNT } from "@/lib/currency";
 import { createGoal, updateGoal, deleteGoal } from "@/actions/goals";
 import type { Goal } from "./goals-board";
 
-const EMPTY: GoalInput = { name: "", target: 0, current: 0, monthly: 0 };
+const EMPTY: GoalInput = {
+  name: "",
+  target: 0,
+  current: 0,
+  monthly: 0,
+  extraAmount: 0,
+  extraFrequency: "month",
+  extraDate: "",
+};
 
 // A money field with a leading R adornment, registered as a number.
 function MoneyField({
@@ -85,11 +95,19 @@ export function GoalModal({
   const target = watch("target");
   const current = watch("current");
   const monthly = watch("monthly");
-  const eta = monthsToGoal(
-    randToCents(Number(current) || 0),
-    randToCents(Number(target) || 0),
-    randToCents(Number(monthly) || 0),
-  );
+  const extraAmount = watch("extraAmount");
+  const extraFrequency = watch("extraFrequency");
+  const extraDate = watch("extraDate");
+  const targetCents = randToCents(Number(target) || 0);
+  const currentCents = randToCents(Number(current) || 0);
+  const eta =
+    targetCents > 0
+      ? monthsToClear(targetCents - currentCents, randToCents(Number(monthly) || 0), {
+          extraAmount: randToCents(Number(extraAmount) || 0),
+          extraFrequency,
+          extraDate: extraDate ? dayToDate(extraDate) : null,
+        })
+      : null;
 
   useEffect(() => {
     setConfirmDelete(false);
@@ -99,6 +117,9 @@ export function GoalModal({
         target: centsToRand(goal.targetAmount),
         current: centsToRand(goal.currentAmount),
         monthly: centsToRand(goal.monthlyAmount),
+        extraAmount: centsToRand(goal.extraAmount),
+        extraFrequency: (goal.extraFrequency as GoalInput["extraFrequency"]) ?? "month",
+        extraDate: goal.extraDate ? dateToDay(goal.extraDate) : "",
       });
     } else {
       reset(EMPTY);
@@ -154,6 +175,14 @@ export function GoalModal({
           <MoneyField id="target" label="Target" register={register} error={errors.target?.message} />
           <MoneyField id="current" label="Saved so far" register={register} error={errors.current?.message} />
           <MoneyField id="monthly" label="Monthly contribution" register={register} error={errors.monthly?.message} />
+
+          <ExtraFields
+            amount={register("extraAmount", { valueAsNumber: true })}
+            frequency={register("extraFrequency")}
+            date={register("extraDate")}
+            cadence={extraFrequency}
+            hint="Anything you put in beyond the monthly amount, like R50 a day, or a payment you are expecting on a date."
+          />
 
           {eta !== null && eta > 0 ? (
             <p className="text-fg-3 font-mono text-xs">≈ {formatEta(eta)} to reach it</p>

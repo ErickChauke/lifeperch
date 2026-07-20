@@ -10,6 +10,7 @@ import {
   type LoanInput,
   type LoanUpdateInput,
 } from "@/lib/loans";
+import { toExtraRecord } from "@/lib/extra";
 import { randToCents } from "@/lib/money";
 
 // Returns the current user id or throws when there is no session.
@@ -74,6 +75,7 @@ export async function createLoan(input: LoanInput) {
         title: data.title.trim(),
         principal,
         monthlyAmount: randToCents(data.monthly),
+        ...toExtraRecord(data),
         note: data.note?.trim() || null,
       },
     });
@@ -117,6 +119,7 @@ export async function updateLoan(id: string, input: LoanUpdateInput) {
     data: {
       title: data.title.trim(),
       monthlyAmount: randToCents(data.monthly),
+      ...toExtraRecord(data),
       note: data.note?.trim() || null,
     },
   });

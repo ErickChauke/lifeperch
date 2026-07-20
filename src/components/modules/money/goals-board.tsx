@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
-import { goalPercent, monthsToGoal, formatEta, etaTargetDate } from "@/lib/goals";
+import { goalPercent, formatEta, etaTargetDate } from "@/lib/goals";
+import { monthsToClear, extraLabel } from "@/lib/extra";
 import { MoneyEmpty } from "./money-empty";
 import { GoalModal } from "./goal-modal";
 import { Segmented } from "./segmented";
@@ -107,7 +108,8 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   const reached = percent !== null && percent >= 100;
   const unset = goal.targetAmount <= 0;
   const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0);
-  const eta = monthsToGoal(goal.currentAmount, goal.targetAmount, goal.monthlyAmount);
+  const eta = unset ? null : monthsToClear(remaining, goal.monthlyAmount, goal);
+  const extra = extraLabel(goal, (cents) => formatCurrencyShort(centsToRand(cents)));
 
   return (
     <button
@@ -171,8 +173,8 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
         reached={reached}
         unset={unset}
         remaining={remaining}
-        monthly={goal.monthlyAmount}
         eta={eta}
+        extra={extra}
       />
     </button>
   );
@@ -182,14 +184,14 @@ function GoalFoot({
   reached,
   unset,
   remaining,
-  monthly,
   eta,
+  extra,
 }: {
   reached: boolean;
   unset: boolean;
   remaining: number;
-  monthly: number;
   eta: number | null;
+  extra: string | null;
 }) {
   if (reached) {
     return <p className="font-mono text-xs text-[var(--success)]">Goal reached</p>;
@@ -197,7 +199,7 @@ function GoalFoot({
   if (unset) {
     return <p className="font-mono text-xs text-[var(--warning)]">No target set yet</p>;
   }
-  if (monthly <= 0 || eta === null) {
+  if (eta === null) {
     return (
       <p className="font-mono text-xs break-words">
         <span className="text-fg-3" title={formatCurrency(centsToRand(remaining))}>
@@ -216,6 +218,7 @@ function GoalFoot({
         {" · ≈ "}
         {formatEta(eta)} · {format(etaTargetDate(eta), "MMM yyyy")}
       </span>
+      {extra ? <span className="text-fg-3">{` · plus ${extra}`}</span> : null}
     </p>
   );
 }

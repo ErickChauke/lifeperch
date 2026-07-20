@@ -29,7 +29,8 @@ import {
   monthlyTotals,
   txnsInPeriod,
 } from "@/lib/money-stats";
-import { goalPercent, monthsToGoal, formatEta } from "@/lib/goals";
+import { goalPercent, formatEta } from "@/lib/goals";
+import { monthsToClear } from "@/lib/extra";
 import { Segmented } from "./segmented";
 import { MoneyEmpty } from "./money-empty";
 import { SpendingDonut } from "./spending-donut";
@@ -361,7 +362,7 @@ function GoalRow({ goal }: { goal: Goal }) {
   const reached = percent !== null && percent >= 100;
   const unset = goal.targetAmount <= 0;
   const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0);
-  const eta = monthsToGoal(goal.currentAmount, goal.targetAmount, goal.monthlyAmount);
+  const eta = unset ? null : monthsToClear(remaining, goal.monthlyAmount, goal);
 
   const etaText = reached
     ? "Goal reached"
