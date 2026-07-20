@@ -11,7 +11,7 @@ import {
   INCOME_CATEGORIES,
 } from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
-import { loanUnused } from "@/lib/loans";
+import { loanUnused, loanOutstanding } from "@/lib/loans";
 import {
   planSchema,
   budgetItemSchema,
@@ -32,8 +32,55 @@ async function requireUserId(): Promise<string> {
 function revalidateBudget(id?: string) {
   revalidatePath("/money/plan");
   if (id) revalidatePath(`/money/plan/${id}`);
-  // Plan lines feed the loans board's spent and left-to-spend figures.
+  // Plan lines feed the loans board's used and left-to-use figures, and a line
+  // that repays a loan moves money back into the goal it came from.
   revalidatePath("/money/loans");
+  revalidatePath("/money/goals");
+}
+
+// Marks a plan line's repayment against the loan it targets, moving the money
+// back into the source goal exactly as the Repay button does. Clamped to what is
+// still owed, so a line bigger than the debt cannot overpay it.
+async function applyLoanRepayment(userId: string, loanId: string, amount: number) {
+  await prisma.$transaction(async (tx) => {
+    const loan = await tx.selfLoan.findFirst({ where: { id: loanId, userId } });
+    if (!loan) return;
+    const paid = Math.min(amount, loanOutstanding(loan));
+    if (paid <= 0) return;
+    const repaid = loan.repaid + paid;
+    await tx.selfLoan.update({
+      where: { id: loan.id },
+      data: { repaid, settledAt: repaid >= loan.principal ? new Date() : null },
+    });
+    if (loan.goalId) {
+      await tx.savingsGoal.updateMany({
+        where: { id: loan.goalId, userId },
+        data: { currentAmount: { increment: BigInt(paid) } },
+      });
+    }
+  });
+}
+
+// Takes the repayment back off when the line is marked not done again, or when
+// a done line is deleted. Clamped to what was actually repaid.
+async function reverseLoanRepayment(userId: string, loanId: string, amount: number) {
+  await prisma.$transaction(async (tx) => {
+    const loan = await tx.selfLoan.findFirst({ where: { id: loanId, userId } });
+    if (!loan) return;
+    const back = Math.min(amount, loan.repaid);
+    if (back <= 0) return;
+    const repaid = loan.repaid - back;
+    await tx.selfLoan.update({
+      where: { id: loan.id },
+      data: { repaid, settledAt: repaid >= loan.principal ? loan.settledAt : null },
+    });
+    if (loan.goalId) {
+      await tx.savingsGoal.updateMany({
+        where: { id: loan.goalId, userId },
+        data: { currentAmount: { decrement: BigInt(back) } },
+      });
+    }
+  });
 }
 
 // --- Plans ---
@@ -209,6 +256,11 @@ export async function deleteItem(id: string) {
   if (existing.transactionId) {
     await prisma.transaction.deleteMany({ where: { id: existing.transactionId, userId } });
   }
+  // Deleting a line that was already marked done takes its repayment back off
+  // the loan, so the debt never keeps credit for a line that no longer exists.
+  if (existing.completed && existing.loanId) {
+    await reverseLoanRepayment(userId, existing.loanId, existing.amount);
+  }
   await prisma.budgetItem.deleteMany({ where: { id, userId } });
   await clearInboundLinks(userId, id);
   revalidateBudget(existing.planId);
@@ -246,6 +298,7 @@ export async function toggleItemComplete(id: string) {
       where: { id },
       data: { completed: true, transactionId: txn.id },
     });
+    if (item.loanId) await applyLoanRepayment(userId, item.loanId, item.amount);
   } else {
     if (item.transactionId) {
       await prisma.transaction.deleteMany({ where: { id: item.transactionId, userId } });
@@ -254,6 +307,7 @@ export async function toggleItemComplete(id: string) {
       where: { id },
       data: { completed: false, transactionId: null },
     });
+    if (item.loanId) await reverseLoanRepayment(userId, item.loanId, item.amount);
   }
 
   await syncLinkedStatus(userId, "plan", id, !item.completed);
