@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 
-export type ImportSourceType = "wish" | "shopping" | "plan" | "fixed";
+export type ImportSourceType = "wish" | "shopping" | "plan" | "fixed" | "loan";
 
 export type ImportSource = {
   type: ImportSourceType;
@@ -25,6 +25,9 @@ export type ImportSource = {
   group: string;
   // Which plan section the source belongs in; absent where the picker is not split.
   kind?: "income" | "expense";
+  // Listed but not selectable, with hint explaining why.
+  disabled?: boolean;
+  hint?: string;
 };
 
 export function ImportPickerModal({
@@ -67,7 +70,9 @@ export function ImportPickerModal({
     return order.map((g) => ({ group: g, items: byGroup.get(g)! }));
   }, [sources, query]);
 
-  function toggle(key: string) {
+  function toggle(s: ImportSource) {
+    if (s.disabled) return;
+    const key = `${s.type}:${s.id}`;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -78,7 +83,7 @@ export function ImportPickerModal({
 
   function submit() {
     const picked = sources
-      .filter((s) => selected.has(`${s.type}:${s.id}`))
+      .filter((s) => !s.disabled && selected.has(`${s.type}:${s.id}`))
       .map((s) => ({ type: s.type, id: s.id }));
     if (picked.length === 0) return;
     startTransition(async () => {
@@ -95,7 +100,11 @@ export function ImportPickerModal({
 
   const count = selected.size;
   const total = useMemo(
-    () => sources.reduce((sum, s) => (selected.has(`${s.type}:${s.id}`) ? sum + s.price : sum), 0),
+    () =>
+      sources.reduce(
+        (sum, s) => (!s.disabled && selected.has(`${s.type}:${s.id}`) ? sum + s.price : sum),
+        0,
+      ),
     [sources, selected],
   );
 
@@ -131,14 +140,20 @@ export function ImportPickerModal({
                   {items.map((s) => {
                     const key = `${s.type}:${s.id}`;
                     const on = selected.has(key);
+                    const off = !!s.disabled;
                     return (
                       <button
                         key={key}
                         type="button"
-                        onClick={() => toggle(key)}
+                        disabled={off}
+                        onClick={() => toggle(s)}
                         className={cn(
                           "flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
-                          on ? "border-accent-line bg-accent-soft" : "hover:bg-surface-2",
+                          off
+                            ? "opacity-50"
+                            : on
+                              ? "border-accent-line bg-accent-soft"
+                              : "hover:bg-surface-2",
                         )}
                       >
                         <span
@@ -151,7 +166,12 @@ export function ImportPickerModal({
                         >
                           {on ? <Check className="size-3.5" /> : null}
                         </span>
-                        <span className="text-fg min-w-0 flex-1 truncate text-sm">{s.name}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="text-fg block truncate text-sm">{s.name}</span>
+                          {s.hint ? (
+                            <span className="text-fg-3 block truncate text-xs">{s.hint}</span>
+                          ) : null}
+                        </span>
                         <span className="text-fg-2 shrink-0 font-mono text-sm tabular-nums">
                           {formatZAR(centsToRand(s.price))}
                         </span>
