@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { formatCurrency, formatCurrencyShort, MAX_DB_AMOUNT } from "@/lib/currency";
 import { centsToRand, stripNegative } from "@/lib/money";
 import { formatEta, etaTargetDate } from "@/lib/goals";
-import { loanOutstanding, loanUnspent, loanOverspent } from "@/lib/loans";
+import { loanOutstanding, loanUnused, loanOverdrawn } from "@/lib/loans";
 import { repayLoan, type getLoans } from "@/actions/loans";
 import { MoneyEmpty } from "./money-empty";
 import { LoanModal } from "./loan-modal";
@@ -35,7 +35,7 @@ export function LoansBoard({ loans, goals }: { loans: Loan[]; goals: Goal[] }) {
   const settled = loans.filter((l) => l.settledAt);
   const debt = open.reduce((sum, l) => sum + loanOutstanding(l), 0);
   const monthly = open.reduce((sum, l) => sum + l.monthlyAmount, 0);
-  const unspent = open.reduce((sum, l) => sum + loanUnspent(l), 0);
+  const unused = open.reduce((sum, l) => sum + loanUnused(l), 0);
   const eta = monthly > 0 && debt > 0 ? debt / monthly : null;
 
   function closeModal() {
@@ -89,7 +89,7 @@ export function LoansBoard({ loans, goals }: { loans: Loan[]; goals: Goal[] }) {
       {/* Debt summary, mirroring the Basic tab's monthly figures */}
       <div className="bg-surface grid grid-cols-1 gap-2 rounded-lg border p-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
         <Figure label="Owed" value={formatZAR(centsToRand(debt))} danger={debt > 0} />
-        <Figure label="Left to spend" value={formatZAR(centsToRand(unspent))} />
+        <Figure label="Left to use" value={formatZAR(centsToRand(unused))} />
         <Figure label="Repaying / month" value={formatZAR(centsToRand(monthly))} />
         <Figure
           label="Paid off"
@@ -166,8 +166,8 @@ function LoanCard({
   const outstanding = loanOutstanding(loan);
   const percent = loan.principal > 0 ? Math.round((loan.repaid / loan.principal) * 100) : 0;
   const eta = loan.monthlyAmount > 0 ? outstanding / loan.monthlyAmount : null;
-  const left = loanUnspent(loan);
-  const over = loanOverspent(loan);
+  const left = loanUnused(loan);
+  const over = loanOverdrawn(loan);
 
   return (
     <div className="bg-surface hover:border-border-2 flex flex-col gap-3 rounded-lg border p-4 transition-colors">
@@ -208,8 +208,8 @@ function LoanCard({
         </p>
 
         <p className="text-fg-3 font-mono text-xs break-words">
-          {formatCurrencyShort(centsToRand(loan.spent))} of{" "}
-          {formatCurrencyShort(centsToRand(loan.principal))} spent
+          {formatCurrencyShort(centsToRand(loan.used))} of{" "}
+          {formatCurrencyShort(centsToRand(loan.principal))} used
           {over > 0 ? (
             <span className="text-[var(--warning)]">
               {" · over by "}
@@ -218,10 +218,10 @@ function LoanCard({
           ) : left > 0 ? (
             <span className="text-fg-2">
               {" · "}
-              {formatCurrencyShort(centsToRand(left))} left to spend
+              {formatCurrencyShort(centsToRand(left))} left to use
             </span>
           ) : (
-            <span className="text-fg-2"> · all spent</span>
+            <span className="text-fg-2"> · all used</span>
           )}
         </p>
       </button>

@@ -35,14 +35,15 @@ export function loanOutstanding(loan: { principal: number; repaid: number }): nu
   return Math.max(loan.principal - loan.repaid, 0);
 }
 
-// Returns what is left of the loan to spend, in cents. Spend is derived from the
-// plan lines imported from the loan, so it self-corrects when a line changes.
-export function loanUnspent(loan: { principal: number; spent: number }): number {
-  return Math.max(loan.principal - loan.spent, 0);
+// Returns what is left of the borrowed money to use, in cents. Use is derived
+// from the plan lines imported from the loan, so it self-corrects when a line
+// changes.
+export function loanUnused(loan: { principal: number; used: number }): number {
+  return Math.max(loan.principal - loan.used, 0);
 }
 
 // Returns how much the plan lines overshoot the principal, in cents. Non-zero
 // only when a line was edited upwards after import.
-export function loanOverspent(loan: { principal: number; spent: number }): number {
-  return Math.max(loan.spent - loan.principal, 0);
+export function loanOverdrawn(loan: { principal: number; used: number }): number {
+  return Math.max(loan.used - loan.principal, 0);
 }
