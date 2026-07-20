@@ -27,7 +27,7 @@ function revalidateLoans() {
 }
 
 // Fetches the user's loans, open first, newest first within each group. Each loan
-// carries what has been spent from it: the sum of the plan lines imported from it,
+// carries what has been used from it: the sum of the plan lines imported from it,
 // so the figure follows edits to those lines with no extra bookkeeping.
 export async function getLoans() {
   const userId = await requireUserId();
@@ -38,13 +38,13 @@ export async function getLoans() {
   });
   if (loans.length === 0) return [];
 
-  const spend = await prisma.budgetItem.groupBy({
+  const drawn = await prisma.budgetItem.groupBy({
     by: ["originId"],
     where: { userId, originType: "loan", originId: { in: loans.map((l) => l.id) } },
     _sum: { amount: true },
   });
-  const byLoan = new Map(spend.map((s) => [s.originId, s._sum.amount ?? 0]));
-  return loans.map((l) => ({ ...l, spent: byLoan.get(l.id) ?? 0 }));
+  const byLoan = new Map(drawn.map((d) => [d.originId, d._sum.amount ?? 0]));
+  return loans.map((l) => ({ ...l, used: byLoan.get(l.id) ?? 0 }));
 }
 
 // Borrows from yourself. A goal-sourced loan moves the amount out of the

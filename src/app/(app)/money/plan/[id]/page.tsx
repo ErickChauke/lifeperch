@@ -5,7 +5,7 @@ import { getCollections } from "@/actions/wishlist";
 import { getShoppingLists } from "@/actions/shopping";
 import { getFixedItems } from "@/actions/basic";
 import { getLoans } from "@/actions/loans";
-import { loanUnspent } from "@/lib/loans";
+import { loanUnused } from "@/lib/loans";
 import { formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { PlanDetailView } from "@/components/modules/money/plan-detail";
@@ -68,10 +68,11 @@ export default async function PlanDetailPage({
         group: "From basics",
         kind: f.kind === "income" ? ("income" as const) : ("expense" as const),
       })),
-    // Loans are a pot to spend down, so unlike the other sources they stay
-    // listed once used and show greyed with the reason instead of disappearing.
+    // Borrowed money is cash in, so a loan imports into the money-in side. It is
+    // a pot drawn down across plans, so unlike the other sources it stays listed
+    // once used and shows greyed with the reason instead of disappearing.
     ...loans.map((l) => {
-      const left = loanUnspent(l);
+      const left = loanUnused(l);
       const used = linked.has(l.id);
       return {
         type: "loan" as const,
@@ -79,15 +80,15 @@ export default async function PlanDetailPage({
         name: l.title,
         price: left,
         group: "From your loans",
-        kind: "expense" as const,
+        kind: "income" as const,
         disabled: used || l.settledAt !== null || left <= 0,
         hint: used
           ? "already on this plan"
           : l.settledAt
             ? "settled"
             : left <= 0
-              ? "fully spent"
-              : `${formatZAR(centsToRand(left))} left to spend`,
+              ? "fully used"
+              : `${formatZAR(centsToRand(left))} left to use`,
       };
     }),
   ];

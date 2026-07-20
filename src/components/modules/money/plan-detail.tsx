@@ -268,6 +268,11 @@ export function PlanDetailView({
                   {sub ? (
                     <span className="text-fg-3 block truncate text-xs">{sub}</span>
                   ) : null}
+                  {item.originType ? (
+                    <span className="text-fg-3 mt-0.5 flex w-fit items-center gap-1 font-mono text-[10px] uppercase tracking-[0.08em]">
+                      <Link2 className="size-3" /> {originLabel(item.originType)}
+                    </span>
+                  ) : null}
                 </span>
                 <span className="shrink-0 text-right">
                   <span className="text-fg block font-mono text-sm">
