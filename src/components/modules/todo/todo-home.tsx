@@ -173,8 +173,8 @@ export function TodoHome({
     { value: "done", label: <TabLabel text="Done" count={counts.done} /> },
   ];
 
-  // The list the + todo modal and explicit form writes land in: the filtered
-  // list, else the first list. Hidden when no list exists.
+  // The list row edits and the quick-add form write into: the filtered list,
+  // else the first list. Hidden when no list exists.
   const modalCollectionId = projectId !== "all" ? projectId : collections[0]?.id;
 
   function openEdit(todo: Todo) {
@@ -244,10 +244,9 @@ export function TodoHome({
             ) : (
               <Button
                 size="sm"
-                onClick={() => {
-                  setEditing(null);
-                  setOpen(true);
-                }}
+                onClick={() =>
+                  router.push(projectId !== "all" ? `/todo/${projectId}` : "/todo/lists")
+                }
               >
                 <Plus /> Todo
               </Button>
