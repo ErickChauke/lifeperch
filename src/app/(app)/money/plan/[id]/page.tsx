@@ -93,5 +93,12 @@ export default async function PlanDetailPage({
     }),
   ];
 
-  return <PlanDetailView plan={plan} goals={goals} importSources={importSources} />;
+  return (
+    <PlanDetailView
+      plan={plan}
+      goals={goals}
+      loans={loans}
+      importSources={importSources}
+    />
+  );
 }

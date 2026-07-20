@@ -14,6 +14,7 @@ import {
   Circle,
   Download,
   Link2,
+  Banknote,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
 import { goalPercent } from "@/lib/goals";
+import { loanOutstanding } from "@/lib/loans";
 import { deletePlan, duplicatePlan, toggleItemComplete, importToPlan } from "@/actions/budget";
 import { PlanModal } from "./plan-modal";
 import { PlanItemModal } from "./plan-item-modal";
@@ -35,10 +37,12 @@ const STATUS_FILTERS = [
 ] as const;
 import type { getPlan, getPlans } from "@/actions/budget";
 import type { getGoals } from "@/actions/goals";
+import type { getLoans } from "@/actions/loans";
 
 type Plan = NonNullable<Awaited<ReturnType<typeof getPlan>>>;
 type Item = Plan["items"][number];
 type Goal = Awaited<ReturnType<typeof getGoals>>[number];
+type Loan = Awaited<ReturnType<typeof getLoans>>[number];
 type PlanForEdit = Awaited<ReturnType<typeof getPlans>>[number];
 
 const sum = (items: Item[]) => items.reduce((s, i) => s + i.amount, 0);
@@ -72,10 +76,12 @@ function subFor(item: Item): string {
 export function PlanDetailView({
   plan,
   goals,
+  loans,
   importSources,
 }: {
   plan: Plan;
   goals: Goal[];
+  loans: Loan[];
   importSources: ImportSource[];
 }) {
   const router = useRouter();
@@ -85,6 +91,7 @@ export function PlanDetailView({
   const [importing, setImporting] = useState<null | "income" | "expense">(null);
   const [status, setStatus] = useState<StatusFilter>("all");
   const goalsById = new Map(goals.map((g) => [g.id, g]));
+  const loansById = new Map(loans.map((l) => [l.id, l]));
   const [itemModal, setItemModal] = useState<{
     open: boolean;
     item: Item | null;
@@ -310,6 +317,7 @@ export function PlanDetailView({
             cumulative={cumulative}
             plannedIn={plannedIn}
             goal={item.goalId ? (goalsById.get(item.goalId) ?? null) : null}
+            loan={item.loanId ? (loansById.get(item.loanId) ?? null) : null}
             pending={pending}
             onEdit={() => openItem(item, "expense")}
             onToggleComplete={() => toggleComplete(item.id)}
@@ -325,6 +333,7 @@ export function PlanDetailView({
         item={itemModal.item}
         defaultKind={itemModal.kind}
         goals={goals}
+        loans={loans}
       />
       <ImportPickerModal
         open={importing !== null}
@@ -414,6 +423,7 @@ function ExpenseRow({
   cumulative,
   plannedIn,
   goal,
+  loan,
   pending,
   onEdit,
   onToggleComplete,
@@ -422,12 +432,53 @@ function ExpenseRow({
   cumulative: number;
   plannedIn: number;
   goal: Goal | null;
+  loan: Loan | null;
   pending: boolean;
   onEdit: () => void;
   onToggleComplete: () => void;
 }) {
   const planned = item.amount;
   const dim = item.completed && "opacity-50";
+
+  // A loan-repaying line shows the debt and how far it is paid off, mirroring
+  // the goal-funded row above the running draw-down bar.
+  if (loan) {
+    const outstanding = loanOutstanding(loan);
+    const pct =
+      loan.principal > 0 ? Math.round((loan.repaid / loan.principal) * 100) : 0;
+    return (
+      <div className="bg-surface hover:border-border-2 rounded-lg border p-3 transition-colors">
+        <button
+          type="button"
+          onClick={onEdit}
+          className={cn("flex w-full flex-col gap-2 text-left", dim)}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-accent-read flex items-center gap-1.5 text-sm font-medium">
+              <Banknote className="size-3.5" /> {headingFor(item)}
+            </span>
+            <span className="text-fg font-mono text-sm">
+              {formatZAR(centsToRand(planned))}
+            </span>
+          </div>
+          <span className="text-fg-3 font-mono text-xs">
+            repaying {loan.title} · {pct}% done ·{" "}
+            {formatZAR(centsToRand(outstanding))} owed
+          </span>
+          {item.note ? (
+            <span className="text-fg-3 truncate text-xs">{item.note}</span>
+          ) : null}
+        </button>
+        <div className="mt-2 flex justify-end">
+          <CompleteToggle
+            completed={item.completed}
+            pending={pending}
+            onToggle={onToggleComplete}
+          />
+        </div>
+      </div>
+    );
+  }
 
   // A goal-funded line shows the goal and its overall progress instead of the
   // running draw-down bar.

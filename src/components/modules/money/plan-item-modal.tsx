@@ -19,10 +19,12 @@ import { MAX_DB_AMOUNT } from "@/lib/currency";
 import { addItem, updateItem, deleteItem } from "@/actions/budget";
 import type { getPlan } from "@/actions/budget";
 import type { getGoals } from "@/actions/goals";
+import type { getLoans } from "@/actions/loans";
 
 type Plan = NonNullable<Awaited<ReturnType<typeof getPlan>>>;
 type Item = Plan["items"][number];
 type Goal = Awaited<ReturnType<typeof getGoals>>[number];
+type Loan = Awaited<ReturnType<typeof getLoans>>[number];
 
 type Kind = "income" | "expense";
 
@@ -33,6 +35,7 @@ export function PlanItemModal({
   item,
   defaultKind = "expense",
   goals = [],
+  loans = [],
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -40,6 +43,7 @@ export function PlanItemModal({
   item: Item | null;
   defaultKind?: Kind;
   goals?: Goal[];
+  loans?: Loan[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -49,9 +53,12 @@ export function PlanItemModal({
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [goalId, setGoalId] = useState("");
+  // What the allocation goes toward, as "goal:<id>" or "loan:<id>". One field so
+  // a line can never claim to fund a goal and repay a loan at once.
+  const [target, setTarget] = useState("");
 
   const categories = categoriesFor(kind);
+  const openLoans = loans.filter((l) => !l.settledAt);
 
   useEffect(() => {
     if (!open) return;
@@ -62,14 +69,16 @@ export function PlanItemModal({
       setTitle(item.title ?? "");
       setAmount((item.amount / 100).toString());
       setNote(item.note ?? "");
-      setGoalId(item.goalId ?? "");
+      setTarget(
+        item.loanId ? `loan:${item.loanId}` : item.goalId ? `goal:${item.goalId}` : "",
+      );
     } else {
       setKind(defaultKind);
       setCategory("");
       setTitle("");
       setAmount("");
       setNote("");
-      setGoalId("");
+      setTarget("");
     }
   }, [open, item, defaultKind]);
 
@@ -93,7 +102,10 @@ export function PlanItemModal({
       title: title.trim() || null,
       amount: value,
       note: note.trim() || null,
-      goalId: kind === "expense" && goalId ? goalId : null,
+      goalId:
+        kind === "expense" && target.startsWith("goal:") ? target.slice(5) : null,
+      loanId:
+        kind === "expense" && target.startsWith("loan:") ? target.slice(5) : null,
     };
     startTransition(async () => {
       try {
@@ -168,24 +180,39 @@ export function PlanItemModal({
             </Select>
           </div>
 
-          {kind === "expense" && goals.length > 0 ? (
+          {kind === "expense" && (goals.length > 0 || openLoans.length > 0) ? (
             <div className="space-y-1.5">
-              <Label htmlFor="item-goal">Fund a savings goal</Label>
+              <Label htmlFor="item-target">Put it toward</Label>
               <Select
-                id="item-goal"
-                value={goalId}
-                onChange={(e) => setGoalId(e.target.value)}
+                id="item-target"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
               >
-                <option value="">None</option>
-                {goals.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
+                <option value="">Nothing in particular</option>
+                {goals.length > 0 ? (
+                  <optgroup label="Savings goals">
+                    {goals.map((g) => (
+                      <option key={g.id} value={`goal:${g.id}`}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
+                {openLoans.length > 0 ? (
+                  <optgroup label="Loans">
+                    {openLoans.map((l) => (
+                      <option key={l.id} value={`loan:${l.id}`}>
+                        {l.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
               </Select>
-              {goalId ? (
+              {target ? (
                 <p className="text-fg-3 text-xs">
-                  This allocation funds the goal; it shows its progress instead of category spend.
+                  {target.startsWith("loan:")
+                    ? "This allocation repays the loan; it shows the payoff progress instead of category spend."
+                    : "This allocation funds the goal; it shows its progress instead of category spend."}
                 </p>
               ) : null}
             </div>

@@ -37,7 +37,7 @@ export type PlanInput = z.infer<typeof planSchema>;
 
 // A plan line: expected money in (income) or a planned allocation (expense).
 // category matches the transaction categories so actuals can be summed by it.
-// An expense line may instead fund a savings goal (goalId).
+// An expense line may also fund a savings goal (goalId) or repay a loan (loanId).
 export const budgetItemSchema = z.object({
   kind: z.enum(["income", "expense"]),
   category: z.string().min(1, "Pick a category"),
@@ -48,6 +48,7 @@ export const budgetItemSchema = z.object({
     .max(MAX_DB_AMOUNT, "Amount is too large"),
   note: z.string().nullable().optional(),
   goalId: z.string().nullable().optional(),
+  loanId: z.string().nullable().optional(),
 });
 
 export type BudgetItemInput = z.infer<typeof budgetItemSchema>;
