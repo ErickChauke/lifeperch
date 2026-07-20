@@ -11,6 +11,7 @@ import {
   INCOME_CATEGORIES,
 } from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
+import { loanUnspent } from "@/lib/loans";
 import {
   planSchema,
   budgetItemSchema,
@@ -31,6 +32,8 @@ async function requireUserId(): Promise<string> {
 function revalidateBudget(id?: string) {
   revalidatePath("/money/plan");
   if (id) revalidatePath(`/money/plan/${id}`);
+  // Plan lines feed the loans board's spent and left-to-spend figures.
+  revalidatePath("/money/loans");
 }
 
 // --- Plans ---
@@ -256,15 +259,17 @@ export async function toggleItemComplete(id: string) {
   revalidatePath("/money");
 }
 
-// Imports wishes, shopping items and fixed items into a plan as linked lines. A
-// wish or shopping item becomes an expense line; a fixed item keeps its own kind
-// (so a fixed salary lands as income) and is imported at its stored amount, ready
-// to adjust. The category follows the source when it is a known category for that
-// kind, else "Other". Sources already linked into this plan are skipped. Returns
-// how many were added.
+// Imports wishes, shopping items, fixed items and loans into a plan as linked
+// lines. A wish, shopping item or loan becomes an expense line; a fixed item
+// keeps its own kind (so a fixed salary lands as income) and is imported at its
+// stored amount, ready to adjust. A loan comes in at whatever is left unspent of
+// its principal, so importing it twice cannot allocate more than was borrowed.
+// The category follows the source when it is a known category for that kind,
+// else "Other". Sources already linked into this plan are skipped. Returns how
+// many were added.
 export async function importToPlan(
   planId: string,
-  sources: { type: "wish" | "shopping" | "fixed"; id: string }[],
+  sources: { type: "wish" | "shopping" | "fixed" | "loan"; id: string }[],
 ) {
   const userId = await requireUserId();
   const plan = await prisma.budgetPlan.findFirst({ where: { id: planId, userId } });
@@ -273,7 +278,8 @@ export async function importToPlan(
   const wishIds = sources.filter((s) => s.type === "wish").map((s) => s.id);
   const shopIds = sources.filter((s) => s.type === "shopping").map((s) => s.id);
   const fixedIds = sources.filter((s) => s.type === "fixed").map((s) => s.id);
-  const [wishes, items, fixed, existing] = await Promise.all([
+  const loanIds = sources.filter((s) => s.type === "loan").map((s) => s.id);
+  const [wishes, items, fixed, loans, loanSpend, existing] = await Promise.all([
     wishIds.length
       ? prisma.wishlistItem.findMany({
           where: { userId, id: { in: wishIds } },
@@ -288,6 +294,16 @@ export async function importToPlan(
       : Promise.resolve([]),
     fixedIds.length
       ? prisma.fixedItem.findMany({ where: { userId, id: { in: fixedIds } } })
+      : Promise.resolve([]),
+    loanIds.length
+      ? prisma.selfLoan.findMany({ where: { userId, id: { in: loanIds }, settledAt: null } })
+      : Promise.resolve([]),
+    loanIds.length
+      ? prisma.budgetItem.groupBy({
+          by: ["originId"],
+          where: { userId, originType: "loan", originId: { in: loanIds } },
+          _sum: { amount: true },
+        })
       : Promise.resolve([]),
     prisma.budgetItem.findMany({
       where: { userId, planId, originId: { in: sources.map((s) => s.id) } },
@@ -347,6 +363,24 @@ export async function importToPlan(
       amount: f.amount,
       originType: "fixed",
       originId: f.id,
+    });
+  }
+  // A loan lands at what is left of its principal after the lines already
+  // imported from it elsewhere, so the pot cannot be over-allocated.
+  const loanSpent = new Map(loanSpend.map((s) => [s.originId, s._sum.amount ?? 0]));
+  for (const l of loans) {
+    if (taken.has(l.id)) continue;
+    const left = loanUnspent({ principal: l.principal, spent: loanSpent.get(l.id) ?? 0 });
+    if (left <= 0) continue;
+    rows.push({
+      userId,
+      planId,
+      kind: "expense",
+      category: "Other",
+      title: l.title,
+      amount: left,
+      originType: "loan",
+      originId: l.id,
     });
   }
   if (rows.length) await prisma.budgetItem.createMany({ data: rows });
