@@ -31,7 +31,7 @@ function toChoice(node: React.ReactElement): Choice | null {
 
 // Reads the <option> and <optgroup> children the call sites already pass, so the
 // popup can render them without every form having to change shape.
-function collect(children: React.ReactNode): (Choice | Group)[] {
+export function collect(children: React.ReactNode): (Choice | Group)[] {
   const out: (Choice | Group)[] = []
   React.Children.forEach(children, (child) => {
     if (isOption(child, "optgroup")) {
@@ -52,7 +52,7 @@ function collect(children: React.ReactNode): (Choice | Group)[] {
   return out
 }
 
-function flatten(entries: (Choice | Group)[]): Choice[] {
+export function flatten(entries: (Choice | Group)[]): Choice[] {
   return entries.flatMap((e) => ("choices" in e ? e.choices : [e]))
 }
 
@@ -81,10 +81,12 @@ function Select({
   id,
   disabled,
   required: _required,
+  onBlur,
   ref: forwardedRef,
   ...props
 }: React.ComponentProps<"select"> & { placeholder?: string }) {
   const innerRef = React.useRef<HTMLSelectElement | null>(null)
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null)
 
   const setRef = React.useCallback(
     (el: HTMLSelectElement | null) => {
@@ -95,14 +97,20 @@ function Select({
     [forwardedRef],
   )
 
-  // The hidden select is the source of truth, so a form library writing to it
-  // directly (a reset, say) still shows through here.
+  // The hidden select is the source of truth. Events cover a user pick and any
+  // library that dispatches one; a library that assigns el.value silently (a
+  // react-hook-form reset or setValue) shows through on the next render, since
+  // getSnapshot re-reads the element every time.
   const subscribe = React.useCallback((onChange: () => void) => {
     const el = innerRef.current
     if (!el) return () => {}
     el.addEventListener("change", onChange)
+    el.addEventListener("input", onChange)
     onChange()
-    return () => el.removeEventListener("change", onChange)
+    return () => {
+      el.removeEventListener("change", onChange)
+      el.removeEventListener("input", onChange)
+    }
   }, [])
 
   // Before the select mounts there is nothing to read, so both snapshots fall
@@ -116,6 +124,14 @@ function Select({
 
   const entries = collect(children)
   const selected = flatten(entries).find((c) => c.value === value)
+
+  // Reports the trigger's blur against the hidden select, since that is the
+  // element a form library registered and the one carrying the field name.
+  function handleBlur(event: React.FocusEvent<HTMLButtonElement>) {
+    if (!onBlur) return
+    const el = innerRef.current ?? event.target
+    onBlur({ ...event, target: el, currentTarget: el } as unknown as React.FocusEvent<HTMLSelectElement>)
+  }
 
   function renderChoice(choice: Choice) {
     return (
@@ -145,6 +161,10 @@ function Select({
         tabIndex={-1}
         disabled={disabled}
         className="sr-only"
+        // Form libraries focus the field they registered to flag an error. That
+        // ref points here, so hand focus to the visible trigger instead of
+        // stranding it on a hidden element.
+        onFocus={() => triggerRef.current?.focus()}
         {...props}
       >
         {placeholder ? <option value="" /> : null}
@@ -160,9 +180,13 @@ function Select({
         }}
       >
         <SelectPrimitive.Trigger
+          ref={triggerRef}
           id={id}
           type="button"
           style={style}
+          // The hidden select can never be blurred, so a form library tracking
+          // touched fields only hears about it from here.
+          onBlur={handleBlur}
           className={cn(
             "flex h-8 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-transparent py-1 pr-2.5 pl-2.5 text-base transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-input/50 data-[disabled]:opacity-50 md:text-sm dark:bg-input/30",
             className,
