@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { settleItem, unsettleItem } from "@/lib/settle";
 
 // Cross-module item links. The three "things to buy" (wishlist items, shopping
 // items, plan expense lines) carry an originType/originId pointer to the row they
@@ -99,17 +100,35 @@ export async function syncLinkedStatus(
   if (planIds.length) {
     const rows = await prisma.budgetItem.findMany({
       where: { userId, id: { in: planIds } },
-      select: { id: true, planId: true, transactionId: true },
+      select: {
+        id: true,
+        planId: true,
+        transactionId: true,
+        completed: true,
+        loanId: true,
+        goalId: true,
+        amount: true,
+      },
     });
     const txnIds = rows.map((r) => r.transactionId).filter((t): t is string => !!t);
     if (txnIds.length) {
       await prisma.transaction.deleteMany({ where: { userId, id: { in: txnIds } } });
+    }
+    // A neighbour line flipped through a link moves money exactly as one toggled
+    // directly does, so a loan or goal it targets stays in step. Only lines
+    // actually changing state settle, so mirroring a flag twice cannot double up.
+    for (const r of rows) {
+      if (r.completed === done) continue;
+      if (done) await settleItem(userId, r);
+      else await unsettleItem(userId, r);
     }
     await prisma.budgetItem.updateMany({
       where: { userId, id: { in: planIds } },
       data: { completed: done, transactionId: null },
     });
     for (const r of rows) revalidatePath(`/money/plan/${r.planId}`);
+    revalidatePath("/money/loans");
+    revalidatePath("/money/goals");
   }
 
   if (shopIds.length) {

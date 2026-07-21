@@ -1,5 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { monthsToGoal, formatEta } from "@/lib/goals";
+import { monthsToGoal, goalRemaining, formatEta } from "@/lib/goals";
+
+describe("goalRemaining", () => {
+  it("returns what is still needed to reach the target", () => {
+    expect(goalRemaining({ currentAmount: 40000, targetAmount: 100000 })).toBe(60000);
+  });
+
+  it("floors at 0 when the goal is funded past its target", () => {
+    expect(goalRemaining({ currentAmount: 100000, targetAmount: 100000 })).toBe(0);
+    expect(goalRemaining({ currentAmount: 150000, targetAmount: 100000 })).toBe(0);
+  });
+});
 
 describe("monthsToGoal", () => {
   it("returns fractional months at the contribution rate", () => {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatCurrencyShort } from "@/lib/currency";
 import { centsToRand } from "@/lib/money";
-import { goalPercent, formatEta, etaTargetDate } from "@/lib/goals";
+import { goalPercent, goalRemaining, formatEta, etaTargetDate } from "@/lib/goals";
 import { monthsToClear, extraLabel } from "@/lib/extra";
 import { MoneyEmpty } from "./money-empty";
 import { GoalModal } from "./goal-modal";
@@ -107,7 +107,7 @@ function GoalCard({ goal, onClick }: { goal: Goal; onClick: () => void }) {
   const percent = goalPercent(goal.currentAmount, goal.targetAmount);
   const reached = percent !== null && percent >= 100;
   const unset = goal.targetAmount <= 0;
-  const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0);
+  const remaining = goalRemaining(goal);
   const eta = unset ? null : monthsToClear(remaining, goal.monthlyAmount, goal);
   const extra = extraLabel(goal, (cents) => formatCurrencyShort(centsToRand(cents)));
 

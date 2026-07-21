@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { cn, formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
 import { periodLabel } from "@/lib/budget";
-import { goalPercent } from "@/lib/goals";
+import { goalPercent, goalRemaining } from "@/lib/goals";
 import { loanOutstanding } from "@/lib/loans";
 import { deletePlan, duplicatePlan, toggleItemComplete, importToPlan } from "@/actions/budget";
 import { PlanModal } from "./plan-modal";
@@ -484,6 +484,7 @@ function ExpenseRow({
   // running draw-down bar.
   if (goal) {
     const pct = goalPercent(goal.currentAmount, goal.targetAmount);
+    const left = goalRemaining(goal);
     return (
       <div className="bg-surface hover:border-border-2 rounded-lg border p-3 transition-colors">
         <button
@@ -502,6 +503,9 @@ function ExpenseRow({
           <span className="text-fg-3 font-mono text-xs">
             funding {goal.name}
             {pct !== null ? ` · ${pct}% of target` : ""}
+            {pct !== null && left > 0
+              ? ` · ${formatZAR(centsToRand(left))} to go`
+              : ""}
           </span>
           {item.note ? (
             <span className="text-fg-3 truncate text-xs">{item.note}</span>
