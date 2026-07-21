@@ -36,6 +36,12 @@ export function goalPercent(currentCents: number, targetCents: number): number |
   return Math.round(Math.min(currentCents / targetCents, 1) * 100);
 }
 
+// Returns what is still needed to reach the target, in cents. 0 once reached, so
+// a goal funded past its target never reports a negative amount left.
+export function goalRemaining(goal: { currentAmount: number; targetAmount: number }): number {
+  return Math.max(goal.targetAmount - goal.currentAmount, 0);
+}
+
 // Returns the fractional months remaining to reach the target at the monthly
 // contribution rate. 0 once reached; null when there is no monthly amount or
 // no target (no ETA). Callers format the value with formatEta.
