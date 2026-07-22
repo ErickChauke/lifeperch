@@ -12,3 +12,13 @@ export function cn(...inputs: ClassValue[]) {
 export function formatZAR(amount: number): string {
   return formatCurrency(amount, "ZAR")
 }
+
+// Upper-cases the first letter of each word, so a stored "erick chauke" reads
+// "Erick Chauke" in a greeting. Returns "" for an empty or whitespace name so
+// the caller can fall back to its own default.
+export function titleCaseName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (ch) => ch.toUpperCase())
+}

@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         continue;
       }
       const { subject, html } = buildDigestEmail(
-        user.name ?? "there",
+        user.name ?? "",
         today,
         overdue,
       );

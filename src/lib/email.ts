@@ -1,7 +1,9 @@
 import { Resend } from "resend";
 
-// Default sender works with zero domain setup on the Resend free tier.
-const DEFAULT_FROM = "onboarding@resend.dev";
+// Default sender works with zero domain setup on the Resend free tier. The
+// display name is what the inbox shows, so it reads "LifePerch" rather than the
+// raw sandbox address. Set EMAIL_FROM to a verified-domain address to replace it.
+const DEFAULT_FROM = "LifePerch <onboarding@resend.dev>";
 
 type SendEmailArgs = {
   to: string;
