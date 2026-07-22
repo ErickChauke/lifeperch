@@ -1,3 +1,5 @@
+import { titleCaseName } from "@/lib/utils";
+
 // Escapes the few characters that would break HTML inside a text value.
 function escapeHtml(value: string): string {
   return value
@@ -26,7 +28,7 @@ export function buildPasswordResetEmail(
                 <div style="font-size:13px;color:#888f99;">LifePerch</div>
                 <h1 style="font-size:20px;color:#1b1f24;margin:4px 0 0;">Reset a folder password</h1>
                 <p style="font-size:15px;color:#5b6068;margin:16px 0 0;">Hi ${escapeHtml(
-                  name,
+                  titleCaseName(name) || "there",
                 )}, you asked to reset the password on your vault folder
                   <strong>${escapeHtml(folderTitle)}</strong>. Open the link below to clear
                   it, then set a new password from the folder settings.</p>

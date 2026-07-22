@@ -1,6 +1,13 @@
 import type { Todo } from "@/generated/prisma/client";
 import { PRIORITIES, priorityColor } from "@/lib/todo";
 import { WEEKDAYS } from "@/lib/timetable";
+import { titleCaseName } from "@/lib/utils";
+
+// Pairs a count with its noun, keeping the noun singular for one. Used to build
+// the subject so "1 todos" never happens.
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
 
 // Returns the human label for a priority value, falling back to the raw value.
 function priorityLabel(priority: string): string {
@@ -67,10 +74,13 @@ export function buildDigestEmail(
   overdue: Todo[],
 ): { subject: string; html: string } {
   const total = today.length + overdue.length;
+  const who = titleCaseName(name) || "there";
   const subject =
     overdue.length > 0
-      ? `Your todos: ${overdue.length} overdue, ${today.length} today`
-      : `Your todos for today: ${today.length}`;
+      ? `${plural(overdue.length, "todo")} overdue, ${today.length} today`
+      : today.length > 0
+        ? `${plural(today.length, "todo")} today`
+        : "You're all clear today";
 
   const body =
     total === 0
@@ -87,8 +97,8 @@ export function buildDigestEmail(
             <tr>
               <td>
                 <div style="font-size:13px;color:#888f99;">LifePerch</div>
-                <h1 style="font-size:20px;color:#1b1f24;margin:4px 0 0;">Morning, ${escapeHtml(
-                  name,
+                <h1 style="font-size:20px;color:#1b1f24;margin:4px 0 0;">Good morning, ${escapeHtml(
+                  who,
                 )}</h1>
                 ${body}
               </td>
