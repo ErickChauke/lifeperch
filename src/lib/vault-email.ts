@@ -27,7 +27,7 @@ export function buildPasswordResetEmail(
               <td>
                 <div style="font-size:13px;color:#888f99;">LifePerch</div>
                 <h1 style="font-size:20px;color:#1b1f24;margin:4px 0 0;">Reset a folder password</h1>
-                <p style="font-size:15px;color:#5b6068;margin:16px 0 0;">Hi ${escapeHtml(
+                <p style="font-size:15px;color:#5b6068;margin:16px 0 0;text-align:justify;">Hi ${escapeHtml(
                   titleCaseName(name) || "there",
                 )}, you asked to reset the password on your vault folder
                   <strong>${escapeHtml(folderTitle)}</strong>. Open the link below to clear
@@ -35,7 +35,7 @@ export function buildPasswordResetEmail(
                 <p style="margin:24px 0;">
                   <a href="${escapeHtml(resetLink)}" style="display:inline-block;background:#1b1f24;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:11px 20px;border-radius:8px;">Reset folder password</a>
                 </p>
-                <p style="font-size:13px;color:#888f99;margin:0;">This link expires in 30 minutes. If you did not request it, you can ignore this email and the password stays unchanged.</p>
+                <p style="font-size:13px;color:#888f99;margin:0;text-align:justify;">This link expires in 30 minutes. If you did not request it, you can ignore this email and the password stays unchanged.</p>
               </td>
             </tr>
           </table>

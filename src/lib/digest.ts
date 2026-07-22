@@ -84,7 +84,7 @@ export function buildDigestEmail(
 
   const body =
     total === 0
-      ? `<p style="font-size:15px;color:#5b6068;">Nothing due today and nothing overdue. Enjoy the breathing room.</p>`
+      ? `<p style="font-size:15px;color:#5b6068;text-align:justify;">Nothing due today and nothing overdue. Enjoy the breathing room.</p>`
       : `${renderSection("Overdue", overdue)}${renderSection("Today", today)}`;
 
   const html = `<!DOCTYPE html>
