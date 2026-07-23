@@ -51,7 +51,7 @@ export function LoansBoard({ loans, goals }: { loans: Loan[]; goals: Goal[] }) {
       <>
         <MoneyEmpty
           eyebrow="Records · Money · Loans"
-          message="Nothing borrowed. When you lend yourself money - from a goal's fund or from general savings - track it here so the debt stays visible until it's paid back."
+          message="Nothing borrowed. When you lend yourself money - out of a goal's fund, or from nothing you track here - record it so the debt stays visible until it's paid back."
           action={
             <Button onClick={() => setCreating(true)}>
               <Plus /> New loan
@@ -133,7 +133,7 @@ export function LoansBoard({ loans, goals }: { loans: Loan[]; goals: Goal[] }) {
                 <span className="min-w-0 flex-1">
                   <span className="text-fg block truncate text-sm font-medium">{loan.title}</span>
                   <span className="text-fg-3 block truncate text-xs">
-                    {loan.goal ? `from ${loan.goal.name}` : "from general savings"}
+                    {loan.goal ? `from ${loan.goal.name}` : "not from a goal"}
                     {loan.settledAt ? ` · settled ${format(loan.settledAt, "d MMM yyyy")}` : ""}
                   </span>
                 </span>
@@ -179,7 +179,7 @@ function LoanCard({
         <div className="flex items-start justify-between gap-2">
           <span className="text-fg min-w-0 truncate font-medium">{loan.title}</span>
           <span className="bg-surface-3 text-fg-2 shrink-0 rounded-full px-2 py-0.5 text-[11px]">
-            {loan.goal ? `from ${loan.goal.name}` : "general savings"}
+            {loan.goal ? `from ${loan.goal.name}` : "no goal"}
           </span>
         </div>
 
