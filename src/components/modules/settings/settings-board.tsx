@@ -376,8 +376,13 @@ function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative h-6 w-11 shrink-0 rounded-full border transition-colors disabled:opacity-50",
-          checked ? "border-accent-line bg-accent" : "bg-surface-2",
+          "relative h-6 w-11 shrink-0 rounded-full border transition-colors outline-none",
+          "focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
+          // bg-primary, not bg-accent: --color-accent is the shadcn hover grey
+          // here, so an accent fill on this surface would read as off.
+          checked
+            ? "border-accent-line bg-primary"
+            : "bg-surface-3 border-border-2 hover:bg-surface-2",
         )}
       >
         <span
@@ -385,7 +390,7 @@ function Toggle({
             "absolute top-1/2 size-4 -translate-y-1/2 rounded-full transition-[left]",
             checked ? "left-[22px]" : "left-[3px]",
           )}
-          style={{ background: checked ? "var(--accent-fg)" : "var(--text-3)" }}
+          style={{ background: checked ? "var(--accent-fg)" : "var(--text-2)" }}
         />
       </button>
     </label>
