@@ -26,10 +26,12 @@ export const loanSchema = z.object({
 
 export type LoanInput = z.infer<typeof loanSchema>;
 
-// Edit form: the principal and source are fixed once borrowed; only the plan
-// around the loan can change.
+// Edit form: the principal is fixed once borrowed, but the source can be
+// re-pointed, since picking the wrong goal is easy and was previously permanent.
+// Moving it settles up with both goals, see `@/lib/loan-source`.
 export const loanUpdateSchema = loanSchema.pick({
   title: true,
+  goalId: true,
   monthly: true,
   extraAmount: true,
   extraFrequency: true,

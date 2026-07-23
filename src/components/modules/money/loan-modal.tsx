@@ -76,6 +76,38 @@ function MoneyField({
   );
 }
 
+// Says what picking this source will actually do to the balances. "No goal" is
+// not a pot: nothing is held there and nothing moves, which is worth stating
+// outright rather than leaving it to be inferred from a label.
+function describeSource(
+  loan: Loan | null,
+  goalId: string | null,
+  nextGoal: Goal | undefined,
+  owed: number,
+): string | null {
+  if (!loan) {
+    return nextGoal
+      ? `The amount moves out of ${nextGoal.name} and returns as you repay.`
+      : "No savings balance moves. The debt is only tracked here.";
+  }
+  if ((loan.goalId ?? null) === goalId) {
+    return goalId
+      ? null
+      : "No savings balance moves. The debt is only tracked here.";
+  }
+  if (owed === 0) {
+    return "This loan is repaid, so changing the source moves no money.";
+  }
+  const amount = formatZAR(centsToRand(owed));
+  const from = loan.goal?.name;
+  if (from && nextGoal) {
+    return `Returns ${amount} to ${from} and takes it from ${nextGoal.name}.`;
+  }
+  if (from) return `Returns ${amount} to ${from}. No goal is charged.`;
+  if (nextGoal) return `Takes ${amount} from ${nextGoal.name}.`;
+  return null;
+}
+
 export function LoanModal({
   open,
   onOpenChange,
@@ -113,7 +145,10 @@ export function LoanModal({
     extraFrequency,
     extraDate: extraDate ? dayToDate(extraDate) : null,
   });
-  const sourceGoal = goals.find((g) => g.id === goalId);
+  const nextGoal = goals.find((g) => g.id === goalId);
+  // What the source goal is still out by, and so what a re-point moves.
+  const owed = loan ? loanOutstanding(loan) : 0;
+  const sourceHint = describeSource(loan, goalId || null, nextGoal, owed);
 
   useEffect(() => {
     setConfirmDelete(false);
@@ -139,6 +174,7 @@ export function LoanModal({
         if (loan) {
           await updateLoan(loan.id, {
             title: values.title,
+            goalId: values.goalId || null,
             monthly: values.monthly,
             extraAmount: values.extraAmount,
             extraFrequency: values.extraFrequency,
@@ -190,39 +226,44 @@ export function LoanModal({
           </div>
 
           {loan ? (
-            // The principal and source are fixed once borrowed.
+            // The principal is fixed once borrowed; the source is not.
             <p className="text-fg-3 text-sm">
               Borrowed{" "}
               <span className="text-fg font-mono">{formatZAR(centsToRand(loan.principal))}</span>{" "}
-              from {loan.goal ? loan.goal.name : "general savings"} · repaid{" "}
+              from {loan.goal ? loan.goal.name : "no goal"} · repaid{" "}
               <span className="text-fg font-mono">{formatZAR(centsToRand(loan.repaid))}</span>
             </p>
           ) : (
-            <>
-              <MoneyField
-                id="amount"
-                label="Amount"
-                register={register}
-                error={errors.amount?.message}
-              />
-              <div className="space-y-1.5">
-                <Label htmlFor="goalId">Borrow from</Label>
-                <Select id="goalId" {...register("goalId")}>
-                  <option value="">General savings</option>
-                  {goals.map((g) => (
-                    <option key={g.id} value={g.id} disabled={g.currentAmount <= 0}>
-                      {g.name} · {formatZAR(centsToRand(g.currentAmount))} available
-                    </option>
-                  ))}
-                </Select>
-                {sourceGoal ? (
-                  <p className="text-fg-3 text-xs">
-                    The amount moves out of {sourceGoal.name} and returns as you repay.
-                  </p>
-                ) : null}
-              </div>
-            </>
+            <MoneyField
+              id="amount"
+              label="Amount"
+              register={register}
+              error={errors.amount?.message}
+            />
           )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="goalId">Borrow from</Label>
+            <Select id="goalId" {...register("goalId")}>
+              <option value="">Not from a goal</option>
+              {goals.map((g) => (
+                <option
+                  key={g.id}
+                  value={g.id}
+                  // Editing: a goal has to cover what is still owed before the
+                  // loan can point at it. The current source always stays picked.
+                  disabled={
+                    loan
+                      ? g.id !== loan.goalId && g.currentAmount < owed
+                      : g.currentAmount <= 0
+                  }
+                >
+                  {g.name} · {formatZAR(centsToRand(g.currentAmount))} available
+                </option>
+              ))}
+            </Select>
+            {sourceHint ? <p className="text-fg-3 text-xs">{sourceHint}</p> : null}
+          </div>
 
           <MoneyField
             id="monthly"

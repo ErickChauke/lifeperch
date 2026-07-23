@@ -10,6 +10,7 @@ import {
   type LoanInput,
   type LoanUpdateInput,
 } from "@/lib/loans";
+import { moveLoanSource } from "@/lib/loan-source";
 import { toExtraRecord } from "@/lib/extra";
 import { randToCents } from "@/lib/money";
 
@@ -110,18 +111,28 @@ export async function repayLoan(id: string, amountRand: number) {
   revalidateLoans();
 }
 
-// Updates the plan around a loan. The principal and source stay fixed.
+// Updates the plan around a loan. The principal stays fixed, but the source can
+// move: picking the wrong goal when borrowing is easy, and it used to be
+// permanent. Re-pointing hands what is still owed back to the old goal and takes
+// it from the new one, all in one transaction so a rejected move writes nothing.
 export async function updateLoan(id: string, input: LoanUpdateInput) {
   const userId = await requireUserId();
   const data = loanUpdateSchema.parse(input);
-  await prisma.selfLoan.updateMany({
-    where: { id, userId },
-    data: {
-      title: data.title.trim(),
-      monthlyAmount: randToCents(data.monthly),
-      ...toExtraRecord(data),
-      note: data.note?.trim() || null,
-    },
+
+  await prisma.$transaction(async (tx) => {
+    const loan = await tx.selfLoan.findFirst({ where: { id, userId } });
+    if (!loan) throw new Error("Loan not found");
+    await moveLoanSource(tx, userId, loan, data.goalId);
+    await tx.selfLoan.update({
+      where: { id: loan.id },
+      data: {
+        title: data.title.trim(),
+        goalId: data.goalId,
+        monthlyAmount: randToCents(data.monthly),
+        ...toExtraRecord(data),
+        note: data.note?.trim() || null,
+      },
+    });
   });
   revalidateLoans();
 }
