@@ -28,9 +28,12 @@ export function JournalBoard({ entries }: { entries: Entry[] }) {
 
   return (
     <PageShell>
-      <PageBody className="pt-6 md:pt-10">
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="flex w-full flex-col gap-6 lg:w-[300px] lg:shrink-0">
+      {/* Two columns that each own their scroll from lg up, so the page itself
+          stays pinned (design-system 10). Below lg the layout stacks and the
+          page scrolls as one surface, so the height bounds are lg-only. */}
+      <PageBody className="pt-6 md:pt-10 lg:overflow-hidden">
+        <div className="flex flex-col gap-6 lg:h-full lg:min-h-0 lg:flex-row">
+          <div className="flex w-full flex-col gap-6 lg:min-h-0 lg:w-[300px] lg:shrink-0">
             <Calendar
               selected={selected}
               today={today}
@@ -43,7 +46,7 @@ export function JournalBoard({ entries }: { entries: Entry[] }) {
               onSelect={setSelected}
             />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="scrollbar-hide min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
             <EntryEditor key={selected} day={selected} entry={selectedEntry} />
           </div>
         </div>
