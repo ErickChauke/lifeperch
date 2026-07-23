@@ -52,7 +52,7 @@ export function TodoCalendar({
   const days = eachDayOfInterval({ start, end });
 
   return (
-    <div className="bg-surface rounded-md border border-border p-4">
+    <div className="bg-surface shrink-0 rounded-md border border-border p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-[15px] font-semibold">
           {format(month, "MMMM")}{" "}

@@ -168,9 +168,12 @@ export function TodoBoard({ project }: { project: Project }) {
         )}
       </PageHeader>
 
-      <PageBody className="pt-2 md:pt-2">
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="flex w-full flex-col gap-4 lg:w-[300px] lg:shrink-0">
+      {/* The calendar and Add todo stay put from lg up while the list scrolls on
+          its own, so a long list never pushes them off screen. Below lg the
+          layout stacks and the page scrolls as one surface. */}
+      <PageBody className="pt-2 md:pt-2 lg:overflow-hidden">
+        <div className="flex flex-col gap-6 lg:h-full lg:min-h-0 lg:flex-row">
+          <div className="flex w-full flex-col gap-4 lg:min-h-0 lg:w-[300px] lg:shrink-0">
             <TodoCalendar
               selected={selected}
               today={today}
@@ -178,12 +181,12 @@ export function TodoBoard({ project }: { project: Project }) {
               recurringDays={recurringDays}
               onSelect={setSelected}
             />
-            <Button onClick={openAdd} className="w-full">
+            <Button onClick={openAdd} className="w-full shrink-0">
               <Plus />
               Add todo
             </Button>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="scrollbar-hide min-w-0 flex-1 lg:min-h-0 lg:overflow-y-auto">
             <TodoList
               todos={todos}
               today={today}

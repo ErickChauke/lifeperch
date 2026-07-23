@@ -291,9 +291,12 @@ export function TodoHome({
         </div>
       </PageHeader>
 
-      <PageBody className="pt-2 md:pt-2">
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="order-2 w-full lg:order-1 lg:w-[300px] lg:shrink-0">
+      {/* The calendar stays put from lg up while the lists scroll on their own,
+          so a long day never pushes it off screen. Below lg the layout stacks
+          and the page scrolls as one surface. */}
+      <PageBody className="pt-2 md:pt-2 lg:overflow-hidden">
+        <div className="flex flex-col gap-6 lg:h-full lg:min-h-0 lg:flex-row">
+          <div className="order-2 w-full lg:order-1 lg:min-h-0 lg:w-[300px] lg:shrink-0">
             <TodoCalendar
               selected={selectedDay ?? today}
               today={today}
@@ -303,7 +306,7 @@ export function TodoHome({
               onSelect={(day) => setSelectedDay(day === today ? null : day)}
             />
           </div>
-          <div className="order-1 min-w-0 flex-1 lg:order-2">
+          <div className="scrollbar-hide order-1 min-w-0 flex-1 lg:order-2 lg:min-h-0 lg:overflow-y-auto">
             {selectedDay ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
