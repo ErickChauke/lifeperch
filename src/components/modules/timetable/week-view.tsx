@@ -229,7 +229,7 @@ export function WeekView({
                         ) : chip.tone === "interview" ? (
                           <CalendarClock className="size-3 shrink-0 text-[var(--info)]" />
                         ) : (
-                          <Milestone className="text-accent size-3 shrink-0" />
+                          <Milestone className="text-accent-read size-3 shrink-0" />
                         )}
                         <span className="text-fg max-w-[14rem] truncate">
                           {chip.label}
@@ -285,7 +285,7 @@ export function WeekView({
                   )}
                 >
                   <span>{day.slice(0, 3)}</span>
-                  <span className={isToday ? "text-accent" : "text-fg-2"}>
+                  <span className={isToday ? "text-accent-read" : "text-fg-2"}>
                     {format(parseISO(dayStr), "d")}
                   </span>
                 </div>

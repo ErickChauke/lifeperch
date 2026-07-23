@@ -342,7 +342,7 @@ export function TodoHome({
                         {mark.tone === "deadline" ? (
                           <Flag className="text-destructive size-4 shrink-0" />
                         ) : (
-                          <Milestone className="text-accent size-4 shrink-0" />
+                          <Milestone className="text-accent-read size-4 shrink-0" />
                         )}
                         <span className="text-fg min-w-0 flex-1 truncate text-sm">
                           {mark.label}
