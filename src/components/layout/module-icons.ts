@@ -11,6 +11,7 @@ import {
   Briefcase,
   Lock,
   GitBranch,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +29,7 @@ export const ICONS: Record<string, LucideIcon> = {
   jobs: Briefcase,
   vault: Lock,
   timeline: GitBranch,
+  settings: Settings,
 };
 
 // Returns the lucide icon for a module icon name, falling back to Calendar.
