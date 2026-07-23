@@ -141,7 +141,7 @@ export function TodoWeekTimeline({
                   )}
                 >
                   <span>{format(parseISO(day), "EEE")}</span>
-                  <span className={isToday ? "text-accent" : "text-fg-2"}>
+                  <span className={isToday ? "text-accent-read" : "text-fg-2"}>
                     {format(parseISO(day), "d")}
                   </span>
                 </div>
