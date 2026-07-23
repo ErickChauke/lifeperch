@@ -17,6 +17,7 @@ model User {
   emailVerified         DateTime?
   image                 String?
   dailyDigest           Boolean                @default(true)
+  todoCleanupDays       Int?                   @default(3)
   accounts              Account[]
   sessions              Session[]
   timetableEvents       TimetableEvent[]

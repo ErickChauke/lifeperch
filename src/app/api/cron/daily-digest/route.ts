@@ -3,15 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { getTodayTodosForUser } from "@/actions/todo";
 import { buildDigestEmail } from "@/lib/digest";
 import { sendEmail } from "@/lib/email";
+import { cleanupCompletedTodos } from "@/lib/todo-cleanup";
 
 export const dynamic = "force-dynamic";
 
 // Send even when there is nothing due. Flip to true for a daily nudge instead.
 const SEND_WHEN_EMPTY = false;
 
-// Sends the daily todo digest to every opted-in user. Triggered by Vercel Cron,
-// which carries no session, so it reads by explicit user id and guards with a
-// shared secret rather than auth().
+// The daily pass: clears out finished todos past their retention window, then
+// sends the todo digest to every opted-in user. Triggered by Vercel Cron, which
+// carries no session, so it reads by explicit user id and guards with a shared
+// secret rather than auth().
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   // Reject unless the Bearer secret matches. A missing secret allows manual dev runs.
@@ -19,6 +21,21 @@ export async function GET(request: Request) {
     const auth = request.headers.get("authorization");
     if (auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
+  // This is the app's one daily pass, so retention runs here too. It covers every
+  // user, not just the ones opted into the digest, and runs before the digest is
+  // built so a cleaned todo never shows up in an email that outlives it.
+  let cleaned = 0;
+  const everyone = await prisma.user.findMany({
+    select: { id: true, todoCleanupDays: true },
+  });
+  for (const user of everyone) {
+    try {
+      cleaned += await cleanupCompletedTodos(user.id, user.todoCleanupDays);
+    } catch (err) {
+      console.error(`todo cleanup failed for ${user.id}`, err);
     }
   }
 
@@ -49,5 +66,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ sent, skipped });
+  return NextResponse.json({ sent, skipped, cleaned });
 }
