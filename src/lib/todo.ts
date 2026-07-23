@@ -232,3 +232,32 @@ export function groupByBucket<T extends TodoLike>(todos: T[], today: string) {
     todos: todos.filter((t) => bucketOf(t, today) === key).sort(compare),
   }));
 }
+
+// --- Auto clean ---
+// How long finished todos are kept before Settings deletes them. Pure on
+// purpose: the settings form imports these, and the delete itself lives in
+// `@/lib/todo-cleanup`, which reaches the database.
+
+export const CLEANUP_DAYS = [1, 3, 7, 14, 30] as const;
+
+export const DEFAULT_CLEANUP_DAYS = 3;
+
+// True when the value is a retention window the settings form offers. Anything
+// else is rejected at the action boundary rather than silently stored.
+export function isCleanupDays(value: number): boolean {
+  return (CLEANUP_DAYS as readonly number[]).includes(value);
+}
+
+// Reads the settings form value back into a retention window. An empty string
+// is the "Never" option, as is anything unrecognised.
+export function parseCleanupDays(value: string): number | null {
+  if (value === "") return null;
+  const days = Number(value);
+  return Number.isFinite(days) && isCleanupDays(days) ? days : null;
+}
+
+// Returns the label for a retention window, for the field and its summary line.
+export function cleanupLabel(days: number | null): string {
+  if (days === null) return "Never";
+  return days === 1 ? "After 1 day" : `After ${days} days`;
+}

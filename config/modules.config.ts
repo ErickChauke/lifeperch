@@ -1,7 +1,7 @@
 // Module registry. The sidebar renders a link for every enabled module,
 // grouped by section. Set enabled: false to hide a module without deleting its data.
 // icon is a lucide-react icon name, mapped to a component in nav-links.
-export type ModuleGroup = "Daily" | "Records" | "Archive";
+export type ModuleGroup = "Daily" | "Records" | "Archive" | "System";
 
 export type ModuleConfig = {
   id: string;
@@ -13,7 +13,7 @@ export type ModuleConfig = {
 };
 
 // Section order in the sidebar.
-export const GROUP_ORDER: ModuleGroup[] = ["Daily", "Records", "Archive"];
+export const GROUP_ORDER: ModuleGroup[] = ["Daily", "Records", "Archive", "System"];
 
 export const modules: ModuleConfig[] = [
   // Daily
@@ -31,4 +31,6 @@ export const modules: ModuleConfig[] = [
   // Archive
   { id: "timeline", label: "Milestones", href: "/timeline", icon: "timeline", group: "Archive", enabled: true },
   { id: "vault", label: "Vault", href: "/vault", icon: "vault", group: "Archive", enabled: true },
+  // System
+  { id: "settings", label: "Settings", href: "/settings", icon: "settings", group: "System", enabled: true },
 ];
