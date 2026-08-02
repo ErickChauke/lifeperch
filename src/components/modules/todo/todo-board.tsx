@@ -15,6 +15,7 @@ import {
   PageBody,
 } from "@/components/layout/page-shell";
 import { dateToDay } from "@/lib/money";
+import { isDone } from "@/lib/todo";
 import {
   renameCollection,
   updateCollectionDescription,
@@ -59,6 +60,14 @@ export function TodoBoard({ project }: { project: Project }) {
     });
     return set;
   }, [todos]);
+
+  // Progress for this one list, the context the To-Do homepage cannot show since
+  // it spans every list. A recurring todo counts as done only when done today.
+  const doneCount = useMemo(
+    () => todos.filter((t) => isDone(t, today)).length,
+    [todos, today],
+  );
+  const donePct = todos.length > 0 ? Math.round((doneCount / todos.length) * 100) : 0;
 
   function openAdd() {
     setEditing(null);
@@ -163,6 +172,19 @@ export function TodoBoard({ project }: { project: Project }) {
             </div>
             {project.description ? (
               <p className="text-fg-2 text-sm">{project.description}</p>
+            ) : null}
+            {todos.length > 0 ? (
+              <div className="flex items-center gap-3 pt-1">
+                <div className="bg-surface-2 h-2 w-full max-w-[220px] overflow-hidden rounded-full">
+                  <div
+                    className="bg-primary h-full rounded-full transition-all"
+                    style={{ width: `${donePct}%` }}
+                  />
+                </div>
+                <span className="text-fg-2 shrink-0 font-mono text-xs">
+                  {doneCount} of {todos.length} done
+                </span>
+              </div>
             ) : null}
           </div>
         )}

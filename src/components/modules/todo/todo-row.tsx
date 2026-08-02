@@ -13,14 +13,21 @@ import type { Todo } from "./todo-board";
 // One todo line: a completion checkbox, the title with a priority pip, optional
 // time and recurrence badges, tags, and a chip that jumps to a linked module.
 // The body opens the edit modal; the chip and checkbox stop that.
+//
+// variant "card" (default) is a standalone bordered card, used everywhere a todo
+// stands on its own. "flat" is transparent and borderless for rows stacked
+// inside one panel with dividers, the inside-a-list view; the panel supplies the
+// surface and border, so passing "flat" never changes a "card" call site.
 export function TodoRow({
   todo,
   today,
   onEdit,
+  variant = "card",
 }: {
   todo: Todo;
   today: string;
   onEdit: (todo: Todo) => void;
+  variant?: "card" | "flat";
 }) {
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(isDone(todo, today));
@@ -55,7 +62,14 @@ export function TodoRow({
   }
 
   return (
-    <div className="bg-surface group flex items-center gap-3 rounded-md border border-border px-3 py-2.5">
+    <div
+      className={cn(
+        "group flex items-center gap-3 px-3 py-2.5",
+        variant === "card"
+          ? "bg-surface rounded-md border border-border"
+          : "hover:bg-surface-2 transition-colors",
+      )}
+    >
       <button
         type="button"
         onClick={toggle}
