@@ -51,9 +51,15 @@ export function TodoList({
         {dayTodos.length === 0 ? (
           <p className="text-fg-3 text-sm">Nothing due on this day.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="bg-surface divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border">
             {dayTodos.map((todo) => (
-              <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
+              <TodoRow
+                key={todo.id}
+                todo={todo}
+                today={today}
+                onEdit={onEdit}
+                variant="flat"
+              />
             ))}
           </div>
         )}
@@ -78,9 +84,17 @@ export function TodoList({
           <h3 className="text-fg-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
             {group.label}
           </h3>
-          {group.todos.map((todo) => (
-            <TodoRow key={todo.id} todo={todo} today={today} onEdit={onEdit} />
-          ))}
+          <div className="bg-surface divide-y divide-border overflow-hidden rounded-[var(--r-lg)] border border-border">
+            {group.todos.map((todo) => (
+              <TodoRow
+                key={todo.id}
+                todo={todo}
+                today={today}
+                onEdit={onEdit}
+                variant="flat"
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>
