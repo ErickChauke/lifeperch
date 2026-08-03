@@ -130,7 +130,7 @@ export async function updateShoppingItem(id: string, input: ShoppingItemInput) {
           amount,
           category: item.list.category || "Other",
           description: name,
-          date: dayToDate(dateToDay(new Date())),
+          date: dayToDate(todayDay()),
         },
       });
       await prisma.shoppingItem.update({ where: { id }, data: { transactionId: txn.id } });
