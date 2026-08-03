@@ -7,6 +7,7 @@ import {
   habitSchema,
   habitMet,
   computeStreak,
+  computeWeeklyStreak,
   lastNDays,
   currentWeekDays,
   isHabitExpected,
@@ -63,10 +64,18 @@ export async function getHabits() {
       logs.filter((l) => habitMet(l.value, habit.kind, habit.target)).map((l) => dateToDay(l.date)),
     );
     const expected = (day: string) => isHabitExpected(habit, day);
+    // A weekly-flexible habit is "expected" every day (see isHabitExpected), so
+    // computeStreak's daily-consecutive walk would demand it be met every single
+    // day - defeating the point of a Nx/week target. Count consecutive weeks
+    // hitting that target instead.
+    const streak =
+      habit.weeklyTarget != null
+        ? computeWeeklyStreak(metDays, today, habit.weeklyTarget)
+        : computeStreak(metDays, today, expected);
     return {
       ...habit,
       todayValue,
-      streak: computeStreak(metDays, today, expected),
+      streak,
       weekDone: thisWeek.filter((d) => metDays.has(d)).length,
       last7: week.map((day) => ({
         day,
