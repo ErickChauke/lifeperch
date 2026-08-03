@@ -65,10 +65,16 @@ export async function renameShoppingList(id: string, title: string) {
   revalidateShopping(id);
 }
 
-// Deletes a list and its items (cascade), scoped to the current user.
+// Deletes a list and its items (cascade), scoped to the current user. Severs
+// any link a deleted item's linked siblings held, so they don't dangle.
 export async function deleteShoppingList(id: string) {
   const userId = await requireUserId();
+  const items = await prisma.shoppingItem.findMany({
+    where: { userId, listId: id },
+    select: { id: true },
+  });
   await prisma.shoppingList.deleteMany({ where: { id, userId } });
+  for (const item of items) await clearInboundLinks(userId, item.id);
   revalidateShopping();
 }
 
@@ -91,19 +97,50 @@ export async function createShoppingItem(listId: string, input: ShoppingItemInpu
 }
 
 // Edits an item's name, price (rand to cents), and quantity, scoped to the user.
+// When the item is already bought, its logged transaction is kept in step with
+// the new amount/name, the same way updateWish keeps a bought wish's
+// transaction in step: update, create, or delete depending on the new price.
 export async function updateShoppingItem(id: string, input: ShoppingItemInput) {
   const userId = await requireUserId();
   const data = shoppingItemSchema.parse(input);
-  const item = await prisma.shoppingItem.findFirst({ where: { id, userId } });
+  const item = await prisma.shoppingItem.findFirst({
+    where: { id, userId },
+    include: { list: { select: { category: true } } },
+  });
   if (!item) return;
+  const price = randToCents(data.price);
+  const name = data.name.trim();
   await prisma.shoppingItem.updateMany({
     where: { id, userId },
-    data: {
-      name: data.name.trim(),
-      price: randToCents(data.price),
-      quantity: data.quantity,
-    },
+    data: { name, price, quantity: data.quantity },
   });
+
+  if (item.bought) {
+    const amount = price * data.quantity;
+    if (amount > 0 && item.transactionId) {
+      await prisma.transaction.updateMany({
+        where: { id: item.transactionId, userId },
+        data: { amount, description: name, category: item.list.category || "Other" },
+      });
+    } else if (amount > 0 && !item.transactionId) {
+      const txn = await prisma.transaction.create({
+        data: {
+          userId,
+          type: "expense",
+          amount,
+          category: item.list.category || "Other",
+          description: name,
+          date: dayToDate(todayDay()),
+        },
+      });
+      await prisma.shoppingItem.update({ where: { id }, data: { transactionId: txn.id } });
+    } else if (amount === 0 && item.transactionId) {
+      await prisma.transaction.deleteMany({ where: { id: item.transactionId, userId } });
+      await prisma.shoppingItem.update({ where: { id }, data: { transactionId: null } });
+    }
+    revalidatePath("/money/transactions");
+  }
+
   revalidateShopping(item.listId);
 }
 
@@ -152,15 +189,27 @@ export async function toggleBought(id: string) {
   revalidatePath("/money/transactions");
 }
 
-// Sets an item's quantity, floored at 1.
+// Sets an item's quantity, floored at 1. When the item is already bought, its
+// logged transaction's amount follows the new quantity (a transactionId only
+// exists here if the item was bought at a non-zero price, so a single update
+// suffices - the create/delete branches only matter when price itself changes,
+// handled in updateShoppingItem).
 export async function setQuantity(id: string, quantity: number) {
   const userId = await requireUserId();
   const item = await prisma.shoppingItem.findFirst({ where: { id, userId } });
   if (!item) return;
+  const qty = Math.max(1, Math.trunc(quantity));
   await prisma.shoppingItem.updateMany({
     where: { id, userId },
-    data: { quantity: Math.max(1, Math.trunc(quantity)) },
+    data: { quantity: qty },
   });
+  if (item.bought && item.transactionId) {
+    await prisma.transaction.updateMany({
+      where: { id: item.transactionId, userId },
+      data: { amount: item.price * qty },
+    });
+    revalidatePath("/money/transactions");
+  }
   revalidateShopping(item.listId);
 }
 
