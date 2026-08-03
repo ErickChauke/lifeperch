@@ -71,9 +71,15 @@ export async function renameCollection(id: string, title: string) {
 }
 
 // Deletes a collection and its wishes (cascade), scoped to the current user.
+// Severs any link a deleted wish's linked siblings held, so they don't dangle.
 export async function deleteCollection(id: string) {
   const userId = await requireUserId();
+  const items = await prisma.wishlistItem.findMany({
+    where: { userId, collectionId: id },
+    select: { id: true },
+  });
   await prisma.wishlistCollection.deleteMany({ where: { id, userId } });
+  for (const item of items) await clearInboundLinks(userId, item.id);
   revalidateWishlist();
 }
 

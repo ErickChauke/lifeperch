@@ -112,21 +112,32 @@ export async function updatePlan(id: string, input: PlanInput) {
 // Deletes a plan and its lines (cascade), scoped to the current user. Lines that
 // were marked done have their credit taken back off the loan or goal first, and
 // the transactions they logged removed, so deleting a plan leaves no balance
-// crediting a line that is gone and no orphan transaction behind.
+// crediting a line that is gone and no orphan transaction behind. Every
+// cascaded line also has its link to its linked siblings severed, so they
+// don't dangle.
 export async function deletePlan(id: string) {
   const userId = await requireUserId();
   const plan = await prisma.budgetPlan.findFirst({ where: { id, userId } });
   if (!plan) return;
-  const done = await prisma.budgetItem.findMany({
-    where: { planId: id, userId, completed: true },
-    select: { loanId: true, goalId: true, amount: true, transactionId: true },
+  const items = await prisma.budgetItem.findMany({
+    where: { planId: id, userId },
+    select: {
+      id: true,
+      loanId: true,
+      goalId: true,
+      amount: true,
+      transactionId: true,
+      completed: true,
+    },
   });
+  const done = items.filter((i) => i.completed);
   for (const item of done) await unsettleItem(userId, item);
   const txnIds = done.map((i) => i.transactionId).filter((t): t is string => !!t);
   if (txnIds.length) {
     await prisma.transaction.deleteMany({ where: { userId, id: { in: txnIds } } });
   }
   await prisma.budgetPlan.deleteMany({ where: { id, userId } });
+  for (const item of items) await clearInboundLinks(userId, item.id);
   revalidateBudget();
   revalidatePath("/money/transactions");
 }
