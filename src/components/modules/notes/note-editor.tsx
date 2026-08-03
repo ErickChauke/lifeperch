@@ -29,6 +29,15 @@ export function NoteEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
 
+  // Seed the editor with html: rich notes pass through, legacy markdown notes
+  // are converted best-effort. Also used as the form's body default so an
+  // untouched save (title/tags only, body never opened in the editor) still
+  // saves valid html instead of the note's raw pre-conversion text.
+  const initialHtml = useMemo(
+    () => seedHtml(note?.body ?? "", note?.bodyFormat ?? "markdown"),
+    [note],
+  );
+
   const {
     register,
     handleSubmit,
@@ -39,20 +48,13 @@ export function NoteEditor({
     resolver: zodResolver(noteSchema),
     defaultValues: {
       title: note?.title ?? "",
-      body: note?.body ?? "",
-      bodyFormat: note?.bodyFormat === "html" ? "html" : "markdown",
+      body: initialHtml,
+      bodyFormat: "html",
       tags: note?.tags ?? [],
     },
   });
 
   const tags = useWatch({ control, name: "tags" }) ?? [];
-
-  // Seed the editor with html: rich notes pass through, legacy markdown notes
-  // are converted best-effort.
-  const initialHtml = useMemo(
-    () => seedHtml(note?.body ?? "", note?.bodyFormat ?? "markdown"),
-    [note],
-  );
 
   function addTag() {
     const next = normalizeTags([...tags, tagDraft]);
