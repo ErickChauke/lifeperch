@@ -1,6 +1,6 @@
 import { getUploadSignature } from "@/actions/upload";
 
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB (Cloudinary free tier)
+export { MAX_UPLOAD_BYTES } from "@/lib/cloudinary";
 
 export type UploadResult = {
   url: string;

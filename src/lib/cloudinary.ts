@@ -11,6 +11,23 @@ cloudinary.config({
 
 export { cloudinary };
 
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB (Cloudinary free tier)
+
+// The signed upload API has no way to cap a file's size server-side (Cloudinary
+// confirmed this isn't supported), so this is the real enforcement: called from
+// each action right after a fresh upload, it destroys the asset and rejects when
+// the client-side check in lib/upload.ts was bypassed. Reused, already-accepted
+// assets (bytes unchanged from a prior save) always pass, so this only ever
+// blocks a genuinely new oversized upload.
+export async function assertUploadSize(
+  bytes: number | null | undefined,
+  publicId: string | null | undefined,
+): Promise<void> {
+  if (bytes == null || !publicId || bytes <= MAX_UPLOAD_BYTES) return;
+  await destroyAsset(publicId);
+  throw new Error("File exceeds the 10 MB upload limit");
+}
+
 // Best-effort delete of an uploaded asset. The resource type is not stored, so
 // each candidate is tried; a missing asset is not treated as an error. Callers
 // rely on this never throwing (a Cloudinary outage should not block a delete),
