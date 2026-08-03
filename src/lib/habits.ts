@@ -149,6 +149,31 @@ export function currentWeekDays(today: string): string[] {
   return lastNDays(today, weekdayOf(today) + 1);
 }
 
+// Monday "yyyy-MM-dd" of the week containing `day`.
+function mondayOf(day: string): string {
+  return lastNDays(day, weekdayOf(day) + 1)[0];
+}
+
+// The 7 days Monday..Sunday of the week containing `day`, oldest first.
+function fullWeekOf(day: string): string[] {
+  const monday = mondayOf(day);
+  const out: string[] = [];
+  const base = new Date(`${monday}T00:00:00.000Z`);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() + i);
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+// The Monday one week before a given Monday.
+function priorMonday(monday: string): string {
+  const d = new Date(`${monday}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() - 7);
+  return d.toISOString().slice(0, 10);
+}
+
 // Counts consecutive met days ending at today, considering only days the habit
 // is expected on (off days neither count nor break the run). Today not yet met
 // keeps the run alive rather than zeroing it mid-day.
@@ -167,6 +192,37 @@ export function computeStreak(
     }
     isToday = false;
     cursor = prevDay(cursor);
+  }
+  return streak;
+}
+
+// Counts consecutive weeks (Monday..Sunday) meeting a weeklyTarget habit's
+// count, walking back from the current week. Unlike computeStreak, a single
+// missed day never breaks this: the current (in-progress) week keeps the
+// streak alive as long as it can still reach target with the days it has
+// left, and only counts once it actually has; a completed past week only
+// counts if it hit target.
+export function computeWeeklyStreak(
+  metDays: Set<string>,
+  today: string,
+  weeklyTarget: number,
+): number {
+  let monday = mondayOf(today);
+  let streak = 0;
+  for (let guard = 0; guard < 200; guard++) {
+    const week = fullWeekOf(monday);
+    const isCurrent = guard === 0;
+    const relevant = isCurrent ? week.filter((d) => d <= today) : week;
+    const met = relevant.filter((d) => metDays.has(d)).length;
+    const daysLeft = week.length - relevant.length;
+    if (met >= weeklyTarget) {
+      streak++;
+    } else if (isCurrent && met + daysLeft >= weeklyTarget) {
+      // Still reachable this week: neither a completed streak week nor a break.
+    } else {
+      break;
+    }
+    monday = priorMonday(monday);
   }
   return streak;
 }

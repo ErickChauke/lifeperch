@@ -284,15 +284,18 @@ export function TimetableBoard({
   }
 
   // Active medicines with scheduled times drop a dose block onto the grid at each
-  // time, on every day they are expected (empty days = every day).
+  // time, on every day they are expected (empty days = every day). Deduped
+  // defensively: the form rejects duplicate times going forward, but a
+  // duplicate would otherwise collide into one block id and one React key.
   const medicineBlocks: MedicineBlock[] = [];
   for (const m of medicines) {
     if (!m.active || m.times.length === 0) continue;
+    const times = [...new Set(m.times)];
     weekDays.forEach((day, i) => {
       const expected =
         m.days.length === 0 || m.days.includes(weekdayIndex(parseISO(day)));
       if (!expected) return;
-      for (const time of m.times) {
+      for (const time of times) {
         medicineBlocks.push({
           id: `${m.id}-${i}-${time}`,
           dayIdx: i,

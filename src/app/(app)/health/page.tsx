@@ -4,7 +4,7 @@ import { getRoutines, getSessions } from "@/actions/workouts";
 import { getMedicines } from "@/actions/medicines";
 import { getHealthRules } from "@/actions/health-rules";
 import { getHealthNotes } from "@/actions/health-notes";
-import { dateToDay } from "@/lib/money";
+import { todayDay } from "@/lib/money";
 import { HealthHub } from "@/components/modules/health/health-hub";
 
 // The Health hub: the dated meal log, reusable meal plans, workouts, medicines,
@@ -30,7 +30,7 @@ export default async function HealthPage() {
       medicines={medicines}
       rules={rules}
       notes={notes}
-      today={dateToDay(new Date())}
+      today={todayDay()}
     />
   );
 }

@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { isVaultUnlocked } from "@/actions/vault";
 import { formatZAR } from "@/lib/utils";
 import { centsToRand } from "@/lib/money";
+import { dateToDay } from "@/lib/journal";
 
 // One row in the global command palette. moduleId drives the group icon/label;
 // href is the deep link the result navigates to.
@@ -281,7 +282,7 @@ export async function searchEverything(query: string): Promise<SearchResult[]> {
       moduleId: "journal",
       title: e.title || "Journal entry",
       subtitle: format(e.date, DATE_FMT),
-      href: "/journal",
+      href: `/journal?date=${dateToDay(e.date)}`,
     });
   }
   for (const t of transactions) {

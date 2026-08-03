@@ -12,10 +12,17 @@ import type { getEntries } from "@/actions/journal";
 export type Entry = Awaited<ReturnType<typeof getEntries>>[number];
 
 // Client container for Journal. Owns the selected day; the calendar, editor,
-// and past-entries list all read from and write to it.
-export function JournalBoard({ entries }: { entries: Entry[] }) {
+// and past-entries list all read from and write to it. An optional initialDate
+// (from a search result deep-link) opens straight to that day instead of today.
+export function JournalBoard({
+  entries,
+  initialDate,
+}: {
+  entries: Entry[];
+  initialDate?: string;
+}) {
   const today = format(new Date(), "yyyy-MM-dd");
-  const [selected, setSelected] = useState(today);
+  const [selected, setSelected] = useState(initialDate ?? today);
 
   const byDay = useMemo(() => {
     const map = new Map<string, Entry>();

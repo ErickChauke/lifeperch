@@ -150,11 +150,27 @@ export async function createCollection(input: CollectionInput) {
   return collection;
 }
 
+// Loads a card the user owns and confirms it is unlocked (no password, or its
+// own unlock cookie present). This is the check createDocument already made;
+// every other action that writes to or removes a locked card now makes it too,
+// so the vault PIN alone can never be enough to get past a card's own password.
+async function requireCardAccess(userId: string, id: string) {
+  const collection = await prisma.vaultCollection.findFirst({
+    where: { id, userId },
+  });
+  if (!collection) throw new Error("Folder not found");
+  if (collection.passwordHash && !(await isCollectionUnlocked(id))) {
+    throw new Error("Folder locked");
+  }
+  return collection;
+}
+
 // Renames a card.
 export async function renameCollection(id: string, title: string) {
   const userId = await requireUnlockedVault();
   const clean = title.trim();
   if (!clean) return;
+  await requireCardAccess(userId, id);
   await prisma.vaultCollection.updateMany({
     where: { id, userId },
     data: { title: clean },
@@ -165,6 +181,7 @@ export async function renameCollection(id: string, title: string) {
 // Updates a card's description (empty clears it).
 export async function updateCollectionDescription(id: string, description: string) {
   const userId = await requireUnlockedVault();
+  await requireCardAccess(userId, id);
   await prisma.vaultCollection.updateMany({
     where: { id, userId },
     data: { description: description.trim() || null },
@@ -172,10 +189,13 @@ export async function updateCollectionDescription(id: string, description: strin
   revalidateVault(id);
 }
 
-// Sets, changes, or removes a card's password. An empty password removes the
-// lock. Either way the card's unlock cookie is cleared so it must be re-entered.
+// Sets, changes, or removes a card's password. Requires the card to already be
+// unlocked, so changing or clearing a password proves you know the current one
+// (or the card had none). Either way the card's unlock cookie is cleared so it
+// must be re-entered.
 export async function setCollectionPassword(id: string, password: string | null) {
   const userId = await requireUnlockedVault();
+  await requireCardAccess(userId, id);
   const clean = password?.trim();
   await prisma.vaultCollection.updateMany({
     where: { id, userId },
@@ -189,10 +209,7 @@ export async function setCollectionPassword(id: string, password: string | null)
 // Deletes a card, its documents, and their Cloudinary assets.
 export async function deleteCollection(id: string) {
   const userId = await requireUnlockedVault();
-  const collection = await prisma.vaultCollection.findFirst({
-    where: { id, userId },
-  });
-  if (!collection) return;
+  await requireCardAccess(userId, id);
   const documents = await prisma.document.findMany({
     where: { userId, collectionId: id },
   });
@@ -336,11 +353,13 @@ export async function createDocument(collectionId: string, input: DocumentInput)
   revalidateVault(collectionId);
 }
 
-// Deletes a document and its Cloudinary asset, scoped to the current user.
+// Deletes a document and its Cloudinary asset, scoped to the current user. The
+// card it lives in must be unlocked, same as adding a document.
 export async function deleteDocument(id: string) {
   const userId = await requireUnlockedVault();
   const doc = await prisma.document.findFirst({ where: { id, userId } });
   if (!doc) return;
+  await requireCardAccess(userId, doc.collectionId);
   await destroyAsset(doc.publicId);
   await prisma.document.deleteMany({ where: { id, userId } });
   revalidateVault(doc.collectionId);

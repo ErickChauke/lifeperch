@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { dayToDate, dateToDay } from "@/lib/money";
+import { dayToDate, todayDay } from "@/lib/money";
 import { medicineSchema, type MedicineInput } from "@/lib/health";
 
 // Returns the current user id or throws when there is no session.
@@ -32,7 +32,7 @@ function toRecord(data: MedicineInput) {
 // first, then by manual order.
 export async function getMedicines() {
   const userId = await requireUserId();
-  const today = dayToDate(dateToDay(new Date()));
+  const today = dayToDate(todayDay());
   const medicines = await prisma.medicine.findMany({
     where: { userId },
     orderBy: [{ active: "desc" }, { order: "asc" }, { createdAt: "asc" }],
