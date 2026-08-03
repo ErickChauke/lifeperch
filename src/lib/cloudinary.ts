@@ -12,7 +12,10 @@ cloudinary.config({
 export { cloudinary };
 
 // Best-effort delete of an uploaded asset. The resource type is not stored, so
-// each candidate is tried; a missing asset is not treated as an error.
+// each candidate is tried; a missing asset is not treated as an error. Callers
+// rely on this never throwing (a Cloudinary outage should not block a delete),
+// so a failure across every candidate is logged here rather than surfaced,
+// making an orphaned asset observable in the logs instead of silent.
 export async function destroyAsset(publicId: string): Promise<void> {
   for (const resource_type of ["image", "raw", "video"] as const) {
     try {
@@ -22,6 +25,7 @@ export async function destroyAsset(publicId: string): Promise<void> {
       // try the next resource type
     }
   }
+  console.error(`destroyAsset: could not delete Cloudinary asset ${publicId}`);
 }
 
 // Matches a stored Cloudinary delivery URL:
