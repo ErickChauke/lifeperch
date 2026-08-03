@@ -9,7 +9,7 @@ import {
   type ShoppingListInput,
   type ShoppingItemInput,
 } from "@/lib/shopping";
-import { randToCents, dayToDate, dateToDay } from "@/lib/money";
+import { randToCents, dayToDate, todayDay } from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 
 // Returns the current user id or throws when there is no session.
@@ -128,7 +128,7 @@ export async function toggleBought(id: string) {
           amount: item.price * item.quantity,
           category: item.list.category || "Other",
           description: item.name,
-          date: dayToDate(dateToDay(new Date())),
+          date: dayToDate(todayDay()),
         },
       });
       transactionId = txn.id;

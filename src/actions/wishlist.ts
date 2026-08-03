@@ -9,7 +9,7 @@ import {
   type CollectionInput,
   type WishlistInput,
 } from "@/lib/wishlist";
-import { randToCents, dayToDate, dateToDay } from "@/lib/money";
+import { randToCents, dayToDate, todayDay } from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 
 // Returns the current user id or throws when there is no session.
@@ -132,7 +132,7 @@ export async function updateWish(id: string, input: WishlistInput) {
           amount: price,
           category,
           description,
-          date: dayToDate(dateToDay(new Date())),
+          date: dayToDate(todayDay()),
         },
       });
       await prisma.wishlistItem.update({ where: { id }, data: { transactionId: txn.id } });
@@ -183,7 +183,7 @@ export async function toggleWishComplete(id: string) {
           amount: wish.price,
           category: wish.collection.category || "Other",
           description: wish.note?.trim() || wish.name,
-          date: dayToDate(dateToDay(new Date())),
+          date: dayToDate(todayDay()),
         },
       });
       transactionId = txn.id;

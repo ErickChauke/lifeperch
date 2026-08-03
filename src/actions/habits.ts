@@ -12,7 +12,7 @@ import {
   isHabitExpected,
   type HabitInput,
 } from "@/lib/habits";
-import { dayToDate, dateToDay } from "@/lib/money";
+import { dayToDate, dateToDay, todayDay } from "@/lib/money";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -54,7 +54,7 @@ export async function getHabits() {
     orderBy: { createdAt: "asc" },
     include: { logs: true },
   });
-  const today = dateToDay(new Date());
+  const today = todayDay();
   const week = lastNDays(today, 7);
   const thisWeek = currentWeekDays(today);
   return habits.map(({ logs, ...habit }) => {

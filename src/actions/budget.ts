@@ -7,6 +7,7 @@ import {
   randToCents,
   dayToDate,
   dateToDay,
+  todayDay,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
 } from "@/lib/money";
@@ -258,7 +259,7 @@ export async function toggleItemComplete(id: string) {
   if (!item.completed) {
     const start = dateToDay(item.plan.startDate);
     const end = dateToDay(item.plan.endDate);
-    const today = dateToDay(new Date());
+    const today = todayDay();
     const day = today < start ? start : today > end ? end : today;
     const txn = await prisma.transaction.create({
       data: {

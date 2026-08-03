@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { dayToDate, dateToDay } from "@/lib/money";
+import { dayToDate, todayDay } from "@/lib/money";
 import {
   todoSchema,
   todoCollectionSchema,
@@ -154,7 +154,7 @@ export async function getTodayTodosForUser(userId: string) {
     where: { userId },
     orderBy: TODO_ORDER,
   });
-  const today = dateToDay(new Date());
+  const today = todayDay();
   const overdue = todos.filter((t) => isOverdue(t, today));
   const due = todos.filter((t) => dueDay(t, today) === today);
   return { today: due, overdue };
@@ -215,7 +215,7 @@ export async function toggleTodo(id: string) {
   const userId = await requireUserId();
   const todo = await prisma.todo.findFirst({ where: { id, userId } });
   if (!todo) return;
-  const done = isDone(todo, dateToDay(new Date()));
+  const done = isDone(todo, todayDay());
   await prisma.todo.updateMany({
     where: { id, userId },
     data: done
