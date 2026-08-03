@@ -215,6 +215,9 @@ export function MedicineModal({
               Times put this dose on the timetable. Leave empty to keep it off the
               grid.
             </p>
+            {errors.times ? (
+              <p className="text-destructive text-xs">{errors.times.message}</p>
+            ) : null}
           </div>
 
           <div className="space-y-1.5">

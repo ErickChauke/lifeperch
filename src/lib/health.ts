@@ -126,17 +126,22 @@ export type WorkoutSessionInput = z.infer<typeof workoutSessionSchema>;
 
 // Medicines and supplements. dose and schedule are free text (e.g. "1000 IU",
 // "morning, with food"). A taken-today check stores one log row per day.
-export const medicineSchema = z.object({
-  name: z.string().min(1, "Name it"),
-  dose: z.string().nullable(),
-  schedule: z.string().nullable(),
-  times: z.array(z.string().regex(/^\d{2}:\d{2}$/)),
-  days: z.array(z.number().int().min(0).max(6)),
-  active: z.boolean(),
-  linkedModule: z.string().nullable(),
-  linkedId: z.string().nullable(),
-  linkedLabel: z.string().nullable(),
-});
+export const medicineSchema = z
+  .object({
+    name: z.string().min(1, "Name it"),
+    dose: z.string().nullable(),
+    schedule: z.string().nullable(),
+    times: z.array(z.string().regex(/^\d{2}:\d{2}$/)),
+    days: z.array(z.number().int().min(0).max(6)),
+    active: z.boolean(),
+    linkedModule: z.string().nullable(),
+    linkedId: z.string().nullable(),
+    linkedLabel: z.string().nullable(),
+  })
+  .refine((d) => new Set(d.times).size === d.times.length, {
+    message: "Remove the duplicate time",
+    path: ["times"],
+  });
 
 export type MedicineInput = z.infer<typeof medicineSchema>;
 
