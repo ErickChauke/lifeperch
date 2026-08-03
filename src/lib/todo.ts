@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseISO } from "date-fns";
 import { dayToDate, dateToDay } from "@/lib/money";
 import { timeToMinutes, weekdayIndex } from "@/lib/timetable";
 
@@ -133,7 +134,7 @@ function dayDiff(from: string, to: string): number {
 export function dueDay(todo: TodoLike, today: string): string | null {
   if (todo.specificDate) return dateToDay(todo.specificDate);
   if (todo.isRecurring && todo.dayOfWeek !== null) {
-    const delta = (todo.dayOfWeek - weekdayIndex(dayToDate(today)) + 7) % 7;
+    const delta = (todo.dayOfWeek - weekdayIndex(parseISO(today)) + 7) % 7;
     const d = dayToDate(today);
     d.setUTCDate(d.getUTCDate() + delta);
     return d.toISOString().slice(0, 10);
@@ -159,7 +160,7 @@ export function bucketOf(todo: TodoLike, today: string): Bucket {
   const diff = dayDiff(today, due);
   if (diff <= 0) return "today";
   if (diff === 1) return "tomorrow";
-  const toSunday = 6 - weekdayIndex(dayToDate(today));
+  const toSunday = 6 - weekdayIndex(parseISO(today));
   if (diff <= toSunday) return "week";
   return "later";
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { format } from "date-fns";
+import { todayDay } from "@/lib/money";
 import {
   Calendar,
   BookText,
@@ -75,7 +76,7 @@ export default async function DashboardPage() {
   const session = await auth();
   const name = session?.user?.name?.split(" ")[0] ?? "there";
   const now = new Date();
-  const todayStr = format(now, "yyyy-MM-dd");
+  const todayStr = todayDay(now);
   const [
     { today: dueToday, overdue },
     events,

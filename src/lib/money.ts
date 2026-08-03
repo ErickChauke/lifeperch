@@ -29,6 +29,18 @@ export function dateToDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+// Fixed offset for this single-user deployment (SAST, UTC+2, no DST). Vercel
+// functions always run in UTC, so "today" must be shifted by this or it reads
+// up to 2 hours behind the browser's local day just after midnight, disagreeing
+// with client code that reads the browser's own local date. Use this wherever
+// server code needs "what day is it right now" - never dateToDay(new Date())
+// or a bare toISOString() for that purpose.
+const APP_TZ_OFFSET_MINUTES = 120;
+
+export function todayDay(now: Date = new Date()): string {
+  return dateToDay(new Date(now.getTime() + APP_TZ_OFFSET_MINUTES * 60_000));
+}
+
 // Investing is carried by this expense category and reframed on the dashboard as
 // its own figure, excluded from the spending donut and the SPENT total.
 export const INVESTMENT_CATEGORY = "Investments";

@@ -1,6 +1,6 @@
 import { getHabits } from "@/actions/habits";
 import { getTodos } from "@/actions/todo";
-import { dateToDay } from "@/lib/money";
+import { todayDay } from "@/lib/money";
 import { HabitsBoard } from "@/components/modules/habits/habits-board";
 
 // Habit check-in board. today is computed once on the server so the check-in
@@ -9,6 +9,6 @@ import { HabitsBoard } from "@/components/modules/habits/habits-board";
 export default async function HabitsPage() {
   const [habits, todos] = await Promise.all([getHabits(), getTodos()]);
   return (
-    <HabitsBoard habits={habits} todos={todos} today={dateToDay(new Date())} />
+    <HabitsBoard habits={habits} todos={todos} today={todayDay()} />
   );
 }
