@@ -11,7 +11,7 @@ import {
   PageBody,
 } from "@/components/layout/page-shell";
 import { MoneyEmpty } from "@/components/modules/money/money-empty";
-import { habitMet } from "@/lib/habits";
+import { habitMet, isHabitExpected } from "@/lib/habits";
 import { HabitCard } from "./habit-card";
 import { HabitModal, type TodoOption } from "./habit-modal";
 import type { getHabits } from "@/actions/habits";
@@ -41,10 +41,18 @@ export function HabitsBoard({
     );
   }, [habits, search]);
 
-  const doneCount = habits.filter((h) =>
+  // Only habits actually due today count toward the day's progress, matching
+  // the dashboard's today-habits widget.
+  const expectedToday = useMemo(
+    () => habits.filter((h) => isHabitExpected(h, today)),
+    [habits, today],
+  );
+  const doneCount = expectedToday.filter((h) =>
     habitMet(h.todayValue, h.kind, h.target),
   ).length;
-  const pct = habits.length ? Math.round((doneCount / habits.length) * 100) : 0;
+  const pct = expectedToday.length
+    ? Math.round((doneCount / expectedToday.length) * 100)
+    : 0;
   const dateLabel = format(new Date(`${today}T00:00:00`), "dd MMM yyyy");
 
   function closeModal() {
@@ -59,7 +67,7 @@ export function HabitsBoard({
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Habits</h1>
             <p className="text-fg-3 mt-1 font-mono text-xs tabular-nums">
-              {dateLabel} · {doneCount} / {habits.length} done
+              {dateLabel} · {doneCount} / {expectedToday.length} done
             </p>
           </div>
           {habits.length > 0 ? (
