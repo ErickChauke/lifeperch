@@ -1,6 +1,6 @@
 import { getUploadSignature } from "@/actions/upload";
 
-export { MAX_UPLOAD_BYTES } from "@/lib/cloudinary";
+export { MAX_UPLOAD_BYTES } from "@/lib/upload-limit";
 
 export type UploadResult = {
   url: string;

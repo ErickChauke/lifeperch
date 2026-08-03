@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { MAX_UPLOAD_BYTES } from "@/lib/upload-limit";
 
 // Configured from the Cloudinary env vars (see .env.example). secure: true so
 // delivery URLs are always https.
@@ -10,8 +11,6 @@ cloudinary.config({
 });
 
 export { cloudinary };
-
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB (Cloudinary free tier)
 
 // The signed upload API has no way to cap a file's size server-side (Cloudinary
 // confirmed this isn't supported), so this is the real enforcement: called from
