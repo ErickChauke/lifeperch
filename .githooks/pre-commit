@@ -1,0 +1,29 @@
+#!/bin/sh
+# Blocks staging of secret-shaped files. Templates are allowlisted by name so
+# .env.example etc still commit normally.
+
+allowlist='^\.env\.(example|sample|template)$'
+blocked='(^|/)(\.env(\..*)?|.*\.pem|.*\.key|.*\.p12|.*\.pfx|.*credentials.*\.json|.*service-account.*\.json)$'
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+
+bad=""
+for f in $staged; do
+  base=$(basename "$f")
+  echo "$base" | grep -Eq "$allowlist" && continue
+  echo "$f" | grep -Eiq "$blocked" && bad="$bad$f
+"
+done
+
+if [ -n "$bad" ]; then
+  echo ""
+  echo "pre-commit: blocked - these staged files look like secrets:"
+  printf '%s' "$bad"
+  echo ""
+  echo "If one is genuinely safe (a template), name it *.example/*.sample/*.template,"
+  echo "or adjust .githooks/pre-commit."
+  echo ""
+  exit 1
+fi
+
+exit 0

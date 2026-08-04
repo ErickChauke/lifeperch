@@ -1,0 +1,22 @@
+#!/bin/sh
+# Blocks AI attribution trailers from ever landing in a commit. A
+# Co-Authored-By: Claude trailer once got a bot account listed as a GitHub
+# Contributor on this repo, and a full history rewrite couldn't undo it -
+# GitHub keeps every PR's original commits in refs/pull/N/head forever.
+# Prevention here is the only real fix.
+
+msg_file="$1"
+pattern='(anthropic\.com|generated with \[?claude|🤖 generated with|co-authored-by:.*claude)'
+
+if grep -Eiq "$pattern" "$msg_file"; then
+  echo ""
+  echo "commit-msg: blocked - this message contains an AI attribution trailer"
+  echo "(Claude/Anthropic). Never commit these - see docs/WORKFLOW.md."
+  echo ""
+  echo "Offending line(s):"
+  grep -Ein "$pattern" "$msg_file"
+  echo ""
+  exit 1
+fi
+
+exit 0
