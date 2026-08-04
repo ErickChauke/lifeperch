@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
+import { assertUploadSize, destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 import {
   literatureSchema,
   litCollectionSchema,
@@ -35,6 +35,8 @@ function toRecord(data: LiteratureInput) {
     url: data.url?.trim() || null,
     fileUrl: data.fileUrl || null,
     publicId: data.publicId || null,
+    format: data.format || null,
+    bytes: data.bytes ?? null,
     notes: data.notesFormat === "html" ? sanitizeRichHtml(data.notes) : data.notes,
     notesFormat: data.notesFormat,
     tags: normalizeTags(data.tags),
@@ -154,6 +156,7 @@ export async function createLit(collectionId: string, input: LiteratureInput) {
   });
   if (!collection) throw new Error("Topic not found");
   const data = literatureSchema.parse(input);
+  await assertUploadSize(data.bytes, data.publicId);
   await prisma.literature.create({
     data: { userId, collectionId, ...toRecord(data) },
   });
@@ -165,6 +168,7 @@ export async function createLit(collectionId: string, input: LiteratureInput) {
 export async function updateLit(id: string, input: LiteratureInput) {
   const userId = await requireUserId();
   const data = literatureSchema.parse(input);
+  await assertUploadSize(data.bytes, data.publicId);
   const existing = await prisma.literature.findFirst({ where: { id, userId } });
   if (!existing) return;
   if (existing.publicId && existing.publicId !== data.publicId) {

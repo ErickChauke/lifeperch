@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
+import { assertUploadSize, destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 import { sendEmail } from "@/lib/email";
 import { buildPasswordResetEmail } from "@/lib/vault-email";
 import {
@@ -339,6 +339,7 @@ export async function createDocument(collectionId: string, input: DocumentInput)
     throw new Error("Folder locked");
   }
   const data = documentSchema.parse(input);
+  await assertUploadSize(data.bytes, data.publicId);
   await prisma.document.create({
     data: {
       userId,

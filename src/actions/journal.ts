@@ -11,7 +11,7 @@ import {
   type AttachmentInput,
 } from "@/lib/journal";
 import { sanitizeRichHtml } from "@/lib/rich-html";
-import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
+import { assertUploadSize, destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -103,6 +103,7 @@ export async function addJournalAttachment(
   });
   if (!entry) throw new Error("Entry not found");
   const data = attachmentSchema.parse(input);
+  await assertUploadSize(data.bytes, data.publicId);
   const attachment = await prisma.dailyEntryAttachment.create({
     data: { userId, entryId, ...data },
   });

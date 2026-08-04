@@ -2,6 +2,7 @@
 
 import { FileText, Link as LinkIcon } from "lucide-react";
 import { statusLabel } from "@/lib/literature";
+import { formatBytes } from "@/lib/vault";
 import type { getCollection } from "@/actions/literature";
 
 export type Paper = NonNullable<
@@ -50,7 +51,11 @@ export function PaperCard({ paper, onEdit }: { paper: Paper; onEdit: () => void 
             ) : (
               <LinkIcon className="size-3.5" />
             )}
-            {paper.fileUrl ? "PDF" : "Link"}
+            {paper.fileUrl
+              ? [paper.format?.toUpperCase() ?? "PDF", formatBytes(paper.bytes)]
+                  .filter(Boolean)
+                  .join(" · ")
+              : "Link"}
           </button>
         ) : (
           <span className="text-fg-4 font-mono text-xs">-</span>

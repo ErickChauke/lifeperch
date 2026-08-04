@@ -14,7 +14,7 @@ import {
   type AttachmentInput,
 } from "@/lib/notes";
 import { sanitizeRichHtml } from "@/lib/rich-html";
-import { destroyAsset, signedFileUrl } from "@/lib/cloudinary";
+import { assertUploadSize, destroyAsset, signedFileUrl } from "@/lib/cloudinary";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -185,6 +185,7 @@ export async function addNoteAttachment(noteId: string, input: AttachmentInput) 
   const note = await prisma.note.findFirst({ where: { id: noteId, userId } });
   if (!note) throw new Error("Note not found");
   const data = attachmentSchema.parse(input);
+  await assertUploadSize(data.bytes, data.publicId);
   const attachment = await prisma.noteAttachment.create({
     data: { userId, noteId, ...data },
   });

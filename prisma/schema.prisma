@@ -402,6 +402,8 @@ model Literature {
   url          String?
   fileUrl      String?
   publicId     String?
+  format       String?
+  bytes        Int?
   notes        String               @default("") @db.Text
   notesFormat  String               @default("markdown")
   tags         String[]             @default([])

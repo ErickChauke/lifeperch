@@ -36,6 +36,8 @@ export const literatureSchema = z.object({
   url: z.string().nullable(),
   fileUrl: z.string().nullable(),
   publicId: z.string().nullable(),
+  format: z.string().nullable().optional(),
+  bytes: z.number().nullable().optional(),
   notes: z.string().max(RICH_BODY_MAX),
   notesFormat: bodyFormatSchema,
   tags: z.array(z.string()),

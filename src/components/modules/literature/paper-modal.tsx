@@ -93,6 +93,8 @@ function PaperForm({
   const [url, setUrl] = useState(paper?.url ?? "");
   const [fileUrl, setFileUrl] = useState<string | null>(paper?.fileUrl ?? null);
   const [publicId, setPublicId] = useState<string | null>(paper?.publicId ?? null);
+  const [format, setFormat] = useState<string | null>(paper?.format ?? null);
+  const [bytes, setBytes] = useState<number | null>(paper?.bytes ?? null);
   const [file, setFile] = useState<File | null>(null);
   const [notes, setNotes] = useState(() =>
     seedHtml(paper?.notes ?? "", paper?.notesFormat ?? "markdown"),
@@ -144,6 +146,8 @@ function PaperForm({
     (async () => {
       let nextFileUrl: string | null = null;
       let nextPublicId: string | null = null;
+      let nextFormat: string | null = null;
+      let nextBytes: number | null = null;
       let nextUrl: string | null = null;
 
       try {
@@ -153,10 +157,14 @@ function PaperForm({
             const result = await uploadFile(file, "lifeperch/literature", setProgress);
             nextFileUrl = result.url;
             nextPublicId = result.publicId;
+            nextFormat = result.format;
+            nextBytes = result.bytes;
             setUploading(false);
           } else {
             nextFileUrl = fileUrl;
             nextPublicId = publicId;
+            nextFormat = format;
+            nextBytes = bytes;
           }
         } else {
           nextUrl = url.trim() || null;
@@ -175,6 +183,8 @@ function PaperForm({
         url: nextUrl,
         fileUrl: nextFileUrl,
         publicId: nextPublicId,
+        format: nextFormat,
+        bytes: nextBytes,
         notes,
         notesFormat: "html" as const,
         tags,
@@ -331,12 +341,19 @@ function PaperForm({
                   <span className="text-fg min-w-0 flex-1 truncate text-sm">
                     {file ? file.name : "Stored PDF"}
                   </span>
+                  {formatBytes(file ? file.size : bytes) ? (
+                    <span className="text-fg-3 shrink-0 font-mono text-xs">
+                      {formatBytes(file ? file.size : bytes)}
+                    </span>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => {
                       setFile(null);
                       setFileUrl(null);
                       setPublicId(null);
+                      setFormat(null);
+                      setBytes(null);
                     }}
                     aria-label="Clear file"
                     className="text-fg-4 hover:text-[var(--danger)]"
