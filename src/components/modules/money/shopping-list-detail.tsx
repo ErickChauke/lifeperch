@@ -54,10 +54,16 @@ export function ShoppingListDetailView({
   const [status, setStatus] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
 
-  const toBuy = list.items.filter((i) => !i.bought);
-  const basket = list.items.filter((i) => i.bought);
+  // A loan draws money in as a funding row, not a thing to buy, so it is split
+  // off first and every purchase figure runs over the real items only.
+  const funding = list.items.filter((i) => i.originType === "loan");
+  const items = list.items.filter((i) => i.originType !== "loan");
+  const toBuy = items.filter((i) => !i.bought);
+  const basket = items.filter((i) => i.bought);
   const estimate = toBuy.reduce((s, i) => s + i.price * i.quantity, 0);
   const basketTotal = basket.reduce((s, i) => s + i.price * i.quantity, 0);
+  const drawn = funding.reduce((s, f) => s + f.price, 0);
+  const loanLeft = Math.max(drawn - basketTotal, 0);
 
   // Search filters the displayed rows by name; the summary totals stay on the
   // full list so the estimate reads the whole basket, not just a match.
@@ -66,7 +72,7 @@ export function ShoppingListDetailView({
   const visibleToBuy = toBuy.filter(matchesSearch);
   const visibleBasket = basket.filter(matchesSearch);
   const noMatches =
-    list.items.length > 0 &&
+    items.length > 0 &&
     visibleToBuy.length === 0 &&
     visibleBasket.length === 0;
 
@@ -212,6 +218,38 @@ export function ShoppingListDetailView({
         </span>
       </div>
 
+      {funding.length > 0 ? (
+        <div className="border-accent-line bg-accent-soft space-y-2 rounded-lg border p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-accent-read font-mono text-[10.5px] uppercase tracking-[0.10em]">
+              Funded by loan
+            </span>
+            <span className="text-fg-3 font-mono text-xs">
+              {formatZAR(centsToRand(basketTotal))} spent · {formatZAR(centsToRand(loanLeft))} left
+            </span>
+          </div>
+          {funding.map((f) => (
+            <div key={f.id} className="flex items-center justify-between gap-3">
+              <span className="text-fg min-w-0 truncate text-sm">{f.name}</span>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-fg font-mono text-sm tabular-nums">
+                  {formatZAR(centsToRand(f.price))}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => run(() => deleteShoppingItem(f.id), "Could not remove")}
+                  disabled={pending}
+                  aria-label={`Return ${f.name} to the loan`}
+                  className="text-fg-4 hover:text-[var(--danger)] flex size-6 items-center justify-center transition-colors"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={name}
@@ -245,12 +283,12 @@ export function ShoppingListDetailView({
       {importSources.length > 0 ? (
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
-            <Download /> Import from wishlist or plans
+            <Download /> Import from wishlist, plans or loans
           </Button>
         </div>
       ) : null}
 
-      {list.items.length > 0 ? (
+      {items.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <SearchInput
             value={search}
@@ -261,7 +299,7 @@ export function ShoppingListDetailView({
         </div>
       ) : null}
 
-      {list.items.length === 0 ? (
+      {items.length === 0 ? (
         <p className="text-fg-3 text-sm">Nothing on this list yet. Add the first thing you need.</p>
       ) : noMatches ? (
         <div className="text-fg-3 flex flex-col items-start gap-3 py-10 text-sm">
@@ -325,7 +363,7 @@ export function ShoppingListDetailView({
         onImport={(picked) =>
           importToShoppingList(
             list.id,
-            picked as { type: "wish" | "plan"; id: string }[],
+            picked as { type: "wish" | "plan" | "loan"; id: string; amount?: number }[],
           )
         }
       />
