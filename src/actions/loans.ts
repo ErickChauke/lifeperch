@@ -11,6 +11,7 @@ import {
   type LoanUpdateInput,
 } from "@/lib/loans";
 import { moveLoanSource } from "@/lib/loan-source";
+import { sumLoanUsed } from "@/lib/loan-usage";
 import { toExtraRecord } from "@/lib/extra";
 import { randToCents } from "@/lib/money";
 
@@ -29,8 +30,8 @@ function revalidateLoans() {
 }
 
 // Fetches the user's loans, open first, newest first within each group. Each loan
-// carries what has been used from it: the sum of the plan lines imported from it,
-// so the figure follows edits to those lines with no extra bookkeeping.
+// carries what has been used from it: the sum of the plan lines and shopping items
+// drawn from it, so the figure follows edits to those with no extra bookkeeping.
 export async function getLoans() {
   const userId = await requireUserId();
   const loans = await prisma.selfLoan.findMany({
@@ -40,12 +41,7 @@ export async function getLoans() {
   });
   if (loans.length === 0) return [];
 
-  const drawn = await prisma.budgetItem.groupBy({
-    by: ["originId"],
-    where: { userId, originType: "loan", originId: { in: loans.map((l) => l.id) } },
-    _sum: { amount: true },
-  });
-  const byLoan = new Map(drawn.map((d) => [d.originId, d._sum.amount ?? 0]));
+  const byLoan = await sumLoanUsed(userId, loans.map((l) => l.id));
   return loans.map((l) => ({ ...l, used: byLoan.get(l.id) ?? 0 }));
 }
 

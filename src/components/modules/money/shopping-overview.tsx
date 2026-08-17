@@ -18,11 +18,13 @@ export type ShoppingListWithItems = Awaited<
 export function ShoppingOverview({ lists }: { lists: ShoppingListWithItems[] }) {
   const [creating, setCreating] = useState(false);
 
+  // Loan funding rows are money drawn in, not things to buy, so they never count
+  // toward a list's basket or totals.
   const combinedToBuy = lists.reduce(
     (sum, list) =>
       sum +
       list.items
-        .filter((i) => !i.bought)
+        .filter((i) => i.originType !== "loan" && !i.bought)
         .reduce((s, i) => s + i.price * i.quantity, 0),
     0,
   );
@@ -71,19 +73,22 @@ export function ShoppingOverview({ lists }: { lists: ShoppingListWithItems[] }) 
 }
 
 function ListCard({ list }: { list: ShoppingListWithItems }) {
-  const toBuy = list.items.filter((i) => !i.bought);
-  const basket = list.items.filter((i) => i.bought);
+  // Loan funding rows are drawn-in money, not purchases, so they are excluded
+  // from every count and total on the card.
+  const items = list.items.filter((i) => i.originType !== "loan");
+  const toBuy = items.filter((i) => !i.bought);
+  const basket = items.filter((i) => i.bought);
   const estimate = toBuy.reduce((s, i) => s + i.price * i.quantity, 0);
   const spent = basket.reduce((s, i) => s + i.price * i.quantity, 0);
-  const allDone = list.items.length > 0 && toBuy.length === 0;
-  const itemWord = list.items.length === 1 ? "item" : "items";
+  const allDone = items.length > 0 && toBuy.length === 0;
+  const itemWord = items.length === 1 ? "item" : "items";
 
   const meta =
-    list.items.length === 0
+    items.length === 0
       ? "Empty list"
       : allDone
-        ? `All bought · ${list.items.length} ${itemWord}`
-        : `${toBuy.length} to buy · ${list.items.length} ${itemWord}`;
+        ? `All bought · ${items.length} ${itemWord}`
+        : `${toBuy.length} to buy · ${items.length} ${itemWord}`;
 
   // When the list is cleared the estimate is zero, so show what was spent.
   const amount = allDone ? spent : estimate;

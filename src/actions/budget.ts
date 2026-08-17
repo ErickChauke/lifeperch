@@ -14,6 +14,7 @@ import {
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
 import { settleItem, unsettleItem } from "@/lib/settle";
 import { loanUnused } from "@/lib/loans";
+import { sumLoanUsed } from "@/lib/loan-usage";
 import {
   planSchema,
   budgetItemSchema,
@@ -324,7 +325,7 @@ export async function importToPlan(
   const shopIds = sources.filter((s) => s.type === "shopping").map((s) => s.id);
   const fixedIds = sources.filter((s) => s.type === "fixed").map((s) => s.id);
   const loanIds = sources.filter((s) => s.type === "loan").map((s) => s.id);
-  const [wishes, items, fixed, loans, loanSpend, existing] = await Promise.all([
+  const [wishes, items, fixed, loans, loanUsed, existing] = await Promise.all([
     wishIds.length
       ? prisma.wishlistItem.findMany({
           where: { userId, id: { in: wishIds } },
@@ -343,13 +344,11 @@ export async function importToPlan(
     loanIds.length
       ? prisma.selfLoan.findMany({ where: { userId, id: { in: loanIds }, settledAt: null } })
       : Promise.resolve([]),
+    // Spans both plan lines and shopping draws, so a loan cannot be over-drawn
+    // across the two modules.
     loanIds.length
-      ? prisma.budgetItem.groupBy({
-          by: ["originId"],
-          where: { userId, originType: "loan", originId: { in: loanIds } },
-          _sum: { amount: true },
-        })
-      : Promise.resolve([]),
+      ? sumLoanUsed(userId, loanIds)
+      : Promise.resolve(new Map<string, number>()),
     prisma.budgetItem.findMany({
       where: { userId, planId, originId: { in: sources.map((s) => s.id) } },
       select: { originId: true },
@@ -410,9 +409,8 @@ export async function importToPlan(
       originId: f.id,
     });
   }
-  // A loan lands at what is left of its principal after the lines already
-  // imported from it elsewhere, so the pot cannot be over-allocated.
-  const loanUsed = new Map(loanSpend.map((s) => [s.originId, s._sum.amount ?? 0]));
+  // A loan lands at what is left of its principal after everything already
+  // drawn from it elsewhere, so the pot cannot be over-allocated.
   const wanted = new Map(sources.map((s) => [s.id, s.amount]));
   for (const l of loans) {
     const left = loanUnused({ principal: l.principal, used: loanUsed.get(l.id) ?? 0 });
