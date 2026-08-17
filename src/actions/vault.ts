@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -41,7 +41,7 @@ export async function isVaultUnlocked(): Promise<boolean> {
 // Verifies the PIN and, on success, sets the session unlock cookie.
 export async function unlockVault(pin: string): Promise<{ ok: boolean }> {
   await requireUserId();
-  if (!process.env.VAULT_PIN || pin !== process.env.VAULT_PIN) {
+  if (!process.env.VAULT_PIN || !secureEqual(pin, process.env.VAULT_PIN)) {
     return { ok: false };
   }
   const store = await cookies();
@@ -93,6 +93,15 @@ function cardCookieName(id: string): string {
 function hashResetToken(token: string): string {
   const secret = process.env.NEXTAUTH_SECRET ?? "";
   return createHash("sha256").update(`${token}:${secret}`).digest("hex");
+}
+
+// Constant-time string comparison so a PIN, card password hash, or reset token
+// cannot be recovered byte-by-byte via response timing.
+function secureEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
 }
 
 function revalidateVault(id?: string) {
@@ -244,7 +253,7 @@ export async function unlockCollection(
     where: { id, userId },
   });
   if (!collection || !collection.passwordHash) return { ok: false };
-  if (hashCardPassword(password) !== collection.passwordHash) return { ok: false };
+  if (!secureEqual(hashCardPassword(password), collection.passwordHash)) return { ok: false };
   const store = await cookies();
   store.set(cardCookieName(id), cardCookieToken(collection.passwordHash), {
     httpOnly: true,
@@ -313,7 +322,7 @@ export async function confirmCollectionPasswordReset(
     return { ok: false };
   }
   if (collection.resetExpiry.getTime() < Date.now()) return { ok: false };
-  if (collection.resetToken !== hashResetToken(token)) return { ok: false };
+  if (!secureEqual(collection.resetToken, hashResetToken(token))) return { ok: false };
 
   await prisma.vaultCollection.update({
     where: { id: collection.id },

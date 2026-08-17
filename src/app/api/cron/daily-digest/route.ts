@@ -16,12 +16,16 @@ const SEND_WHEN_EMPTY = false;
 // secret rather than auth().
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  // Reject unless the Bearer secret matches. A missing secret allows manual dev runs.
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  // Fail closed: a missing secret means the route is misconfigured, not open.
+  // This route deletes todos and sends email for every user, so it must never
+  // run unauthenticated.
+  if (!secret) {
+    console.error("daily-digest: CRON_SECRET is not configured");
+    return NextResponse.json({ error: "Not configured" }, { status: 500 });
+  }
+  const auth = request.headers.get("authorization");
+  if (auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // This is the app's one daily pass, so retention runs here too. It covers every
