@@ -48,7 +48,9 @@ export default async function PlanDetailPage({
     ),
     ...lists.flatMap((l) =>
       l.items
-        .filter((i) => !i.bought && !linked.has(i.id))
+        // A loan funding row is drawn-in money, not a purchase, so it is never
+        // offered as a shopping expense to import into a plan.
+        .filter((i) => i.originType !== "loan" && !i.bought && !linked.has(i.id))
         .map((i) => ({
           type: "shopping" as const,
           id: i.id,

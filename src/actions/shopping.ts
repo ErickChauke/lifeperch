@@ -11,6 +11,8 @@ import {
 } from "@/lib/shopping";
 import { randToCents, dayToDate, todayDay } from "@/lib/money";
 import { syncLinkedStatus, clearInboundLinks } from "@/lib/money-links";
+import { loanUnused } from "@/lib/loans";
+import { sumLoanUsed } from "@/lib/loan-usage";
 
 // Returns the current user id or throws when there is no session.
 async function requireUserId(): Promise<string> {
@@ -154,6 +156,8 @@ export async function toggleBought(id: string) {
     include: { list: { select: { category: true } } },
   });
   if (!item) return;
+  // A loan funding row is money drawn in, not a purchase, so it is never bought.
+  if (item.originType === "loan") return;
 
   if (!item.bought) {
     let transactionId: string | null = null;
@@ -213,7 +217,8 @@ export async function setQuantity(id: string, quantity: number) {
   revalidateShopping(item.listId);
 }
 
-// Removes an item from a list.
+// Removes an item from a list. Removing a loan funding row frees that draw back
+// to the loan, since the loan's "used" is derived from the rows that remain.
 export async function deleteShoppingItem(id: string) {
   const userId = await requireUserId();
   const item = await prisma.shoppingItem.findFirst({ where: { id, userId } });
@@ -221,14 +226,17 @@ export async function deleteShoppingItem(id: string) {
   await prisma.shoppingItem.deleteMany({ where: { id, userId } });
   await clearInboundLinks(userId, id);
   revalidateShopping(item.listId);
+  if (item.originType === "loan") revalidatePath("/money/loans");
 }
 
-// Imports wishes and plan expense lines into this list as linked shopping items.
-// Each new item keeps an origin pointer so its bought status mirrors the source.
+// Imports wishes, plan expense lines and loan draws into this list. A wish or
+// plan line keeps an origin pointer so its bought status mirrors the source. A
+// loan draws money in as a funding row (originType "loan", price = the draw):
+// the borrowed cash the list is spent against, drawn down like a plan import.
 // Sources already linked into this list are skipped. Returns how many were added.
 export async function importToShoppingList(
   listId: string,
-  sources: { type: "wish" | "plan"; id: string }[],
+  sources: { type: "wish" | "plan" | "loan"; id: string; amount?: number }[],
 ) {
   const userId = await requireUserId();
   const list = await prisma.shoppingList.findFirst({ where: { id: listId, userId } });
@@ -236,13 +244,21 @@ export async function importToShoppingList(
 
   const wishIds = sources.filter((s) => s.type === "wish").map((s) => s.id);
   const planIds = sources.filter((s) => s.type === "plan").map((s) => s.id);
-  const [wishes, lines, existing] = await Promise.all([
+  const loanIds = sources.filter((s) => s.type === "loan").map((s) => s.id);
+  const [wishes, lines, loans, loanUsed, existing] = await Promise.all([
     wishIds.length
       ? prisma.wishlistItem.findMany({ where: { userId, id: { in: wishIds } } })
       : Promise.resolve([]),
     planIds.length
       ? prisma.budgetItem.findMany({ where: { userId, id: { in: planIds }, kind: "expense" } })
       : Promise.resolve([]),
+    loanIds.length
+      ? prisma.selfLoan.findMany({ where: { userId, id: { in: loanIds }, settledAt: null } })
+      : Promise.resolve([]),
+    // Spans plan lines and shopping draws, so the pot cannot be over-drawn.
+    loanIds.length
+      ? sumLoanUsed(userId, loanIds)
+      : Promise.resolve(new Map<string, number>()),
     prisma.shoppingItem.findMany({
       where: { userId, listId, originId: { in: sources.map((s) => s.id) } },
       select: { originId: true },
@@ -267,9 +283,20 @@ export async function importToShoppingList(
     if (taken.has(p.id)) continue;
     rows.push({ userId, listId, name: p.title ?? p.category, price: p.amount, quantity: 1, originType: "plan", originId: p.id });
   }
+  // A loan draws what is left of its principal, or the smaller amount asked for.
+  // The client draw is never trusted; the server re-clamps against what remains.
+  const wanted = new Map(sources.map((s) => [s.id, s.amount]));
+  for (const l of loans) {
+    const left = loanUnused({ principal: l.principal, used: loanUsed.get(l.id) ?? 0 });
+    if (left <= 0) continue;
+    const ask = wanted.get(l.id);
+    const amount = ask && ask > 0 ? Math.min(ask, left) : left;
+    rows.push({ userId, listId, name: l.title, price: amount, quantity: 1, originType: "loan", originId: l.id });
+  }
   if (rows.length) await prisma.shoppingItem.createMany({ data: rows });
 
   revalidateShopping(listId);
   revalidatePath("/money");
+  revalidatePath("/money/loans");
   return rows.length;
 }
